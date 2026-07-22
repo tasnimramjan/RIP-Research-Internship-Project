@@ -31,7 +31,7 @@ The system provides tools for finding supervisors, exploring research labs, disc
 
 ## Technologies
 
-- Frontend:
-- Backend:
-- Database:
-- Other Tools:
+- Frontend: HTML5, CSS3, Vanilla JavaScript (ES6+)
+- Backend: Native Python (http.server, socketserver, sqlite3)
+- Database: SQLite
+- Other Tools: Google Fonts (Inter), Git, GitHub
