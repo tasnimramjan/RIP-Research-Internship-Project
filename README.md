@@ -14,11 +14,12 @@ Student ID - Name
 
 23201362 - Lamisa Raisa Amin	
 
+
 ## Project Description
 
-R.I.P. (Research • Internship • Project) is a web-based platform designed to help university students manage their research, internship, and thesis-related activities in one place.
+R.I.P. (Research • Internship • Project) is a web-based platform designed to help university students manage their research, internship and thesis-related activities in one place.
 
-The system provides tools for finding supervisors, exploring research labs, discovering research papers, browsing internship opportunities, and joining thesis study circles.
+The system provides tools for finding supervisors, exploring research labs, discovering research papers, browsing internship opportunities and joining thesis study circles.
 
 ## Features
 
