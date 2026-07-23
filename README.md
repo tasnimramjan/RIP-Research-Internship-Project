@@ -23,7 +23,7 @@ The system provides tools for finding supervisors, exploring research labs, disc
 - Smart Supervisor Finder
 - Research Lab Board
 - Internship Opportunity Portal
-- Research Paper Discovery & Semantic Search
+- Research Paper Discovery
 - Thesis Group Finder
 
 ## Technologies
