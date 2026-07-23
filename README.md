@@ -4,16 +4,13 @@
 
 ## Group Members
 
-Student ID - Name
+24101416	- Afri Anjum Tutul
 
-24101416 - Afri Anjum Tutul	
+24141016 - Tasnim Ramjan 
 
-24141016 - Tasnim Ramjan 	
+24101429 - Chowdhury Nafisa Sadhaf
 
-24101429 - Chowdhury Nafisa Sadhaf	
-
-23201362 - Lamisa Raisa Amin	
-
+23201362 - Lamisa Raisa Amin
 
 ## Project Description
 
@@ -30,8 +27,10 @@ The system provides tools for finding supervisors, exploring research labs, disc
 - Thesis Group Finder
 
 ## Technologies
+Frontend: HTML5, CSS3, JavaScript (ES6)
 
-- Frontend: HTML5, CSS3, Vanilla JavaScript (ES6+)
-- Backend: Native Python (http.server, socketserver, sqlite3)
-- Database: SQLite
-- Other Tools: Google Fonts (Inter), Git, GitHub
+Backend: Python (http.server, sqlite3)
+
+Database: SQLite
+
+Other Tools: Git, GitHub
