@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>R.I.P. Platform - Member 2</title>
-  <meta name="description" content="R.I.P. (Research - Internship - Project) Platform - Admin, Internship, Paper Discovery, Thesis Group Modules">
+  <title>R.I.P. Platform - Member 1</title>
+  <meta name="description" content="R.I.P. (Research - Internship - Project) Platform - Student & Faculty Modules">
   <link rel="stylesheet" href="/static/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -23,12 +23,10 @@
   </div>
 </header>
 
-<!-- HAMBURGER MENU DRAWER (Member 2 Features) -->
+<!-- HAMBURGER MENU DRAWER (Member 1 Features) -->
 <div id="menuDrawer" class="menu-drawer">
-  <button id="adminMenuItem" class="menu-item" style="display:none; color:var(--accent-pink); font-weight:700;" onclick="switchView('admin-panel')">Admin Control Panel</button>
-  <button class="menu-item" onclick="switchView('internship-portal')">Internship Opportunity Portal</button>
-  <button class="menu-item" onclick="switchView('paper-discovery')">Research Paper Discovery</button>
-  <button id="thesisGroupMenuItem" class="menu-item" onclick="switchView('thesis-groups')">Thesis Group Finder</button>
+  <button class="menu-item" onclick="switchView('supervisor-finder')">Smart Supervisor Finder</button>
+  <button class="menu-item" onclick="switchView('lab-board')">Research Lab Board</button>
 </div>
 
 <!-- MAIN WRAPPER -->
@@ -40,131 +38,63 @@
       <div class="landing-container">
         <h1 class="landing-title">R.I.P.</h1>
         <p class="landing-description">
-          R.I.P. (Research • Internship • Project) is a web-based platform designed to help university students manage their research, internship, and thesis-related activities in one place.
+          R.I.P. (Research • Internship • Project) is a web-based platform designed to help university students manage their research and thesis-related activities in one place.
         </p>
         <div id="landingAuthSection"></div>
       </div>
     </section>
 
-    <!-- ADMIN CONTROL PANEL -->
-    <section id="admin-panel" class="view-panel">
+    <!-- FEATURE 1: Smart Supervisor Finder -->
+    <section id="supervisor-finder" class="view-panel">
       <div class="panel-header">
         <div>
-          <h2 class="panel-title" style="color:var(--accent-pink);">Admin Control Panel</h2>
-          <p class="panel-subtitle">Manage users, faculty, labs, internships, thesis groups, and monitor system analytics.</p>
-        </div>
-        <div style="display:flex; gap:0.5rem;">
-          <button class="btn btn-sm btn-cyan" onclick="openAddUserModal()">Add User</button>
-          <button class="btn btn-sm btn-secondary" onclick="openAdminAddInternshipModal()">Create Internship</button>
+          <h2 class="panel-title">Smart Supervisor Finder</h2>
+          <p class="panel-subtitle">Filter supervisors by department, research area, keywords, CGPA requirements, and thesis availability.</p>
         </div>
       </div>
-
-      <div style="margin-bottom:1.5rem;">
-        <h3 style="font-size:1rem; font-weight:700; margin-bottom:0.8rem;">Platform Analytics</h3>
-        <div id="adminStatsContainer"></div>
-      </div>
-
-      <div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-          <h3 style="font-size:1rem; font-weight:700;">User Management</h3>
-          <button class="btn btn-sm btn-cyan" onclick="openAddUserModal()">+ Add New User</button>
-        </div>
-        <div style="overflow-x:auto; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem;">
-          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted);">
-                <th style="padding:0.6rem 0.5rem;">Name</th>
-                <th style="padding:0.6rem 0.5rem;">Email</th>
-                <th style="padding:0.6rem 0.5rem;">Role</th>
-                <th style="padding:0.6rem 0.5rem;">Department</th>
-                <th style="padding:0.6rem 0.5rem;">Status</th>
-                <th style="padding:0.6rem 0.5rem;">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="adminUsersTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- FEATURE 3: Internship Opportunity Portal -->
-    <section id="internship-portal" class="view-panel">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-title">Internship Opportunity Portal</h2>
-          <p class="panel-subtitle">Browse internship details and recruiter contact information.</p>
-        </div>
-        <button id="adminAddInternshipBtn" class="btn btn-sm btn-cyan" style="display:none;" onclick="openAdminAddInternshipModal()">Create Internship</button>
-      </div>
-      <div class="card-grid" id="internshipList"></div>
-    </section>
-
-    <!-- FEATURE 4: Research Paper Discovery -->
-    <section id="paper-discovery" class="view-panel">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-title">Research Paper Discovery</h2>
-          <p class="panel-subtitle">Search research papers and filter by authors, domain, keywords, and publication year.</p>
-        </div>
-      </div>
-      <div class="form-grid" style="margin-bottom:1.5rem;">
+      <div class="form-grid">
         <div class="form-group">
-          <label>Keyword / Title Search</label>
-          <input type="text" id="paperSearchInput" placeholder="Enter keywords..." list="paperSuggestions" oninput="runPaperSearch()">
-          <datalist id="paperSuggestions"></datalist>
-        </div>
-        <div class="form-group">
-          <label>Filter by Author</label>
-          <input type="text" id="paperAuthorFilter" placeholder="Author name..." oninput="runPaperSearch()">
-        </div>
-        <div class="form-group">
-          <label>Domain</label>
-          <select id="paperDomainFilter" onchange="runPaperSearch()">
-            <option value="">All Domains</option>
-            <option value="Computer Vision">Computer Vision</option>
-            <option value="Natural Language Processing">Natural Language Processing</option>
-            <option value="Cybersecurity">Cybersecurity</option>
-            <option value="Robotics & IoT">Robotics & IoT</option>
+          <label>Department</label>
+          <select id="finderDept" onchange="loadSupervisors()">
+            <option value="">All Departments</option>
+            <option value="CSE">CSE</option>
+            <option value="EEE">EEE</option>
+            <option value="BBA">BBA</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Publication Year</label>
-          <input type="number" id="paperYearFilter" placeholder="e.g. 2023" oninput="runPaperSearch()">
+          <label>Research Keyword</label>
+          <input type="text" id="finderKeyword" placeholder="e.g. Vision, NLP, IoT, Blockchain" oninput="loadSupervisors()">
+        </div>
+        <div class="form-group">
+          <label>Max Min-CGPA Requirement</label>
+          <input type="number" step="0.1" min="0" max="4" id="finderCgpa" placeholder="e.g. 3.5" oninput="loadSupervisors()">
+        </div>
+        <div class="form-group" style="display:flex; align-items:center; gap:0.5rem; margin-top:1.5rem;">
+          <input type="checkbox" id="finderAvail" onchange="loadSupervisors()" style="width:auto; accent-color:var(--accent-cyan);">
+          <label for="finderAvail" style="cursor:pointer;">Available Slots Only</label>
         </div>
       </div>
-      <div class="card-grid" id="paperList"></div>
+      <div class="card-grid" id="supervisorList"></div>
     </section>
 
-    <!-- FEATURE 5: Thesis Group Finder -->
-    <section id="thesis-groups" class="view-panel">
+    <!-- FEATURE 2: Research Lab Board -->
+    <section id="lab-board" class="view-panel">
       <div class="panel-header">
         <div>
-          <h2 class="panel-title">Thesis Group Finder</h2>
-          <p class="panel-subtitle">Create, browse, join, or leave thesis study circles and communicate in group chat.</p>
+          <h2 class="panel-title">Research Lab Board</h2>
+          <p class="panel-subtitle">Browse research labs, ongoing projects, facilities, and RA opportunities.</p>
         </div>
-        <button class="btn btn-sm btn-cyan" onclick="openNewGroupModal()">Create Study Circle</button>
+        <button id="createLabBtn" class="btn btn-sm btn-cyan" style="display:none;" onclick="openCreateLabModal()">Create Research Lab</button>
       </div>
       <div class="form-group" style="max-width:400px; margin-bottom:1.5rem;">
-        <label>Search Thesis Groups</label>
-        <input type="text" id="groupSearchInput" placeholder="Search by topic or group name..." oninput="loadThesisGroups()">
+        <label>Search Research Labs by Name</label>
+        <input type="text" id="labSearchInput" placeholder="Enter lab name or focus area..." oninput="loadLabBoard()">
       </div>
-      <div class="card-grid" id="thesisGroupList"></div>
+      <div class="card-grid" id="labList"></div>
     </section>
 
   </main>
-</div>
-
-<!-- REAL-TIME GROUP CHAT DRAWER -->
-<div id="chatDrawer" class="chat-drawer">
-  <div class="chat-header">
-    <div id="chatHeaderTitle" style="font-weight:700; font-size:0.9rem;">Group Chat</div>
-    <button class="btn btn-sm btn-secondary" onclick="closeChat()">X</button>
-  </div>
-  <div id="chatMessages" class="chat-messages"></div>
-  <div class="chat-input-row">
-    <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-    <button class="btn btn-sm" onclick="sendChatMessage()">Send</button>
-  </div>
 </div>
 
 <!-- AUTHENTICATION MODAL -->
@@ -225,129 +155,110 @@
   </div>
 </div>
 
-<!-- ADMIN ADD USER MODAL -->
-<div id="addUserModal" class="modal-overlay">
+<!-- FACULTY EDIT PROFILE MODAL -->
+<div id="editFacultyProfileModal" class="modal-overlay">
   <div class="modal-box">
-    <h3 style="font-size:1.2rem; font-weight:700;">Add User</h3>
+    <h3 style="font-size:1.2rem; font-weight:700;">Edit Faculty Profile</h3>
     <div class="form-group">
-      <label>Full Name</label>
-      <input type="text" id="addUserName" placeholder="Full name">
-    </div>
-    <div class="form-group">
-      <label>Email Address</label>
-      <input type="email" id="addUserEmail" placeholder="user@univ.edu">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="addUserPassword" placeholder="Enter password">
+      <label>Designation</label>
+      <input type="text" id="editFacDesignation" placeholder="e.g. Professor">
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
       <div class="form-group">
-        <label>Role</label>
-        <select id="addUserRole">
-          <option value="Student">Student</option>
-          <option value="Faculty">Faculty</option>
-          <option value="Admin">Admin</option>
-        </select>
+        <label>h-index</label>
+        <input type="number" id="editFacHIndex" value="20">
       </div>
       <div class="form-group">
-        <label>Department</label>
-        <select id="addUserDept">
-          <option value="CSE">CSE</option>
-          <option value="EEE">EEE</option>
-          <option value="BBA">BBA</option>
-        </select>
+        <label>Open Slots</label>
+        <input type="number" id="editFacSlots" value="3">
       </div>
+    </div>
+    <div class="form-group">
+      <label>Research Areas and Domains (comma-separated)</label>
+      <input type="text" id="editFacDomains" placeholder="e.g. Computer Vision, Deep Learning">
+    </div>
+    <div class="form-group">
+      <label>Min CGPA Requirement</label>
+      <input type="number" step="0.1" id="editFacMinCgpa" value="3.2">
+    </div>
+    <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
+      <input type="checkbox" id="editFacThesisAvail" checked style="width:auto; accent-color:var(--accent-cyan);">
+      <label for="editFacThesisAvail" style="cursor:pointer;">Accepting Thesis Supervision</label>
     </div>
     <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
-      <button class="btn btn-cyan" style="flex:1;" onclick="submitAddUser()">Add User</button>
-      <button class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+      <button class="btn btn-cyan" style="flex:1;" onclick="submitEditFacultyProfile()">Save Profile</button>
+      <button class="btn btn-secondary" onclick="closeEditFacultyProfileModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ADMIN CREATE INTERNSHIP MODAL -->
-<div id="adminInternshipModal" class="modal-overlay">
+<!-- FACULTY CREATE LAB MODAL -->
+<div id="createLabModal" class="modal-overlay">
   <div class="modal-box">
-    <h3 style="font-size:1.2rem; font-weight:700;">Create Internship Opportunity</h3>
+    <h3 style="font-size:1.2rem; font-weight:700;">Create Research Lab</h3>
     <div class="form-group">
-      <label>Company Name</label>
-      <input type="text" id="adminIntCompany" placeholder="e.g. Google Tech">
-    </div>
-    <div class="form-group">
-      <label>Internship Title</label>
-      <input type="text" id="adminIntTitle" placeholder="e.g. Software Engineer Intern">
+      <label>Lab Name</label>
+      <input type="text" id="newLabName" placeholder="e.g. Medical AI and Vision Lab">
     </div>
     <div class="form-group">
-      <label>Requirements</label>
-      <textarea id="adminIntReqs" placeholder="Key skills and requirements..." style="height:70px;"></textarea>
-    </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
-      <div class="form-group">
-        <label>Min CGPA</label>
-        <input type="number" step="0.1" id="adminIntCgpa" value="3.0">
-      </div>
-      <div class="form-group">
-        <label>Department</label>
-        <select id="adminIntDept">
-          <option value="CSE">CSE</option>
-          <option value="EEE">EEE</option>
-          <option value="BBA">BBA</option>
-        </select>
-      </div>
+      <label>Focus Area</label>
+      <input type="text" id="newLabArea" placeholder="e.g. Medical Imaging, Deep Learning">
     </div>
     <div class="form-group">
-      <label>Deadline</label>
-      <input type="text" id="adminIntDeadline" placeholder="YYYY-MM-DD">
-    </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
-      <div class="form-group">
-        <label>Contact Email</label>
-        <input type="email" id="adminIntEmail" placeholder="hr@company.com">
-      </div>
-      <div class="form-group">
-        <label>Contact Phone</label>
-        <input type="text" id="adminIntPhone" placeholder="+1 (555) 0192">
-      </div>
+      <label>Facilities (comma-separated)</label>
+      <input type="text" id="newLabFacilities" placeholder="e.g. 4x NVIDIA A100 GPUs, Brain MRI Dataset">
     </div>
     <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
-      <button class="btn btn-cyan" style="flex:1;" onclick="submitAdminAddInternship()">Post Opportunity</button>
-      <button class="btn btn-secondary" onclick="closeAdminAddInternshipModal()">Cancel</button>
+      <button class="btn btn-cyan" style="flex:1;" onclick="submitCreateLab()">Create Lab</button>
+      <button class="btn btn-secondary" onclick="closeCreateLabModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- CITATION MODAL -->
-<div id="citationModal" class="modal-overlay">
+<!-- FACULTY ADD LAB PROJECT MODAL -->
+<div id="addLabProjectModal" class="modal-overlay">
   <div class="modal-box">
-    <h3 id="citationStyle" style="font-size:1.1rem; font-weight:700; color:var(--accent-cyan);">Citation</h3>
-    <div id="citationOutput" style="background:rgba(15,23,42,0.8); border:1px solid var(--border-color); border-radius:8px; padding:1rem; font-size:0.87rem; line-height:1.7; user-select:all; white-space:pre-wrap;"></div>
-    <div style="display:flex; gap:0.6rem;">
-      <button class="btn btn-cyan" onclick="copyCitation()" style="flex:1;">Copy Citation</button>
-      <button class="btn btn-secondary" onclick="closeCitationModal()">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- NEW THESIS GROUP MODAL -->
-<div id="newGroupModal" class="modal-overlay">
-  <div class="modal-box">
-    <h3 style="font-size:1.2rem; font-weight:700;">Create Study Circle</h3>
+    <h3 style="font-size:1.2rem; font-weight:700;">Add Ongoing Research Project</h3>
     <div class="form-group">
-      <label>Study Circle Name</label>
-      <input type="text" id="newGroupName" placeholder="e.g. Medical Imaging Thesis Circle">
-    </div>
-    <div class="form-group">
-      <label>Research Topic</label>
-      <input type="text" id="newGroupTopic" placeholder="e.g. Deep Learning in Brain MRI">
+      <label>Project Title</label>
+      <input type="text" id="newProjectLabTitle" placeholder="e.g. Automated Tumor Segmentation">
     </div>
     <div class="form-group">
       <label>Description</label>
-      <textarea id="newGroupDesc" placeholder="Describe the focus of this study circle..." style="height:90px; resize:vertical;"></textarea>
+      <textarea id="newProjectLabDesc" placeholder="Project overview..." style="height:80px;"></textarea>
     </div>
     <div style="display:flex; gap:0.6rem;">
-      <button class="btn btn-cyan" style="flex:1;" onclick="submitNewGroup()">Create Group</button>
-      <button class="btn btn-secondary" onclick="closeNewGroupModal()">Cancel</button>
+      <button class="btn btn-cyan" style="flex:1;" onclick="submitAddLabProject()">Add Project</button>
+      <button class="btn btn-secondary" onclick="closeAddLabProjectModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- FACULTY POST RA OPPORTUNITY MODAL -->
+<div id="postRaModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 style="font-size:1.2rem; font-weight:700;">Post RA Position</h3>
+    <div class="form-group">
+      <label>Position Title</label>
+      <input type="text" id="newRaTitle" placeholder="e.g. Graduate Research Assistant">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="newRaDesc" placeholder="Responsibilities and requirements..." style="height:70px;"></textarea>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
+      <div class="form-group">
+        <label>Stipend</label>
+        <input type="text" id="newRaStipend" placeholder="e.g. $1500 / month">
+      </div>
+      <div class="form-group">
+        <label>Deadline</label>
+        <input type="text" id="newRaDeadline" placeholder="YYYY-MM-DD">
+      </div>
+    </div>
+    <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
+      <button class="btn btn-cyan" style="flex:1;" onclick="submitPostRa()">Post Position</button>
+      <button class="btn btn-secondary" onclick="closePostRaModal()">Cancel</button>
     </div>
   </div>
 </div>
