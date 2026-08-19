@@ -124,7 +124,7 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 category = params_flat.get('category')
                 self.send_json(ForumController.get_threads(category))
             elif path == '/api/forums/reminders':
-                self.send_json(ForumController.get_reminders(params_flat.get('user_id')))
+                self.send_json(ForumController.check_reminders(params_flat.get('user_id')))
             elif path == '/api/projects/all':
                 self.send_json({"success": True, "posts": ProjectController.get_all_posts()})
             elif path == '/api/messages/history':
@@ -217,18 +217,18 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(res)
 
         # Forum & Project & Chat APIs
-        elif path == '/api/forums/thread':
-            self.send_json(ForumController.create_thread(data))
+        elif path == '/api/forums/create':
+            self.send_json(ForumController.create_thread(data.get('user_id'), data))
         elif path == '/api/forums/comment':
-            self.send_json(ForumController.add_comment(data))
-        elif path == '/api/forums/reaction':
-            self.send_json(ForumController.add_reaction(data))
+            self.send_json(ForumController.add_comment(data.get('user_id'), data))
+        elif path == '/api/forums/react':
+            self.send_json(ForumController.add_reaction(data.get('user_id'), data))
         elif path == '/api/forums/reminder':
-            self.send_json(ForumController.set_reminder(data))
+            self.send_json(ForumController.set_reminder(data.get('user_id'), data))
         elif path == '/api/projects/create':
             self.send_json(ProjectController.create_post(data.get('student_id'), data))
         elif path == '/api/projects/join':
-            self.send_json(ProjectController.join_project(data.get('post_id'), data.get('student_id')))
+            self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
 
