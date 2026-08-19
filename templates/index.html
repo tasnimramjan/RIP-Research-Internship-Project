@@ -557,5 +557,73 @@
 <script src="/static/forums.js"></script>
 <script src="/static/teammates.js"></script>
 <script src="/static/js/app.js"></script>
+<!-- CREATE THREAD MODAL -->
+<div id="createThreadModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 style="font-size:1.2rem; font-weight:700;">Start New Discussion</h3>
+    <form id="createThreadForm">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="threadTitle" required placeholder="Enter discussion title">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="threadCategory">
+          <option value="General Academic Discussions">General Academic Discussions</option>
+          <option value="Coursework & Study Groups">Coursework & Study Groups</option>
+          <option value="Research Opportunities">Research Opportunities</option>
+          <option value="Career & Alumni Advice">Career & Alumni Advice</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Content</label>
+        <textarea id="threadContent" required rows="4" placeholder="What's on your mind?"></textarea>
+      </div>
+      <button type="submit" class="btn btn-cyan" style="width:100%; margin-top:0.5rem;">Post Discussion</button>
+    </form>
+    <button type="button" id="closeThreadModalBtn" class="btn btn-secondary btn-sm" style="align-self:center; margin-top:0.5rem;" onclick="document.getElementById('createThreadModal').classList.remove('active')">Cancel</button>
+  </div>
+</div>
+
+<!-- SET REMINDER MODAL -->
+<div id="setReminderModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 style="font-size:1.2rem; font-weight:700;">Set Reminder</h3>
+    <div class="form-group">
+      <label>Date & Time</label>
+      <input type="datetime-local" id="reminderDatetime" required>
+    </div>
+    <div class="form-group">
+      <label>Note (Optional)</label>
+      <input type="text" id="reminderNote" placeholder="e.g. Check replies">
+    </div>
+    <button type="button" class="btn btn-cyan" style="width:100%; margin-top:0.5rem;" onclick="Forums.submitReminder()">Save Reminder</button>
+    <button type="button" class="btn btn-secondary btn-sm" style="align-self:center; margin-top:0.5rem;" onclick="document.getElementById('setReminderModal').classList.remove('active')">Cancel</button>
+  </div>
+</div>
+
+<!-- POST PROJECT MODAL -->
+<div id="postProjectModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 style="font-size:1.2rem; font-weight:700;">Post Project Idea</h3>
+    <form id="postProjectForm">
+      <div class="form-group">
+        <label>Idea Title</label>
+        <input type="text" id="projTitle" required placeholder="E.g., Automated Greenhouse Monitor">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="projDesc" required rows="4" placeholder="Describe the project and goals..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Required Skills</label>
+        <input type="text" id="projSkills" required placeholder="E.g., Python, IoT, Teamwork">
+      </div>
+      <button type="submit" class="btn btn-cyan" style="width:100%; margin-top:0.5rem;">Publish Idea</button>
+    </form>
+    <button type="button" class="btn btn-secondary btn-sm" style="align-self:center; margin-top:0.5rem;" onclick="document.getElementById('postProjectModal').classList.remove('active')">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>
