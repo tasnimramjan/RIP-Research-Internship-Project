@@ -6,6 +6,8 @@
   <title>R.I.P. Platform - Member 1</title>
   <meta name="description" content="R.I.P. (Research - Internship - Project) Platform - Student & Faculty Modules">
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/forums.css">
+  <link rel="stylesheet" href="/static/teammates.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -27,6 +29,9 @@
 <div id="menuDrawer" class="menu-drawer">
   <button class="menu-item" onclick="switchView('supervisor-finder')">Smart Supervisor Finder</button>
   <button class="menu-item" onclick="switchView('lab-board')">Research Lab Board</button>
+  <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
+  <button class="menu-item" onclick="switchView('discussion-forums')">Discussion Forums</button>
+  <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
 </div>
 
 <!-- MAIN WRAPPER -->
@@ -94,7 +99,142 @@
       <div class="card-grid" id="labList"></div>
     </section>
 
+    <!-- FEATURE 3: Discussion Forums -->
+    <section id="discussion-forums" class="view-panel">
+      <div class="forum-container">
+        <div class="forum-header">
+          <h2>Discussion Forums</h2>
+          <button id="openCreateThreadBtn" class="btn-primary">+ Create Thread</button>
+        </div>
+        <div class="forum-layout">
+          <aside class="forum-sidebar">
+            <ul>
+              <li data-category="All" class="active">All Topics</li>
+              <li data-category="Thesis">Thesis</li>
+              <li data-category="Projects">Projects</li>
+              <li data-category="Internships">Internships</li>
+              <li data-category="Defense Preparation">Defense Preparation</li>
+              <li data-category="General Academic Discussions">General Academic Discussions</li>
+            </ul>
+          </aside>
+          <div id="threadsContainer">
+            <!-- Threads rendered via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE 4: Project Teammate Finder -->
+    <section id="teammate-finder" class="view-panel">
+      <div class="teammate-board">
+        <div class="teammate-header">
+          <h2>Project Teammate Finder</h2>
+          <button id="openPostProjectBtn" class="btn-primary">+ Post Project Idea</button>
+        </div>
+        <div id="projectBoardContainer" class="project-board-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE 5: Availability Tracker -->
+    <section id="availability-tracker" class="view-panel">
+      <div class="teammate-board">
+        <div class="teammate-header" style="margin-bottom:1rem;">
+          <h2>Thesis Availability Tracker</h2>
+        </div>
+        <p style="color:var(--text-muted); margin-bottom: 2rem;">Real-time dashboard of faculty members currently accepting thesis students and their estimated remaining slots.</p>
+        <div class="card-grid" id="trackerContainer">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
   </main>
+</div>
+
+<!-- CREATE THREAD MODAL -->
+<div id="createThreadModal" class="modal-overlay">
+  <div class="modal-content">
+    <button class="modal-close" id="closeThreadModalBtn">&times;</button>
+    <h3>Create New Discussion Thread</h3>
+    <form id="createThreadForm">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="threadTitle" required placeholder="Enter an engaging title...">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="threadCategory">
+          <option value="Thesis">Thesis</option>
+          <option value="Projects">Projects</option>
+          <option value="Internships">Internships</option>
+          <option value="Defense Preparation">Defense Preparation</option>
+          <option value="General Academic Discussions">General Academic Discussions</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Discussion Content</label>
+        <textarea id="threadContent" rows="5" required placeholder="What do you want to discuss?"></textarea>
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Post Thread</button>
+    </form>
+  </div>
+</div>
+
+<!-- SET REMINDER MODAL -->
+<div id="setReminderModal" class="modal-overlay">
+  <div class="modal-content">
+    <button class="modal-close" onclick="document.getElementById('setReminderModal').classList.remove('active')">&times;</button>
+    <h3>Set Thread Reminder</h3>
+    <div class="form-group">
+      <label>Select Date and Time</label>
+      <input type="datetime-local" id="reminderDatetime">
+    </div>
+    <div class="form-group">
+      <label>Reminder Note (Optional)</label>
+      <input type="text" id="reminderNote" placeholder="e.g., Check for replies on my thesis topic">
+    </div>
+    <button class="btn-primary" style="width: 100%;" onclick="Forums.submitReminder()">Save Reminder</button>
+  </div>
+</div>
+
+<!-- POST PROJECT MODAL -->
+<div id="postProjectModal" class="modal-overlay">
+  <div class="modal-content">
+    <button class="modal-close" id="closePostProjectBtn">&times;</button>
+    <h3>Post Project Idea</h3>
+    <form id="postProjectForm">
+      <div class="form-group">
+        <label>Idea Title</label>
+        <input type="text" id="projTitle" required placeholder="E.g. AI-based Health Assistant">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="projDesc" rows="4" required placeholder="Briefly describe your project..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Required Skills</label>
+        <input type="text" id="projSkills" required placeholder="E.g. Python, React, NLP">
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%;">Post Idea</button>
+    </form>
+  </div>
+</div>
+
+<!-- CHAT WINDOW -->
+<div id="chatWindow" class="chat-window">
+  <div class="chat-header">
+    <span id="chatUserName">Chat</span>
+    <button class="chat-close" id="closeChatBtn">&times;</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <!-- Messages loaded via JS -->
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="chatInput" placeholder="Type a message...">
+    <button id="chatSendBtn">➤</button>
+  </div>
 </div>
 
 <!-- AUTHENTICATION MODAL -->
@@ -264,5 +404,7 @@
 </div>
 
 <script src="/static/js/app.js"></script>
+<script src="/static/forums.js"></script>
+<script src="/static/teammates.js"></script>
 </body>
 </html>

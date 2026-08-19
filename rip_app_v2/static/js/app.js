@@ -25,6 +25,8 @@ function initApp() {
   currentUser = stored ? JSON.parse(stored) : null;
   renderUserNav();
   showLandingPage();
+  if (currentUser && window.Forums) Forums.init(currentUser);
+  if (currentUser && window.Teammates) Teammates.init(currentUser);
 }
 
 // ── Navigation ──────────────────────────────────────────
@@ -99,6 +101,9 @@ function switchView(viewId) {
   else if (viewId === 'paper-discovery')   loadPapers();
   else if (viewId === 'thesis-groups')     loadThesisGroups();
   else if (viewId === 'admin-panel')       loadAdminPanel();
+  else if (viewId === 'availability-tracker') loadAvailabilityTracker();
+  else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
+  else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
 }
 
 // ── Authentication ───────────────────────────────────────
@@ -118,7 +123,7 @@ async function submitLogin() {
   if (!email || !password) return alert('Please enter your email and password.');
   const res  = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
   const data = await res.json();
-  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); }
+  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); if(window.Forums) Forums.init(currentUser); if(window.Teammates) Teammates.init(currentUser); }
   else alert(data.message);
 }
 
@@ -132,11 +137,11 @@ async function submitSignup() {
   if (password.length < 8) return alert('Password must be at least 8 characters long.');
   const res  = await fetch('/api/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, password, role, department: dept}) });
   const data = await res.json();
-  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); }
+  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); if(window.Forums) Forums.init(currentUser); if(window.Teammates) Teammates.init(currentUser); }
   else alert(data.message);
 }
 
-function logout() { currentUser = null; localStorage.removeItem('rip_user'); renderUserNav(); showLandingPage(); }
+function logout() { currentUser = null; localStorage.removeItem('rip_user'); if(window.Forums && window.Forums.pollingInterval) clearInterval(window.Forums.pollingInterval); if(window.Teammates && window.Teammates.pollingInterval) clearInterval(window.Teammates.pollingInterval); renderUserNav(); showLandingPage(); }
 
 // ── FEATURE 1: Smart Supervisor Finder ──────────────────
 async function loadSupervisors() {
@@ -522,3 +527,49 @@ async function sendChatMessage() {
   await fetch('/api/chat/group/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sender_id: currentUser.user_id, group_id: window._activeGroupId, text}) });
   input.value = ''; fetchChatMessages();
 }
+
+// FEATURE 5: Availability Tracker
+async function loadAvailabilityTracker() {
+  const container = document.getElementById('trackerContainer');
+  if(!container) return;
+  container.innerHTML = '<div style="color:var(--text-muted);">Loading availability data...</div>';
+  
+  try {
+    const res = await fetch('/api/supervisors/search');
+    const data = await res.json();
+    
+    if (!data.supervisors || data.supervisors.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-muted);">No faculty data available.</div>';
+      return;
+    }
+    
+    container.innerHTML = data.supervisors.map(f => {
+      const isAvailable = f.thesis_available === 1 && f.remaining_slots > 0;
+      const badgeClass = isAvailable ? 'available' : 'full';
+      const badgeText = isAvailable ? 'Accepting Students' : 'Full / Unavailable';
+      
+      return `
+        <div class="tracker-card">
+          <div class="tracker-header">
+            <div>
+              <h3 style="margin-bottom:0.2rem; font-size:1.2rem;">${f.name}</h3>
+              <div style="font-size:0.9rem; color:var(--text-muted);">${f.designation} &bull; ${f.department}</div>
+            </div>
+            <div class="tracker-badge ${badgeClass}">${badgeText}</div>
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 0.5rem;">
+            Min CGPA Required: <strong style="color:var(--text-color);">${f.min_cgpa_req}</strong>
+          </div>
+          <div class="tracker-slots">
+            <h3>${f.remaining_slots}</h3>
+            <p>Estimated Slots Left</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<div style="color:red;">Error loading availability data.</div>';
+  }
+}
+

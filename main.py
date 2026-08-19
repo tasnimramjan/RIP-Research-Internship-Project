@@ -9,6 +9,9 @@ from controllers.auth_controller       import AuthController
 from controllers.supervisor_controller import SupervisorController
 from controllers.faculty_controller    import FacultyController
 from controllers.lab_controller        import LabController
+from controllers.forum_controller      import ForumController
+from controllers.project_controller    import ProjectController
+from controllers.message_controller    import MessageController
 
 PORT = int(os.environ.get("PORT", 8001))
 BASE_DIR = os.path.dirname(__file__)
@@ -63,6 +66,23 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 search_name = params_flat.get('name') or params_flat.get('search')
                 res = LabController.get_all_labs(search_name=search_name)
                 self.send_json(res)
+            elif path == "/api/forums/threads":
+                category = params_flat.get('category')
+                res = ForumController.get_threads(category=category)
+                self.send_json(res)
+            elif path == "/api/forums/reminders":
+                user_id = params_flat.get('user_id')
+                res = ForumController.check_reminders(user_id)
+                self.send_json(res)
+            elif path == "/api/projects/all":
+                skill = params_flat.get('skill')
+                res = ProjectController.get_all_posts(skill=skill)
+                self.send_json(res)
+            elif path == "/api/messages/history":
+                user1 = params_flat.get('user1')
+                user2 = params_flat.get('user2')
+                res = MessageController.get_direct_messages(user1, user2)
+                self.send_json(res)
             else:
                 self.send_json({"error": "Endpoint not found"}, status=404)
             return
@@ -97,6 +117,27 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(res)
         elif path == "/api/labs/post_ra":
             res = LabController.post_ra(data.get('lab_id'), data)
+            self.send_json(res)
+        elif path == "/api/forums/create":
+            res = ForumController.create_thread(data.get('user_id'), data)
+            self.send_json(res)
+        elif path == "/api/forums/comment":
+            res = ForumController.add_comment(data.get('user_id'), data)
+            self.send_json(res)
+        elif path == "/api/forums/react":
+            res = ForumController.add_reaction(data.get('user_id'), data)
+            self.send_json(res)
+        elif path == "/api/forums/remind":
+            res = ForumController.set_reminder(data.get('user_id'), data)
+            self.send_json(res)
+        elif path == "/api/projects/create":
+            res = ProjectController.create_post(data.get('student_id'), data)
+            self.send_json(res)
+        elif path == "/api/projects/join":
+            res = ProjectController.join_team(data.get('post_id'), data.get('student_id'))
+            self.send_json(res)
+        elif path == "/api/messages/send":
+            res = MessageController.send_message(data)
             self.send_json(res)
         else:
             self.send_json({"error": "POST endpoint not found"}, status=404)

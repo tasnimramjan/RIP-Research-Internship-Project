@@ -6,6 +6,8 @@
   <title>R.I.P. Platform</title>
   <meta name="description" content="R.I.P. (Research - Internship - Project) is a web-based platform designed to help university students manage their research, internship, and thesis-related activities in one place.">
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/forums.css">
+  <link rel="stylesheet" href="/static/teammates.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -32,6 +34,9 @@
   <button class="menu-item" onclick="switchView('internship-portal')">Internship Opportunity Portal</button>
   <button class="menu-item" onclick="switchView('paper-discovery')">Research Paper Discovery</button>
   <button id="thesisGroupMenuItem" class="menu-item" onclick="switchView('thesis-groups')">Thesis Group Finder</button>
+  <button class="menu-item" onclick="switchView('discussion-forums')">Discussion Forums</button>
+  <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
+  <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
 </div>
 
 <!-- MAIN WRAPPER -->
@@ -88,6 +93,42 @@
           </table>
         </div>
       </div>
+    </section>
+
+    <!-- FEATURE 6: Discussion Forums -->
+    <section id="discussion-forums" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Discussion Forums</h2>
+          <p class="panel-subtitle">Engage with peers, ask questions, and set thread reminders.</p>
+        </div>
+        <button class="btn btn-sm btn-cyan" onclick="Forums.openNewThreadModal()">+ New Thread</button>
+      </div>
+      <div id="forums-app"></div>
+    </section>
+
+    <!-- FEATURE 7: Project Teammate Finder -->
+    <section id="teammate-finder" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Project Teammate Finder</h2>
+          <p class="panel-subtitle">Find collaborators for your course projects and research ideas.</p>
+        </div>
+        <button class="btn btn-sm btn-cyan" onclick="Teammates.openNewPostModal()">+ Post Idea</button>
+      </div>
+      <div id="teammates-app"></div>
+    </section>
+
+    <!-- FEATURE 8: Availability Tracker -->
+    <section id="availability-tracker" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Availability Tracker</h2>
+          <p class="panel-subtitle">Live tracking of thesis supervision slots across faculty.</p>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="loadAvailabilityTracker()">Refresh Status</button>
+      </div>
+      <div class="card-grid" id="trackerContainer" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));"></div>
     </section>
 
     <!-- FEATURE 1: Smart Supervisor Finder (KEPT) -->
@@ -513,6 +554,8 @@
   </div>
 </div>
 
+<script src="/static/forums.js"></script>
+<script src="/static/teammates.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

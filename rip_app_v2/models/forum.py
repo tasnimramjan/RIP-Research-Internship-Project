@@ -87,19 +87,26 @@ class DiscussionModel:
     def add_reaction(thread_id, user_id, reaction_type):
         conn = get_db()
         cursor = conn.cursor()
-        try:
+        
+        # Check if already exists
+        cursor.execute("SELECT * FROM forum_reactions WHERE thread_id=? AND user_id=? AND reaction_type=?", (thread_id, user_id, reaction_type))
+        row = cursor.fetchone()
+        
+        if row:
+            # Unlike
+            cursor.execute("DELETE FROM forum_reactions WHERE thread_id=? AND user_id=? AND reaction_type=?", (thread_id, user_id, reaction_type))
+            action = "removed"
+        else:
+            # Like
             cursor.execute(
                 "INSERT INTO forum_reactions (thread_id, user_id, reaction_type) VALUES (?, ?, ?)",
                 (thread_id, user_id, reaction_type)
             )
-            conn.commit()
-            success = True
-        except Exception:
-            # Reaction already exists
-            success = False
-        finally:
-            conn.close()
-        return success
+            action = "added"
+            
+        conn.commit()
+        conn.close()
+        return True, action
 
     @staticmethod
     def set_reminder(thread_id, user_id, remind_at, note=None):
@@ -113,3 +120,26 @@ class DiscussionModel:
         conn.commit()
         conn.close()
         return reminder_id
+
+    @staticmethod
+    def get_due_reminders(user_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("""
+            SELECT r.*, t.title as thread_title 
+            FROM thread_reminders r
+            JOIN discussion_threads t ON r.thread_id = t.thread_id
+            WHERE r.user_id = ? AND r.is_triggered = 0 AND r.remind_at <= ?
+        """, (user_id, now))
+        reminders = [dict(r) for r in cursor.fetchall()]
+        
+        # Mark as triggered
+        if reminders:
+            ids = [r['reminder_id'] for r in reminders]
+            placeholders = ','.join('?' for _ in ids)
+            cursor.execute(f"UPDATE thread_reminders SET is_triggered = 1 WHERE reminder_id IN ({placeholders})", ids)
+            conn.commit()
+            
+        conn.close()
+        return reminders

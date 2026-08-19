@@ -14,12 +14,13 @@ from controllers.internship_controller  import InternshipController   # KEPT
 from controllers.paper_controller       import PaperController
 from controllers.thesis_group_controller import ThesisGroupController
 from controllers.admin_controller       import AdminController
+from controllers.forum_controller       import ForumController
+from controllers.project_controller     import ProjectController
+from controllers.message_controller     import MessageController
 
-# Removed (features stripped from v2):
-#   MatchingController   — Research Interest Matching & 1-to-1 Chat
-#   ProjectController    — Project Teammate Finder
-#   ForumController      — Discussion Forums & Thread Reminders
-# Routes for Faculty Profile Explorer & Availability Tracker removed below.
+# Removed (features stripped from v2, now restored):
+#   MatchingController   — Research Interest Matching & 1-to-1 Chat (Partially restored)
+# Routes for Faculty Profile Explorer removed below.
 
 PORT = int(os.environ.get("PORT", 8001))
 BASE_DIR = os.path.dirname(__file__)
@@ -118,13 +119,20 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 res = AdminController.get_system_analytics()
                 self.send_json(res)
 
+            # -- Forum & Project & Chat APIs --
+            elif path == '/api/forums/threads':
+                category = params_flat.get('category')
+                self.send_json(ForumController.get_threads(category))
+            elif path == '/api/forums/reminders':
+                self.send_json(ForumController.get_reminders(params_flat.get('user_id')))
+            elif path == '/api/projects/all':
+                self.send_json({"success": True, "posts": ProjectController.get_all_posts()})
+            elif path == '/api/messages/history':
+                self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
+
             # -- REMOVED routes return 404 --
             # /api/matching/*          → Research Interest Matching (REMOVED)
             # /api/faculty/<id> GET    → Faculty Profile Explorer (REMOVED)
-            # /api/supervisors/availability/* → Availability Tracker (REMOVED)
-            # /api/projects/*          → Project Teammate Finder (REMOVED)
-            # /api/forum/*             → Discussion Forums (REMOVED)
-            # /api/chat/direct         → 1-to-1 Chat (REMOVED)
             else:
                 self.send_json({"error": "Endpoint not found"}, status=404)
             return
@@ -207,6 +215,22 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/admin/delete_group":
             res = AdminController.delete_thesis_group(data.get('group_id'))
             self.send_json(res)
+
+        # Forum & Project & Chat APIs
+        elif path == '/api/forums/thread':
+            self.send_json(ForumController.create_thread(data))
+        elif path == '/api/forums/comment':
+            self.send_json(ForumController.add_comment(data))
+        elif path == '/api/forums/reaction':
+            self.send_json(ForumController.add_reaction(data))
+        elif path == '/api/forums/reminder':
+            self.send_json(ForumController.set_reminder(data))
+        elif path == '/api/projects/create':
+            self.send_json(ProjectController.create_post(data.get('student_id'), data))
+        elif path == '/api/projects/join':
+            self.send_json(ProjectController.join_project(data.get('post_id'), data.get('student_id')))
+        elif path == '/api/messages/send':
+            self.send_json(MessageController.send_message(data))
 
         else:
             self.send_json({"error": "POST endpoint not found"}, status=404)

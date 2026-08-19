@@ -29,7 +29,7 @@ class ChatMessageModel:
         cursor.execute("""
         SELECT m.*, u.name as sender_name
         FROM chat_messages m
-        JOIN users u ON m.sender_id = u.user_id
+        LEFT JOIN users u ON m.sender_id = u.user_id
         WHERE (m.sender_id = ? AND m.receiver_id = ?)
            OR (m.sender_id = ? AND m.receiver_id = ?)
         ORDER BY m.timestamp ASC
@@ -45,7 +45,7 @@ class ChatMessageModel:
         cursor.execute("""
         SELECT m.*, u.name as sender_name
         FROM chat_messages m
-        JOIN users u ON m.sender_id = u.user_id
+        LEFT JOIN users u ON m.sender_id = u.user_id
         WHERE m.group_id = ?
         ORDER BY m.timestamp ASC
         """, (group_id,))
