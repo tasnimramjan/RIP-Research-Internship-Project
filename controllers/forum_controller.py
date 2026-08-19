@@ -38,8 +38,8 @@ class ForumController:
         thread_id = data.get('thread_id')
         r_type = data.get('reaction_type', 'like')
         
-        ok = DiscussionModel.add_reaction(thread_id, user_id, r_type)
-        return {"success": ok, "message": "Reaction recorded." if ok else "Reaction already exists."}
+        ok, action = DiscussionModel.add_reaction(thread_id, user_id, r_type)
+        return {"success": ok, "action": action, "message": f"Reaction {action}."}
 
     @staticmethod
     def set_reminder(user_id, data):
@@ -52,3 +52,8 @@ class ForumController:
             
         rem_id = DiscussionModel.set_reminder(thread_id, user_id, remind_at, note=note)
         return {"success": True, "reminder_id": rem_id, "message": f"Reminder set for {remind_at}!"}
+
+    @staticmethod
+    def check_reminders(user_id):
+        reminders = DiscussionModel.get_due_reminders(user_id)
+        return {"success": True, "reminders": reminders}

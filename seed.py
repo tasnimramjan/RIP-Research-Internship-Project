@@ -23,8 +23,8 @@ def seed_data():
 
     # 1. Admin
     admin_id = "admin_1"
-    cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)",
-                   (admin_id, "System Administrator", "admin@univ.edu", hash_pw("password123"), "CSE", "Admin"))
+    cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (admin_id, "System Administrator", "admin@univ.edu", hash_pw("password123"), "CSE", "Admin", "Active"))
     cursor.execute("INSERT INTO admins VALUES (?, ?)", (admin_id, "SuperAdmin"))
 
     # 2. Faculty
@@ -80,8 +80,8 @@ def seed_data():
     ]
 
     for f in faculties:
-        cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)",
-                       (f["id"], f["name"], f["email"], hash_pw("password123"), f["dept"], "Faculty"))
+        cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       (f["id"], f["name"], f["email"], hash_pw("password123"), f["dept"], "Faculty", "Active"))
         cursor.execute("INSERT INTO faculty VALUES (?, ?, ?, ?, ?, ?, ?)",
                        (f["id"], f["designation"], f["h_index"], json.dumps(f["domains"]), f["slots"], f["min_cgpa"], f["available"]))
 
@@ -122,8 +122,8 @@ def seed_data():
     ]
 
     for s in students:
-        cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)",
-                       (s["id"], s["name"], s["email"], hash_pw("password123"), s["dept"], "Student"))
+        cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       (s["id"], s["name"], s["email"], hash_pw("password123"), s["dept"], "Student", "Active"))
         cursor.execute("INSERT INTO students VALUES (?, ?, ?)",
                        (s["id"], s["cgpa"], json.dumps(s["interests"])))
 
@@ -373,6 +373,18 @@ def seed_data():
                    ("msg_1", "stu_alice", "fac_rahman", None, "Respected Sir, I am interested in joining your Vision & Intelligence Lab for my undergraduate thesis.", "2026-07-22 11:00:00"))
     cursor.execute("INSERT INTO chat_messages VALUES (?, ?, ?, ?, ?, ?)",
                    ("msg_2", "fac_rahman", "stu_alice", None, "Hello Alice, your CGPA is impressive. Please review our lab's MRI Segmentation paper and send me your proposal outline.", "2026-07-22 11:05:00"))
+
+    # 11. Project Teammates
+    cursor.execute("INSERT INTO project_teammates VALUES (NULL, ?, ?, ?)", ("post_1", "stu_alice", "Accepted"))
+    cursor.execute("INSERT INTO project_teammates VALUES (NULL, ?, ?, ?)", ("post_2", "stu_charlie", "Pending"))
+
+    # 12. Thread Reminders
+    cursor.execute("INSERT INTO thread_reminders VALUES (?, ?, ?, ?, ?, ?)",
+                   ("rem_1", "th_1", "stu_alice", "2026-08-25 10:00:00", "Review presentation", 0))
+
+    # 13. Group Chat Messages
+    cursor.execute("INSERT INTO chat_messages VALUES (?, ?, ?, ?, ?, ?)",
+                   ("msg_3", "stu_alice", None, "grp_1", "Hey team, let's start the literature review this weekend.", "2026-07-23 10:00:00"))
 
     conn.commit()
     conn.close()
