@@ -8,10 +8,10 @@ window.Teammates = {
         this.currentUser = user;
         // Bind UI events for Teammate Finder
         document.getElementById('openPostProjectBtn')?.addEventListener('click', () => {
-            document.getElementById('postProjectModal').classList.add('active');
+            document.getElementById('postProjectModal').classList.add('open');
         });
         document.getElementById('closePostProjectBtn')?.addEventListener('click', () => {
-            document.getElementById('postProjectModal').classList.remove('active');
+            document.getElementById('postProjectModal').classList.remove('open');
         });
         document.getElementById('postProjectForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -19,13 +19,13 @@ window.Teammates = {
         });
         
         // Chat UI bindings
-        document.getElementById('closeChatBtn')?.addEventListener('click', () => {
+        document.getElementById('closeDirectChatBtn')?.addEventListener('click', () => {
             this.closeChat();
         });
-        document.getElementById('chatSendBtn')?.addEventListener('click', () => {
+        document.getElementById('directChatSendBtn')?.addEventListener('click', () => {
             this.sendMessage();
         });
-        document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
+        document.getElementById('directChatInput')?.addEventListener('keypress', (e) => {
             if(e.key === 'Enter') this.sendMessage();
         });
     },
@@ -76,7 +76,7 @@ window.Teammates = {
             });
             const data = await res.json();
             if(data.success) {
-                document.getElementById('postProjectModal').classList.remove('active');
+                document.getElementById('postProjectModal').classList.remove('open');
                 document.getElementById('postProjectForm').reset();
                 this.loadProjects();
             } else {
@@ -105,8 +105,8 @@ window.Teammates = {
     openChat(userId, userName) {
         this.activeChatUserId = userId;
         this.activeChatUserName = userName;
-        document.getElementById('chatUserName').innerText = userName;
-        document.getElementById('chatWindow').classList.add('open');
+        document.getElementById('directChatUserName').innerText = userName;
+        document.getElementById('directChatWindow').classList.add('open');
         this.fetchMessages();
         
         // Polling interval strictly for the active chat
@@ -115,7 +115,7 @@ window.Teammates = {
     },
 
     closeChat() {
-        document.getElementById('chatWindow').classList.remove('open');
+        document.getElementById('directChatWindow').classList.remove('open');
         this.activeChatUserId = null;
         if(this.pollingInterval) clearInterval(this.pollingInterval);
     },
@@ -134,7 +134,7 @@ window.Teammates = {
     },
 
     renderMessages(messages) {
-        const container = document.getElementById('chatMessages');
+        const container = document.getElementById('directChatMessages');
         if(!messages || messages.length === 0) {
             container.innerHTML = `<p style="text-align:center; color:#9ca3af; font-size:0.8rem; margin-top:2rem;">No messages yet. Say hi!</p>`;
             return;
@@ -160,7 +160,7 @@ window.Teammates = {
     },
 
     async sendMessage() {
-        const input = document.getElementById('chatInput');
+        const input = document.getElementById('directChatInput');
         const text = input.value.trim();
         if(!text || !this.activeChatUserId) return;
         

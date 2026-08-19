@@ -126,7 +126,7 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             elif path == '/api/forums/reminders':
                 self.send_json(ForumController.check_reminders(params_flat.get('user_id')))
             elif path == '/api/projects/all':
-                self.send_json({"success": True, "posts": ProjectController.get_all_posts()})
+                self.send_json(ProjectController.get_all_posts())
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
 
