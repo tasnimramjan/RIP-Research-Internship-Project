@@ -254,7 +254,65 @@ def init_db():
         FOREIGN KEY (sender_id) REFERENCES users(user_id)
     )
     """)
-    
+    # Feature 16: Research Event & Conference Hub
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS events (
+    event_id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL CHECK(category IN ('Conference', 'Workshop', 'Seminar', 'Hackathon', 'Academic Event')),
+    description TEXT NOT NULL,
+    date TEXT NOT NULL,
+    location TEXT NOT NULL,
+    organizer_id TEXT NOT NULL,
+    FOREIGN KEY (organizer_id) REFERENCES users(user_id)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS event_registrations (
+    registration_id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    registered_at TEXT NOT NULL,
+    UNIQUE(event_id, user_id),
+    FOREIGN KEY (event_id) REFERENCES events(event_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+   )
+   """)
+
+   # Feature 18: Real-Time Notification Center
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notifications (
+    notification_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    message TEXT NOT NULL,
+    is_read INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+  )
+   """)
+
+   # Feature 19: Personalized Dashboard Tasks
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS dashboard_tasks (
+    task_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    deadline TEXT NOT NULL,
+    status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'In Progress', 'Completed')),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+  )
+   """)
+
+  # Feature 20: Academic FAQ Chatbot
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS faqs (
+    faq_id TEXT PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    category TEXT NOT NULL
+  )
+  """)
     conn.commit()
     conn.close()
 
