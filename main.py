@@ -137,6 +137,9 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             elif path == "/api/matching/search":
                 from controllers.matching_controller import MatchingController
                 self.send_json(MatchingController.search(params_flat))
+            elif path == "/api/availability/search":
+                from controllers.availability_controller import AvailabilityController
+                self.send_json(AvailabilityController.search(params_flat))
             
             # -- REMOVED routes return 404 --
             else:
