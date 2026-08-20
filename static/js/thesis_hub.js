@@ -1,5 +1,5 @@
 // ==========================================================
-// ThesisHub AI — Client-side Controller for 5 Features
+// Client-side Controller for 5 Research & Academic Features
 // (Progress Tracker & AI, LaTeX Editor, Citations, Resources, Archive)
 // ==========================================================
 
@@ -24,19 +24,58 @@ const ThesisHub = {
   },
 
   // ── Modal Handlers ─────────────────────────────────────
+  openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('open');
+      modal.style.display = 'flex';
+    }
+  },
+
+  closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.remove('open');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  },
+
   setupModals() {
-    const wireModal = (openBtnId, closeBtnId, modalId) => {
+    const wire = (openBtnId, closeBtnId, modalId) => {
       const openBtn = document.getElementById(openBtnId);
       const closeBtn = document.getElementById(closeBtnId);
       const modal = document.getElementById(modalId);
-      if (openBtn && modal) openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
-      if (closeBtn && modal) closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+      if (openBtn) {
+        openBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.openModal(modalId);
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.closeModal(modalId);
+        });
+      }
+
+      // Close when clicking overlay backdrop
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            this.closeModal(modalId);
+          }
+        });
+      }
     };
 
-    wireModal('open-milestone-modal-btn', 'close-milestone-modal-btn', 'milestone-modal');
-    wireModal('edit-feedback-btn', 'close-supervisor-modal-btn', 'supervisor-modal');
-    wireModal('open-citation-modal-btn', 'close-citation-modal-btn', 'citation-modal');
-    wireModal('open-resource-modal-btn', 'close-resource-modal-btn', 'resource-modal');
+    wire('open-milestone-modal-btn', 'close-milestone-modal-btn', 'milestone-modal');
+    wire('edit-feedback-btn', 'close-supervisor-modal-btn', 'supervisor-modal');
+    wire('open-citation-modal-btn', 'close-citation-modal-btn', 'citation-modal');
+    wire('open-resource-modal-btn', 'close-resource-modal-btn', 'resource-modal');
   },
 
   // ── FEATURE 11: Milestones & Hugging Face AI Assistant ─
@@ -61,7 +100,7 @@ const ThesisHub = {
           });
           const data = await res.json();
           if (data.success) {
-            document.getElementById('milestone-modal')?.classList.add('hidden');
+            this.closeModal('milestone-modal');
             addForm.reset();
             this.loadMilestones();
           }
@@ -206,7 +245,7 @@ const ThesisHub = {
         });
 
         this.updateSupervisorUI(status, feedback);
-        document.getElementById('supervisor-modal')?.classList.add('hidden');
+        this.closeModal('supervisor-modal');
       });
     }
 
@@ -322,7 +361,7 @@ const ThesisHub = {
           body: JSON.stringify(payload)
         });
 
-        document.getElementById('citation-modal')?.classList.add('hidden');
+        this.closeModal('citation-modal');
         addCitForm.reset();
         this.loadCitations();
       });
@@ -398,7 +437,7 @@ const ThesisHub = {
           body: JSON.stringify(payload)
         });
 
-        document.getElementById('resource-modal')?.classList.add('hidden');
+        this.closeModal('resource-modal');
         addResForm.reset();
         this.loadResources();
       });
@@ -485,6 +524,8 @@ const ThesisHub = {
 
 // Global expose for modular invocation
 window.ThesisHub = ThesisHub;
+window.openThesisModal = (id) => ThesisHub.openModal(id);
+window.closeThesisModal = (id) => ThesisHub.closeModal(id);
 window.loadThesisTracker = () => ThesisHub.loadMilestones();
 window.loadOverleafEditor = () => ThesisHub.loadDocument();
 window.loadCitationsManager = () => ThesisHub.loadCitations();
