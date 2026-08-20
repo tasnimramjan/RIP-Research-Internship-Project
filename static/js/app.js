@@ -59,7 +59,7 @@ function renderUserNav() {
       </div>
       <button class="btn btn-sm btn-secondary" onclick="logout()">Log Out</button>`;
   } else {
-    if (burgerBtn)     burgerBtn.style.display = 'none';
+    if (burgerBtn)     burgerBtn.style.display = 'inline-flex';
     if (adminMenuItem) adminMenuItem.style.display = 'none';
     closeMenuDrawer();
     container.innerHTML = `

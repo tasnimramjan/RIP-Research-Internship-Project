@@ -24,6 +24,13 @@
       <div class="brand" onclick="showLandingPage()">
         <span>R.I.P.</span>
       </div>
+      <nav class="quick-nav-links">
+        <button class="nav-pill" onclick="switchView('tab-tracker')"><i class="fa-solid fa-chart-line" style="color:var(--accent-cyan);"></i> Progress Tracker</button>
+        <button class="nav-pill" onclick="switchView('tab-overleaf')"><i class="fa-solid fa-file-code" style="color:var(--accent-indigo);"></i> LaTeX Manager</button>
+        <button class="nav-pill" onclick="switchView('tab-citations')"><i class="fa-solid fa-quote-right" style="color:var(--accent-purple);"></i> Citations</button>
+        <button class="nav-pill" onclick="switchView('tab-resources')"><i class="fa-solid fa-book-bookmark" style="color:var(--accent-pink);"></i> Resources</button>
+        <button class="nav-pill" onclick="switchView('tab-archive')"><i class="fa-solid fa-box-archive" style="color:var(--accent-cyan);"></i> Archive</button>
+      </nav>
       <div style="display:flex; align-items:center; gap:1rem;">
         <div id="userNavStatus" class="user-nav-status"></div>
         <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleMenuDrawer()" title="Menu">&#9776;</button>
@@ -32,8 +39,16 @@
   </header>
 
   <!-- HAMBURGER MENU DRAWER -->
-  <!-- Removed: interest-matching, faculty-explorer, availability-tracker, teammate-finder, discussion-forums -->
   <div id="menuDrawer" class="menu-drawer">
+    <div class="menu-section-header"><i class="fa-solid fa-graduation-cap"></i> Thesis Hub Features</div>
+    <button class="menu-item" style="color:var(--accent-cyan); font-weight:700;" onclick="switchView('tab-tracker')"><i class="fa-solid fa-chart-line" style="margin-right:8px;"></i>Thesis Progress & AI</button>
+    <button class="menu-item" style="color:var(--accent-indigo); font-weight:700;" onclick="switchView('tab-overleaf')"><i class="fa-solid fa-file-code" style="margin-right:8px;"></i>LaTeX Document Manager</button>
+    <button class="menu-item" style="color:var(--accent-purple); font-weight:700;" onclick="switchView('tab-citations')"><i class="fa-solid fa-quote-right" style="margin-right:8px;"></i>Citations & References</button>
+    <button class="menu-item" style="color:var(--accent-pink); font-weight:700;" onclick="switchView('tab-resources')"><i class="fa-solid fa-book-bookmark" style="margin-right:8px;"></i>Resource Library</button>
+    <button class="menu-item" style="color:var(--accent-cyan); font-weight:700;" onclick="switchView('tab-archive')"><i class="fa-solid fa-box-archive" style="margin-right:8px;"></i>Peer Thesis Archive</button>
+
+    <div class="menu-divider"></div>
+    <div class="menu-section-header" style="color:var(--text-muted);"><i class="fa-solid fa-compass"></i> Platform Tools</div>
     <button id="facultyProfileMenuItem" class="menu-item" style="display:none; color:var(--accent-cyan); font-weight:700;"
       onclick="switchView('faculty-profile')">My Profile</button>
     <button id="adminMenuItem" class="menu-item" style="display:none; color:var(--accent-pink); font-weight:700;"
@@ -50,12 +65,6 @@
     <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
     <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
     <button id="facultyChatMenuItem" class="menu-item" style="display:none;" onclick="switchView('faculty-chat')">Faculty Messages</button>
-    <!-- THESIS MANAGEMENT HUB FEATURES -->
-    <button class="menu-item" style="color:var(--accent-cyan); font-weight:700;" onclick="switchView('tab-tracker')"><i class="fa-solid fa-chart-line" style="margin-right:6px;"></i>Thesis Progress & AI</button>
-    <button class="menu-item" style="color:var(--accent-indigo); font-weight:700;" onclick="switchView('tab-overleaf')"><i class="fa-solid fa-file-code" style="margin-right:6px;"></i>LaTeX Document Manager</button>
-    <button class="menu-item" style="color:var(--accent-purple); font-weight:700;" onclick="switchView('tab-citations')"><i class="fa-solid fa-quote-right" style="margin-right:6px;"></i>Citations & References</button>
-    <button class="menu-item" style="color:var(--accent-pink); font-weight:700;" onclick="switchView('tab-resources')"><i class="fa-solid fa-book-bookmark" style="margin-right:6px;"></i>Resource Library</button>
-    <button class="menu-item" style="color:var(--accent-cyan); font-weight:700;" onclick="switchView('tab-archive')"><i class="fa-solid fa-box-archive" style="margin-right:6px;"></i>Peer Thesis Archive</button>
   </div>
 
   <!-- MAIN WRAPPER -->
@@ -71,6 +80,58 @@
             their research, internship, and thesis-related activities in one place.
           </p>
           <div id="landingAuthSection"></div>
+
+          <!-- THESIS HUB 5 FEATURES SHOWCASE -->
+          <div class="thesis-hub-showcase">
+            <h2 class="showcase-title"><i class="fa-solid fa-graduation-cap" style="color:var(--accent-cyan);"></i> Thesis Management & Research Hub</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Explore the five thesis writing, AI assistance, reference management, and archival features:</p>
+            <div class="showcase-grid">
+              <div class="showcase-card" onclick="switchView('tab-tracker')">
+                <div>
+                  <i class="fa-solid fa-chart-line" style="color:var(--accent-cyan);"></i>
+                  <h3>Progress Tracker & AI</h3>
+                  <p>Track milestone completion rates and chat with Hugging Face AI for thesis assistance.</p>
+                </div>
+                <span class="btn btn-sm btn-outline" style="margin-top:0.75rem; border-color:var(--accent-cyan); color:var(--accent-cyan); width:100%; justify-content:center;">Open Tracker &rarr;</span>
+              </div>
+
+              <div class="showcase-card" onclick="switchView('tab-overleaf')">
+                <div>
+                  <i class="fa-solid fa-file-code" style="color:var(--accent-indigo);"></i>
+                  <h3>LaTeX Document Manager</h3>
+                  <p>Overleaf-style editor with live PDF rendering and supervisor approval status.</p>
+                </div>
+                <span class="btn btn-sm btn-outline" style="margin-top:0.75rem; border-color:var(--accent-indigo); color:var(--accent-indigo); width:100%; justify-content:center;">Open Editor &rarr;</span>
+              </div>
+
+              <div class="showcase-card" onclick="switchView('tab-citations')">
+                <div>
+                  <i class="fa-solid fa-quote-right" style="color:var(--accent-purple);"></i>
+                  <h3>Citations & References</h3>
+                  <p>Store references and format bibliographies in APA, IEEE, MLA, and BibTeX.</p>
+                </div>
+                <span class="btn btn-sm btn-outline" style="margin-top:0.75rem; border-color:var(--accent-purple); color:var(--accent-purple); width:100%; justify-content:center;">Open Citations &rarr;</span>
+              </div>
+
+              <div class="showcase-card" onclick="switchView('tab-resources')">
+                <div>
+                  <i class="fa-solid fa-book-bookmark" style="color:var(--accent-pink);"></i>
+                  <h3>Resource Library</h3>
+                  <p>Download LaTeX templates, writing guides, defense slide decks, and seminar notes.</p>
+                </div>
+                <span class="btn btn-sm btn-outline" style="margin-top:0.75rem; border-color:var(--accent-pink); color:var(--accent-pink); width:100%; justify-content:center;">Open Library &rarr;</span>
+              </div>
+
+              <div class="showcase-card" onclick="switchView('tab-archive')">
+                <div>
+                  <i class="fa-solid fa-box-archive" style="color:var(--accent-cyan);"></i>
+                  <h3>Peer Thesis Archive</h3>
+                  <p>Search previous student thesis documents by area, department, or keywords.</p>
+                </div>
+                <span class="btn btn-sm btn-outline" style="margin-top:0.75rem; border-color:var(--accent-cyan); color:var(--accent-cyan); width:100%; justify-content:center;">Open Archive &rarr;</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
