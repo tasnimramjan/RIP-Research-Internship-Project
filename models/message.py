@@ -52,3 +52,20 @@ class ChatMessageModel:
         rows = cursor.fetchall()
         conn.close()
         return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_chat_contacts(user_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT u.user_id, u.name, u.role
+            FROM users u
+            WHERE u.user_id IN (
+                SELECT sender_id FROM chat_messages WHERE receiver_id = ?
+                UNION
+                SELECT receiver_id FROM chat_messages WHERE sender_id = ?
+            )
+        """, (user_id, user_id))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]

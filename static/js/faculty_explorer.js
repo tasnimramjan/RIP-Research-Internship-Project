@@ -131,6 +131,58 @@ function renderFacultyDetails(fac) {
   } else {
     pubsContainer.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted);">No publications found.</p>';
   }
+
+  // Edit Profile button visibility
+  const editBtn = document.getElementById('editFacultyProfileBtn');
+  if (window.currentUser && window.currentUser.user_id === fac.faculty_id) {
+    editBtn.style.display = 'block';
+    // Pre-fill modal
+    document.getElementById('editFacDesignation').value = fac.designation || '';
+    document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
+    document.getElementById('editFacHIndex').value = fac.h_index || 0;
+    document.getElementById('editFacSlots').value = fac.remaining_slots || 0;
+    document.getElementById('editFacCgpa').value = fac.min_cgpa_req || 0.0;
+    document.getElementById('editFacThesisAvail').checked = !!fac.thesis_available;
+  } else {
+    editBtn.style.display = 'none';
+  }
+}
+
+async function submitEditFacultyProfile() {
+  const designation = document.getElementById('editFacDesignation').value.trim();
+  const domains = document.getElementById('editFacDomains').value.split(',').map(s => s.trim()).filter(Boolean);
+  const hIndex = parseInt(document.getElementById('editFacHIndex').value) || 0;
+  const slots = parseInt(document.getElementById('editFacSlots').value) || 0;
+  const cgpa = parseFloat(document.getElementById('editFacCgpa').value) || 0.0;
+  const thesisAvail = document.getElementById('editFacThesisAvail').checked ? 1 : 0;
+
+  try {
+    const res = await fetch('/api/faculty/update_profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        faculty_id: window.currentUser.user_id,
+        designation: designation,
+        research_domains: domains,
+        h_index: hIndex,
+        remaining_slots: slots,
+        min_cgpa_req: cgpa,
+        thesis_available: thesisAvail
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Profile updated successfully!');
+      document.getElementById('editFacultyProfileModal').classList.remove('open');
+      runFacultySearch(); // refresh
+      closeFacultyDetailsModal(); // close modal
+    } else {
+      alert(data.message || 'Error updating profile');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Error updating profile');
+  }
 }
 
 // Ensure the function is exposed globally
@@ -138,6 +190,7 @@ window.runFacultySearch = runFacultySearch;
 window.debounceFacultySearch = debounceFacultySearch;
 window.openFacultyDetailsModal = openFacultyDetailsModal;
 window.closeFacultyDetailsModal = closeFacultyDetailsModal;
+window.submitEditFacultyProfile = submitEditFacultyProfile;
 
 // Load initial data when entering this view
 // We can hook into the switchView from app.js by using an interval or monkey-patching it,

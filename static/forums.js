@@ -99,6 +99,11 @@ const Forums = {
                     <button class="action-btn remind-btn" onclick="Forums.promptReminder('${thread.thread_id}')">
                         ⏰ Remind Me
                     </button>
+                    ${(window.currentUser && (window.currentUser.user_id === thread.user_id || window.currentUser.role === 'Admin')) ? `
+                        <button class="btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="Forums.deleteThread('${thread.thread_id}')">
+                            Delete
+                        </button>
+                    ` : ''}
                 </div>
                 <div class="comments-section" id="comments-${thread.thread_id}">
                     <div class="comments-list">
@@ -112,6 +117,24 @@ const Forums = {
             `;
             container.appendChild(card);
         });
+    },
+
+    async deleteThread(threadId) {
+        if (!confirm('Are you sure you want to delete this discussion thread?')) return;
+        try {
+            const res = await fetch('/api/forums/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: window.currentUser.user_id, thread_id: threadId })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) {
+                this.loadThreads(document.querySelector('.tab-btn.active')?.dataset.category || 'All');
+            }
+        } catch (err) {
+            console.error('Delete error', err);
+        }
     },
 
     renderComments(comments) {

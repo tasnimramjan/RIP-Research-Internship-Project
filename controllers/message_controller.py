@@ -36,5 +36,12 @@ class MessageController:
         row = cursor.fetchone()
         receiver_name = row['name'] if row else "Unknown User"
         conn.close()
-        
         return {"success": True, "messages": messages, "chat_with": receiver_name}
+
+    @staticmethod
+    def get_chat_contacts(user_id):
+        if not user_id:
+            return {"success": False, "message": "User ID is required."}
+            
+        contacts = ChatMessageModel.get_chat_contacts(user_id)
+        return {"success": True, "contacts": contacts}

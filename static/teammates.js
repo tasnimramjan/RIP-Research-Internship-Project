@@ -52,6 +52,8 @@ window.Teammates = {
                                 `<button class="btn btn-sm btn-cyan" onclick="Teammates.openChat('${p.student_id}', '${p.author_name}')">Message Creator</button>
                                  <button class="btn btn-sm btn-secondary" onclick="Teammates.joinProject('${p.post_id}')">Request to Join</button>`
                             : `<span style="font-size:0.8rem; color:var(--accent-indigo); font-weight:600; padding: 0.4rem 0;">Your Project</span>`}
+                            ${(this.currentUser.user_id === p.student_id || this.currentUser.role === 'Admin') ? 
+                                `<button class="btn btn-sm btn-danger" onclick="Teammates.deleteProject('${p.post_id}')">Delete</button>` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -60,6 +62,24 @@ window.Teammates = {
             }
         } catch(err) {
             console.error(err);
+        }
+    },
+
+    async deleteProject(postId) {
+        if (!confirm('Are you sure you want to delete this project post?')) return;
+        try {
+            const res = await fetch('/api/projects/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ post_id: postId, user_id: this.currentUser.user_id })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) {
+                this.loadProjects();
+            }
+        } catch(err) {
+            console.error('Delete project error', err);
         }
     },
 
