@@ -8,17 +8,16 @@ from db import get_db
 class MatchingModel:
     @staticmethod
     def search_all(keywords_str):
-        if not keywords_str:
-            return {"faculty": [], "labs": [], "theses": [], "projects": []}
-            
-        keywords = [k.strip() for k in keywords_str.split() if k.strip()]
-        if not keywords:
-            return {"faculty": [], "labs": [], "theses": [], "projects": []}
+        keywords = []
+        if keywords_str:
+            keywords = [k.strip() for k in keywords_str.split() if k.strip()]
 
         conn = get_db()
         
         # Build conditions for ANDing keywords
         def build_like_clause(fields, kw_list):
+            if not kw_list:
+                return "1=1", []
             # For each keyword, it must appear in AT LEAST ONE of the fields
             # Returns a clause string and parameters
             clauses = []
@@ -93,7 +92,7 @@ class MatchingModel:
             l['facilities'] = json.loads(l['facilities']) if l['facilities'] else []
             
         cursor.execute(thesis_query, thesis_params)
-        theses = [dict(row) for row in cursor.fetchall()]
+        thesis = [dict(row) for row in cursor.fetchall()]
         
         cursor.execute(lp_query, lp_params)
         lab_projs = [dict(row) for row in cursor.fetchall()]
@@ -106,6 +105,6 @@ class MatchingModel:
         return {
             "faculty": faculty,
             "labs": labs,
-            "theses": theses,
+            "thesis": thesis,
             "projects": lab_projs + student_projs
         }

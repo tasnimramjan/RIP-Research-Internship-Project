@@ -11,18 +11,18 @@ async function runMatchingSearch() {
   const keywords = document.getElementById('matchingSearchInput').value.trim();
   const emptyState = document.getElementById('matchingEmptyState');
   const resultsContainer = document.getElementById('matchingResultsContainer');
-  
-  if (!keywords) {
+
+  if (false) {
     emptyState.style.display = 'block';
     emptyState.textContent = 'Type some keywords above to find matching research opportunities.';
     resultsContainer.style.display = 'none';
     return;
   }
-  
+
   try {
     const res = await fetch(`/api/matching/search?keywords=${encodeURIComponent(keywords)}`);
     const data = await res.json();
-    
+
     if (data.success) {
       renderMatchingResults(data);
     } else {
@@ -36,19 +36,19 @@ async function runMatchingSearch() {
 function renderMatchingResults(data) {
   const emptyState = document.getElementById('matchingEmptyState');
   const resultsContainer = document.getElementById('matchingResultsContainer');
-  
-  const { faculty, labs, theses, projects } = data;
-  
-  if (faculty.length === 0 && labs.length === 0 && theses.length === 0 && projects.length === 0) {
+
+  const { faculty, labs, thesis, projects } = data;
+
+  if (faculty.length === 0 && labs.length === 0 && thesis.length === 0 && projects.length === 0) {
     emptyState.style.display = 'block';
     emptyState.textContent = 'No results found. Try adjusting your keywords.';
     resultsContainer.style.display = 'none';
     return;
   }
-  
+
   emptyState.style.display = 'none';
   resultsContainer.style.display = 'flex';
-  
+
   // Render Faculty
   const facList = document.getElementById('matchFacultyList');
   if (faculty.length > 0) {
@@ -74,7 +74,7 @@ function renderMatchingResults(data) {
     facList.innerHTML = '<p style="color:var(--text-muted);">No faculty found matching these keywords.</p>';
     facList.style.display = 'block';
   }
-  
+
   // Render Labs
   const labList = document.getElementById('matchLabList');
   if (labs.length > 0) {
@@ -94,12 +94,12 @@ function renderMatchingResults(data) {
     labList.innerHTML = '<p style="color:var(--text-muted);">No research labs found matching these keywords.</p>';
     labList.style.display = 'block';
   }
-  
-  // Render Theses
+
+  // Render thesis
   const thesisList = document.getElementById('matchThesisList');
-  if (theses.length > 0) {
+  if (thesis.length > 0) {
     thesisList.style.display = 'grid';
-    thesisList.innerHTML = theses.map(t => `
+    thesisList.innerHTML = thesis.map(t => `
       <div class="card">
         <h3 style="font-size:1.1rem; font-weight:800; color:var(--accent-pink); margin-bottom:0.2rem;">${t.group_name}</h3>
         <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; margin-bottom:0.6rem;">Topic: ${t.topic}</div>
@@ -107,10 +107,10 @@ function renderMatchingResults(data) {
       </div>
     `).join('');
   } else {
-    thesisList.innerHTML = '<p style="color:var(--text-muted);">No previous theses found matching these keywords.</p>';
+    thesisList.innerHTML = '<p style="color:var(--text-muted);">No previous thesis found matching these keywords.</p>';
     thesisList.style.display = 'block';
   }
-  
+
   // Render Projects
   const projList = document.getElementById('matchProjectList');
   if (projects.length > 0) {
@@ -143,9 +143,9 @@ function loadInterestMatching() {
     const interests = window.currentUser.student_profile.research_interests || '';
     const input = document.getElementById('matchingSearchInput');
     if (interests && !input.value) {
-      input.value = interests;
-      runMatchingSearch();
+      input.value = typeof interests === 'string' ? interests : (Array.isArray(interests) ? interests.join(', ') : '');
     }
   }
+  runMatchingSearch();
 }
 window.loadInterestMatching = loadInterestMatching;
