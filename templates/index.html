@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="/static/forums.css">
   <link rel="stylesheet" href="/static/teammates.css">
+  <link rel="stylesheet" href="/static/css/thesis_hub.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
 </head>
@@ -48,6 +50,12 @@
     <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
     <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
     <button id="facultyChatMenuItem" class="menu-item" style="display:none;" onclick="switchView('faculty-chat')">Faculty Messages</button>
+    <!-- THESIS MANAGEMENT HUB FEATURES -->
+    <button class="menu-item" style="color:var(--accent-cyan); font-weight:700;" onclick="switchView('tab-tracker')"><i class="fa-solid fa-chart-line" style="margin-right:6px;"></i>Thesis Progress & AI</button>
+    <button class="menu-item" style="color:var(--accent-indigo); font-weight:700;" onclick="switchView('tab-overleaf')"><i class="fa-solid fa-file-code" style="margin-right:6px;"></i>LaTeX Document Manager</button>
+    <button class="menu-item" style="color:var(--accent-purple); font-weight:700;" onclick="switchView('tab-citations')"><i class="fa-solid fa-quote-right" style="margin-right:6px;"></i>Citations & References</button>
+    <button class="menu-item" style="color:var(--accent-pink); font-weight:700;" onclick="switchView('tab-resources')"><i class="fa-solid fa-book-bookmark" style="margin-right:6px;"></i>Resource Library</button>
+    <button class="menu-item" style="color:var(--accent-cyan); font-weight:700;" onclick="switchView('tab-archive')"><i class="fa-solid fa-box-archive" style="margin-right:6px;"></i>Peer Thesis Archive</button>
   </div>
 
   <!-- MAIN WRAPPER -->
@@ -507,6 +515,164 @@
             oninput="loadThesisGroups()">
         </div>
         <div class="card-grid" id="thesisGroupList"></div>
+      </section>
+
+      <!-- FEATURE 11: TRACKER & HUGGING FACE AI ASSISTANT -->
+      <section id="tab-tracker" class="view-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" style="color:var(--accent-cyan);">Thesis Progress Tracker & AI Assistant</h2>
+            <p class="panel-subtitle">Manage roadmap milestones and leverage Hugging Face AI thesis assistance.</p>
+          </div>
+          <button class="btn btn-cyan" id="open-milestone-modal-btn"><i class="fa-solid fa-plus"></i> Add Milestone</button>
+        </div>
+
+        <div class="overall-progress-card">
+          <div class="progress-info">
+            <h3 style="font-size:1.1rem; font-weight:700;">Overall Completion Rate</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Calculated live from active milestone progress</p>
+          </div>
+          <div class="progress-ring">
+            <span id="overall-percentage">0%</span>
+          </div>
+        </div>
+
+        <div class="tracker-layout">
+          <div class="milestones-column">
+            <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem;">Active Milestones</h3>
+            <div id="milestones-list" class="milestone-cards-container"></div>
+          </div>
+
+          <div class="ai-assistant-column">
+            <div class="ai-card">
+              <div class="ai-card-header">
+                <i class="fa-solid fa-robot"></i>
+                <h3 style="font-size:1.1rem; font-weight:700;">Hugging Face AI Assistant</h3>
+              </div>
+              <p class="ai-desc">Request writing support, structure recommendations, and methodology feedback.</p>
+              
+              <div class="chat-box" id="ai-chat-history">
+                <div class="chat-message ai">
+                  Hello! I am your Hugging Face thesis assistant. How can I assist you with your thesis proposal, literature review, or writing today?
+                </div>
+              </div>
+
+              <div class="chat-input-group">
+                <textarea id="ai-input-prompt" placeholder="Ask AI for suggestions or feedback..."></textarea>
+                <button id="ai-submit-btn" class="btn btn-cyan"><i class="fa-solid fa-paper-plane"></i> Send Prompt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURE 12: OVERLEAF DOCUMENT MANAGER & SUPERVISOR APPROVAL -->
+      <section id="tab-overleaf" class="view-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" style="color:var(--accent-indigo);">Overleaf-Style Thesis Editor</h2>
+            <p class="panel-subtitle">Write LaTeX code with live rendering, supervisor reviews, and approval workflows.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span id="doc-version-badge" class="badge" style="background:var(--accent-indigo); color:#fff;">v1.2</span>
+            <button id="save-doc-btn" class="btn btn-cyan"><i class="fa-solid fa-floppy-disk"></i> Save Document</button>
+          </div>
+        </div>
+
+        <!-- Supervisor Panel -->
+        <div class="supervisor-feedback-banner">
+          <div class="supervisor-info">
+            <i class="fa-solid fa-user-check"></i>
+            <div>
+              <strong>Supervisor Approval Status: </strong>
+              <span id="supervisor-status-badge" class="badge badge-warning">Needs Revision</span>
+              <p id="supervisor-feedback-text" style="margin-top:4px; font-size:0.9rem; color:var(--text-main);">Loading feedback...</p>
+            </div>
+          </div>
+          <button id="edit-feedback-btn" class="btn btn-sm btn-secondary"><i class="fa-solid fa-pen"></i> Supervisor Review Panel</button>
+        </div>
+
+        <div class="overleaf-container">
+          <div class="editor-pane">
+            <div class="pane-header">
+              <span><i class="fa-solid fa-code"></i> LaTeX Code</span>
+              <button id="ai-suggest-editor-btn" class="btn btn-sm btn-secondary"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Enhance Text</button>
+            </div>
+            <textarea id="latex-input" class="latex-textarea" spellcheck="false"></textarea>
+          </div>
+
+          <div class="preview-pane">
+            <div class="pane-header">
+              <span style="color:#0f172a;"><i class="fa-solid fa-file-pdf"></i> Document Preview</span>
+              <span class="preview-status"><i class="fa-solid fa-circle-check"></i> Live Sync</span>
+            </div>
+            <div id="latex-preview" class="compiled-document"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURE 13: CITATION & REFERENCE MANAGER -->
+      <section id="tab-citations" class="view-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" style="color:var(--accent-purple);">Citation & Reference Manager</h2>
+            <p class="panel-subtitle">Save references and export bibliographies in APA, IEEE, MLA, and BibTeX formats.</p>
+          </div>
+          <button class="btn btn-cyan" id="open-citation-modal-btn"><i class="fa-solid fa-plus"></i> Add Citation</button>
+        </div>
+
+        <div class="citation-tool-bar">
+          <div class="style-selector">
+            <label for="citation-style"><strong>Export Format:</strong></label>
+            <select id="citation-style">
+              <option value="APA">APA 7th Edition</option>
+              <option value="IEEE">IEEE Style</option>
+              <option value="MLA">MLA 9th Edition</option>
+              <option value="BibTeX">BibTeX Format</option>
+            </select>
+          </div>
+          <button id="copy-citations-btn" class="btn btn-secondary"><i class="fa-solid fa-copy"></i> Copy Bibliography</button>
+        </div>
+
+        <div id="citations-list" class="citations-grid"></div>
+      </section>
+
+      <!-- FEATURE 14: RESOURCE LIBRARY -->
+      <section id="tab-resources" class="view-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" style="color:var(--accent-pink);">Academic Resource Library</h2>
+            <p class="panel-subtitle">Download thesis templates, guidelines, presentation decks, and seminar files.</p>
+          </div>
+          <button class="btn btn-cyan" id="open-resource-modal-btn"><i class="fa-solid fa-plus"></i> Add Resource</button>
+        </div>
+
+        <div id="resources-grid" class="resources-container"></div>
+      </section>
+
+      <!-- FEATURE 15: PEER THESIS ARCHIVE -->
+      <section id="tab-archive" class="view-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" style="color:var(--accent-cyan);">Peer Thesis Archive</h2>
+            <p class="panel-subtitle">Search previous student thesis documents by area, department, or topic.</p>
+          </div>
+        </div>
+
+        <div class="archive-search-box">
+          <div class="archive-search-inputs">
+            <input type="text" id="archive-search-input" placeholder="Search keywords, titles, or concepts..." class="form-control">
+            <select id="archive-dept-filter" class="form-control">
+              <option value="">All Departments</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Software Engineering">Software Engineering</option>
+              <option value="Cybersecurity">Cybersecurity</option>
+            </select>
+            <button id="archive-search-btn" class="btn btn-cyan"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+          </div>
+        </div>
+
+        <div id="archive-results" class="archive-cards-list"></div>
       </section>
 
     </main>
@@ -1056,6 +1222,148 @@
     </div>
   </div>
 
+  <!-- THESIS HUB MODALS -->
+  <!-- Add Milestone Modal -->
+  <div id="milestone-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700;">Add New Milestone</h3>
+      <form id="add-milestone-form">
+        <div class="form-group" style="margin-bottom:0.7rem;">
+          <label>Milestone Title</label>
+          <input type="text" id="ms-title" required class="form-control" placeholder="e.g. Methodology Draft">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label>Phase</label>
+            <select id="ms-phase" class="form-control">
+              <option value="Proposal">Proposal</option>
+              <option value="Literature Review">Literature Review</option>
+              <option value="Implementation">Implementation</option>
+              <option value="Writing">Writing</option>
+              <option value="Submission">Submission</option>
+              <option value="Defense">Defense Preparation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" id="ms-date" required class="form-control">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary" id="close-milestone-modal-btn">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Create Milestone</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supervisor Modal -->
+  <div id="supervisor-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700;">Supervisor Feedback & Status Approval</h3>
+      <form id="supervisor-form">
+        <div class="form-group" style="margin-bottom:0.7rem;">
+          <label>Document Approval Status</label>
+          <select id="sup-status-select" class="form-control">
+            <option value="Approved">Approved</option>
+            <option value="Needs Revision">Needs Revision</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Supervisor Comments & Feedback</label>
+          <textarea id="sup-feedback-input" class="form-control" rows="4" required placeholder="Enter feedback for student..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary" id="close-supervisor-modal-btn">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Update Status & Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Citation Modal -->
+  <div id="citation-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700;">Add Reference</h3>
+      <form id="add-citation-form">
+        <div class="form-group" style="margin-bottom:0.7rem;">
+          <label>Title</label>
+          <input type="text" id="cit-title" required class="form-control" placeholder="Paper/Book title">
+        </div>
+        <div class="form-group" style="margin-bottom:0.7rem;">
+          <label>Authors</label>
+          <input type="text" id="cit-authors" required class="form-control" placeholder="e.g. John Doe, Jane Smith">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; margin-bottom:0.7rem;">
+          <div class="form-group">
+            <label>Year</label>
+            <input type="number" id="cit-year" value="2026" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Publication Type</label>
+            <select id="cit-type" class="form-control">
+              <option value="journal">Journal</option>
+              <option value="conference">Conference</option>
+              <option value="book">Book</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label>Journal / Venue</label>
+            <input type="text" id="cit-journal" class="form-control" placeholder="e.g. IEEE TPAMI">
+          </div>
+          <div class="form-group">
+            <label>DOI / Link</label>
+            <input type="text" id="cit-doi" class="form-control" placeholder="e.g. 10.1109/...">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary" id="close-citation-modal-btn">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Save Citation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Resource Modal -->
+  <div id="resource-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700;">Add New Resource</h3>
+      <form id="add-resource-form">
+        <div class="form-group" style="margin-bottom:0.7rem;">
+          <label>Resource Title</label>
+          <input type="text" id="res-title" required class="form-control" placeholder="e.g. LaTeX Thesis Template">
+        </div>
+        <div class="form-group" style="margin-bottom:0.7rem;">
+          <label>Category</label>
+          <select id="res-category" class="form-control">
+            <option value="Template">Template</option>
+            <option value="Guideline">Guideline</option>
+            <option value="Presentation">Presentation</option>
+            <option value="Seminar">Seminar</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Description</label>
+          <textarea id="res-description" required class="form-control" rows="3" placeholder="Resource description or content..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary" id="close-resource-modal-btn">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Save Resource</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/forums.js"></script>
+  <script src="/static/teammates.js"></script>
+  <script src="/static/js/matching.js"></script>
+  <script src="/static/js/faculty_explorer.js"></script>
+  <script src="/static/js/availability.js"></script>
+  <script src="/static/js/thesis_hub.js"></script>
 </body>
 
 </html>
