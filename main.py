@@ -3,6 +3,10 @@ import socketserver
 import json
 import os
 import urllib.parse
+import threading
+import socketio
+import eventlet
+import eventlet.wsgi
 from seed import seed_data
 
 # Controllers — only those needed for the 5 remaining feature sets
@@ -229,6 +233,8 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ProjectController.create_post(data.get('student_id'), data))
         elif path == '/api/projects/join':
             self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
+        elif path == '/api/projects/respond':
+            self.send_json(ProjectController.respond_to_request(data.get('post_id'), data.get('student_id'), data.get('action')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
 
@@ -236,8 +242,56 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json({"error": "POST endpoint not found"}, status=404)
 
 
+sio = socketio.Server(cors_allowed_origins='*')
+app = socketio.WSGIApp(sio)
+
+@sio.event
+def connect(sid, environ):
+    print(f"[Socket.io] Client connected: {sid}")
+
+@sio.event
+def disconnect(sid):
+    print(f"[Socket.io] Client disconnected: {sid}")
+
+@sio.event
+def join_chat(sid, data):
+    user_id = data.get('user_id')
+    if user_id:
+        sio.enter_room(sid, user_id)
+        print(f"[Socket.io] {user_id} joined their room")
+
+@sio.event
+def send_message(sid, data):
+    sender_id = data.get('sender_id')
+    receiver_id = data.get('receiver_id')
+    message_text = data.get('message_text')
+    
+    if sender_id and receiver_id and message_text:
+        # Save to DB
+        msg_id = MessageController.send_message(data)
+        
+        # Broadcast to receiver and sender
+        msg_payload = {
+            'message_id': msg_id,
+            'sender_id': sender_id,
+            'receiver_id': receiver_id,
+            'message_text': message_text,
+            'timestamp': data.get('timestamp') # optional
+        }
+        sio.emit('new_message', msg_payload, room=receiver_id)
+        sio.emit('new_message', msg_payload, room=sender_id)
+
+def run_socketio_server():
+    eventlet.wsgi.server(eventlet.listen(('', 8002)), app)
+
 def run_server():
     seed_data()
+    
+    # Start Socket.io server in a separate thread
+    t = threading.Thread(target=run_socketio_server, daemon=True)
+    t.start()
+    print("Socket.io real-time chat running at http://127.0.0.1:8002")
+
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), RIPRequestHandler) as httpd:
         print(f"R.I.P. Platform v2 running at http://127.0.0.1:{PORT}")
