@@ -1,1 +1,0 @@
-# MVC Models Package

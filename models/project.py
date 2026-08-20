@@ -16,7 +16,7 @@ class ProjectModel:
         SELECT p.*, u.name as author_name, u.email as author_email, u.department, s.cgpa
         FROM project_posts p
         JOIN users u ON p.student_id = u.user_id
-        JOIN students s ON p.student_id = s.student_id
+        LEFT JOIN students s ON p.student_id = s.student_id
         ORDER BY p.created_at DESC
         """)
         rows = cursor.fetchall()
