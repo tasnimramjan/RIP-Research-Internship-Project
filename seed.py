@@ -308,7 +308,7 @@ def seed_data():
             "id": "th_1",
             "user": "stu_alice",
             "title": "How to choose a suitable Thesis Supervisor for Computer Vision?",
-            "category": "Thesis",
+            "category": "Thesis Discussions",
             "content": "Hi everyone! I am looking for advice on contacting faculty members for thesis supervision in Computer Vision. What CGPA and preliminary literature review should I prepare?",
             "date": "2026-07-20 11:00:00"
         },
@@ -316,7 +316,7 @@ def seed_data():
             "id": "th_2",
             "user": "stu_bob",
             "title": "Tips for Internship Technical Interviews at DataTech & Software Companies",
-            "category": "Internships",
+            "category": "Internship Discussions",
             "content": "Can senior students share their experience with technical coding tests and system design questions for ML engineering internships?",
             "date": "2026-07-21 16:45:00"
         },

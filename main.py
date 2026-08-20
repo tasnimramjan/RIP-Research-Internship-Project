@@ -3,6 +3,10 @@ import socketserver
 import json
 import os
 import urllib.parse
+import threading
+import socketio
+import eventlet
+import eventlet.wsgi
 from seed import seed_data
 
 # Controllers — only those needed for the 5 remaining feature sets
@@ -10,17 +14,13 @@ from controllers.auth_controller        import AuthController
 from controllers.supervisor_controller  import SupervisorController
 from controllers.faculty_controller     import FacultyController
 from controllers.lab_controller         import LabController
-from controllers.internship_controller  import InternshipController   # KEPT
+from controllers.internship_controller  import InternshipController
 from controllers.paper_controller       import PaperController
 from controllers.thesis_group_controller import ThesisGroupController
 from controllers.admin_controller       import AdminController
 from controllers.forum_controller       import ForumController
 from controllers.project_controller     import ProjectController
 from controllers.message_controller     import MessageController
-
-# Removed (features stripped from v2, now restored):
-#   MatchingController   — Research Interest Matching & 1-to-1 Chat (Partially restored)
-# Routes for Faculty Profile Explorer removed below.
 
 PORT = int(os.environ.get("PORT", 8001))
 BASE_DIR = os.path.dirname(__file__)
@@ -122,7 +122,11 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             # -- Forum & Project & Chat APIs --
             elif path == '/api/forums/threads':
                 category = params_flat.get('category')
-                self.send_json(ForumController.get_threads(category))
+                user_id = params_flat.get('user_id')
+                self.send_json(ForumController.get_threads(user_id, category))
+            elif path == '/api/forums/access':
+                user_id = params_flat.get('user_id')
+                self.send_json(ForumController.get_access_categories(user_id))
             elif path == '/api/forums/reminders':
                 self.send_json(ForumController.check_reminders(params_flat.get('user_id')))
             elif path == '/api/projects/all':
@@ -130,9 +134,6 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
 
-            # -- REMOVED routes return 404 --
-            # /api/matching/*          → Research Interest Matching (REMOVED)
-            # /api/faculty/<id> GET    → Faculty Profile Explorer (REMOVED)
             else:
                 self.send_json({"error": "Endpoint not found"}, status=404)
             return
@@ -159,7 +160,7 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             res = AuthController.handle_signup(data)
             self.send_json(res)
 
-        # Group Chat — Thesis Groups only (1-to-1 direct chat REMOVED)
+        # Group Chat — Thesis Groups only
         elif path == "/api/chat/group/send":
             res = ThesisGroupController.send_group_message(data.get('sender_id'), data.get('group_id'), data.get('text'))
             self.send_json(res)
@@ -225,10 +226,18 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ForumController.add_reaction(data.get('user_id'), data))
         elif path == '/api/forums/reminder':
             self.send_json(ForumController.set_reminder(data.get('user_id'), data))
+        elif path == '/api/forums/delete_thread':
+            self.send_json(ForumController.delete_thread(data.get('user_id'), data))
+        elif path == '/api/forums/delete_comment':
+            self.send_json(ForumController.delete_comment(data.get('user_id'), data))
         elif path == '/api/projects/create':
             self.send_json(ProjectController.create_post(data.get('student_id'), data))
         elif path == '/api/projects/join':
             self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
+        elif path == '/api/projects/delete':
+            self.send_json(ProjectController.delete_post(data.get('post_id')))
+        elif path == '/api/projects/respond':
+            self.send_json(ProjectController.respond_to_request(data.get('post_id'), data.get('student_id'), data.get('action')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
 
@@ -236,8 +245,77 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json({"error": "POST endpoint not found"}, status=404)
 
 
+sio = socketio.Server(cors_allowed_origins='*')
+app = socketio.WSGIApp(sio)
+
+@sio.event
+def connect(sid, environ):
+    print(f"[Socket.io] Client connected: {sid}")
+
+@sio.event
+def disconnect(sid):
+    print(f"[Socket.io] Client disconnected: {sid}")
+
+@sio.event
+def join_chat(sid, data):
+    user_id = data.get('user_id')
+    if user_id:
+        sio.enter_room(sid, user_id)
+        print(f"[Socket.io] {user_id} joined their room")
+
+@sio.event
+def send_message(sid, data):
+    sender_id = data.get('sender_id')
+    receiver_id = data.get('receiver_id')
+    message_text = data.get('message_text')
+    
+    if sender_id and receiver_id and message_text:
+        # Save to DB
+        msg_id = MessageController.send_message(data)
+        
+        # Broadcast to receiver and sender
+        msg_payload = {
+            'message_id': msg_id,
+            'sender_id': sender_id,
+            'receiver_id': receiver_id,
+            'message_text': message_text,
+            'timestamp': data.get('timestamp')
+        }
+        sio.emit('new_message', msg_payload, room=receiver_id)
+        sio.emit('new_message', msg_payload, room=sender_id)
+
+def forum_reminder_loop():
+    from models.forum import DiscussionModel
+    while True:
+        try:
+            due_reminders = DiscussionModel.get_due_reminders_all()
+            for r in due_reminders:
+                user_id = r['user_id']
+                payload = {
+                    "thread_id": r['thread_id'],
+                    "thread_title": r['thread_title'],
+                    "note": r['note']
+                }
+                print(f"[Socket.io] Sending reminder to {user_id}: {payload}")
+                sio.emit('forum_reminder', payload, room=user_id)
+        except Exception as e:
+            print(f"[Socket.io] Reminder loop error: {e}")
+        eventlet.sleep(60)
+
+def run_socketio_server():
+    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 8002)), app)
+
 def run_server():
     seed_data()
+    
+    # Start Socket.io server in a separate thread
+    t = threading.Thread(target=run_socketio_server, daemon=True)
+    t.start()
+    print("Socket.io real-time chat running at http://127.0.0.1:8002")
+    
+    # Start background reminder loop
+    eventlet.spawn(forum_reminder_loop)
+
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), RIPRequestHandler) as httpd:
         print(f"R.I.P. Platform v2 running at http://127.0.0.1:{PORT}")

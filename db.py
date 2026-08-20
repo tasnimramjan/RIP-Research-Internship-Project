@@ -169,7 +169,7 @@ def init_db():
         thread_id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
-        category TEXT NOT NULL CHECK(category IN ('Thesis', 'Projects', 'Internships', 'Defense Preparation', 'General Academic Discussions')),
+        category TEXT NOT NULL CHECK(category IN ('Thesis Discussions', 'Project Discussions', 'Internship Discussions', 'Defense Preparation', 'General Academic Discussions')),
         content TEXT NOT NULL,
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(user_id)

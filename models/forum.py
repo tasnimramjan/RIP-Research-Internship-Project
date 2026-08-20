@@ -57,6 +57,15 @@ class DiscussionModel:
     def create_thread(user_id, title, category, content):
         conn = get_db()
         cursor = conn.cursor()
+        
+        # Enforce Admin creation restriction
+        cursor.execute("SELECT role FROM users WHERE user_id = ?", (user_id,))
+        user_role_row = cursor.fetchone()
+        if user_role_row and user_role_row['role'] == 'Admin':
+            if category != 'General Academic Discussions':
+                conn.close()
+                return False, "Admins can only create threads in General Academic Discussions."
+
         thread_id = "th_" + str(uuid.uuid4())[:6]
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
@@ -66,12 +75,23 @@ class DiscussionModel:
         )
         conn.commit()
         conn.close()
-        return thread_id
+        return True, thread_id
 
     @staticmethod
     def add_comment(thread_id, user_id, content):
         conn = get_db()
         cursor = conn.cursor()
+        
+        # Enforce Admin comment restriction
+        cursor.execute("SELECT role FROM users WHERE user_id = ?", (user_id,))
+        user_role_row = cursor.fetchone()
+        if user_role_row and user_role_row['role'] == 'Admin':
+            cursor.execute("SELECT category FROM discussion_threads WHERE thread_id = ?", (thread_id,))
+            thread_row = cursor.fetchone()
+            if thread_row and thread_row['category'] != 'General Academic Discussions':
+                conn.close()
+                return False, "Admins can only comment in General Academic Discussions."
+        
         comment_id = "c_" + str(uuid.uuid4())[:6]
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
@@ -81,7 +101,7 @@ class DiscussionModel:
         )
         conn.commit()
         conn.close()
-        return comment_id
+        return True, comment_id
 
     @staticmethod
     def add_reaction(thread_id, user_id, reaction_type):
@@ -143,3 +163,64 @@ class DiscussionModel:
             
         conn.close()
         return reminders
+
+    @staticmethod
+    def get_due_reminders_all():
+        conn = get_db()
+        cursor = conn.cursor()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("""
+            SELECT r.*, t.title as thread_title 
+            FROM thread_reminders r
+            JOIN discussion_threads t ON r.thread_id = t.thread_id
+            WHERE r.is_triggered = 0 AND r.remind_at <= ?
+        """, (now,))
+        reminders = [dict(r) for r in cursor.fetchall()]
+        
+        if reminders:
+            ids = [r['reminder_id'] for r in reminders]
+            placeholders = ','.join('?' for _ in ids)
+            cursor.execute(f"UPDATE thread_reminders SET is_triggered = 1 WHERE reminder_id IN ({placeholders})", ids)
+            conn.commit()
+            
+        conn.close()
+        return reminders
+
+    @staticmethod
+    def get_user_allowed_categories(user_id):
+        return ["General Academic Discussions", "Thesis Discussions", "Project Discussions", "Internship Discussions", "Defense Preparation"]
+
+    @staticmethod
+    def delete_thread(thread_id, user_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        # Admins only
+        cursor.execute("SELECT role FROM users WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        if not row or row['role'] != 'Admin':
+            conn.close()
+            return False, "Only Admins can delete threads."
+            
+        cursor.execute("DELETE FROM forum_comments WHERE thread_id = ?", (thread_id,))
+        cursor.execute("DELETE FROM forum_reactions WHERE thread_id = ?", (thread_id,))
+        cursor.execute("DELETE FROM thread_reminders WHERE thread_id = ?", (thread_id,))
+        cursor.execute("DELETE FROM discussion_threads WHERE thread_id = ?", (thread_id,))
+        conn.commit()
+        conn.close()
+        return True, "Thread deleted successfully."
+
+    @staticmethod
+    def delete_comment(comment_id, user_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        # Admins only
+        cursor.execute("SELECT role FROM users WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        if not row or row['role'] != 'Admin':
+            conn.close()
+            return False, "Only Admins can delete comments."
+            
+        cursor.execute("DELETE FROM forum_comments WHERE comment_id = ?", (comment_id,))
+        conn.commit()
+        conn.close()
+        return True, "Comment deleted successfully."
