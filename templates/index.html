@@ -29,6 +29,7 @@
 <!-- Removed: interest-matching, faculty-explorer, availability-tracker, teammate-finder, discussion-forums -->
 <div id="menuDrawer" class="menu-drawer">
   <button id="adminMenuItem" class="menu-item" style="display:none; color:var(--accent-pink); font-weight:700;" onclick="switchView('admin-panel')">Admin Control Panel</button>
+  <button class="menu-item" onclick="switchView('interest-matching')">Research Interest Matching</button>
   <button class="menu-item" onclick="switchView('faculty-explorer')">Faculty Profile Explorer</button>
   <button class="menu-item" onclick="switchView('supervisor-finder')">Smart Supervisor Finder</button>
   <button class="menu-item" onclick="switchView('lab-board')">Research Lab Board</button>
@@ -76,7 +77,6 @@
       <div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
           <h3 style="font-size:1rem; font-weight:700;">User Management</h3>
-          <button class="btn btn-sm btn-cyan" onclick="openAddUserModal()">+ Add New User</button>
         </div>
         <div style="overflow-x:auto; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem;">
           <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
@@ -175,6 +175,52 @@
       </div>
       <div id="facultyListEmpty" style="display:none; text-align:center; padding:3rem; color:var(--text-muted);">No results found.</div>
       <div class="card-grid" id="facultyList"></div>
+    </section>
+
+    <!-- RESEARCH INTEREST MATCHING -->
+    <section id="interest-matching" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Research Interest Matching</h2>
+          <p class="panel-subtitle">Discover faculty, research labs, theses, and projects that match your interests.</p>
+        </div>
+      </div>
+      
+      <div class="form-grid" style="margin-bottom:1.5rem;">
+        <div class="form-group" style="grid-column: 1 / -1; display:flex; gap:0.5rem; align-items:flex-end;">
+          <div style="flex:1;">
+            <label>Search by Keywords, Topics, or Interests</label>
+            <input type="text" id="matchingSearchInput" placeholder="e.g. Artificial Intelligence, Data Science, NLP" oninput="debounceMatchingSearch()">
+          </div>
+          <button class="btn btn-secondary" onclick="document.getElementById('matchingSearchInput').value=''; runMatchingSearch();">Clear</button>
+        </div>
+      </div>
+      
+      <div id="matchingEmptyState" style="text-align:center; padding:3rem; color:var(--text-muted);">
+        Type some keywords above to find matching research opportunities.
+      </div>
+
+      <div id="matchingResultsContainer" style="display:none; gap:2rem; flex-direction:column;">
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-cyan);">Matching Faculty</h3>
+          <div class="card-grid" id="matchFacultyList"></div>
+        </div>
+        
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-indigo);">Matching Research Labs</h3>
+          <div class="card-grid" id="matchLabList"></div>
+        </div>
+
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-pink);">Previous Theses</h3>
+          <div class="card-grid" id="matchThesisList"></div>
+        </div>
+        
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-cyan);">Academic Projects</h3>
+          <div class="card-grid" id="matchProjectList"></div>
+        </div>
+      </div>
     </section>
 
     <!-- FEATURE 1: Smart Supervisor Finder (KEPT) -->
@@ -397,7 +443,7 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
       <div class="form-group">
         <label>Role</label>
-        <select id="addUserRole" onchange="toggleAddUserExtraFields()">
+        <select id="addUserRole">
           <option value="Student">Student</option>
           <option value="Faculty">Faculty</option>
           <option value="Admin">Admin</option>
@@ -410,16 +456,6 @@
           <option value="EEE">EEE</option>
           <option value="BBA">BBA</option>
         </select>
-      </div>
-    </div>
-    <div id="addUserFacultyFields" style="display:none; grid-template-columns:1fr 1fr; gap:0.7rem; margin-top:0.7rem;">
-      <div class="form-group">
-        <label>Designation</label>
-        <input type="text" id="addUserFacDesignation" placeholder="e.g. Assistant Professor">
-      </div>
-      <div class="form-group">
-        <label>Domains (comma-separated)</label>
-        <input type="text" id="addUserFacDomains" placeholder="e.g. AI, Systems">
       </div>
     </div>
     <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
@@ -659,6 +695,7 @@
 <script src="/static/forums.js"></script>
 <script src="/static/teammates.js"></script>
 <script src="/static/js/faculty_explorer.js"></script>
+<script src="/static/js/matching.js"></script>
 <script src="/static/js/app.js"></script>
 <!-- CREATE THREAD MODAL -->
 <div id="createThreadModal" class="modal-overlay">

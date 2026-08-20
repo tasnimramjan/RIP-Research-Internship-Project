@@ -480,24 +480,12 @@ async function loadAdminPanel() {
 
 async function adminToggleUserStatus(userId) { const res = await fetch('/api/admin/toggle_user', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId})}); const data=await res.json(); alert(data.message); loadAdminPanel(); }
 async function adminDeleteUser(userId) { if(!confirm('Delete this user?'))return; const res=await fetch('/api/admin/delete_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId})}); const data=await res.json(); alert(data.message); loadAdminPanel(); }
-function openAddUserModal()  { document.getElementById('addUserModal').classList.add('open'); toggleAddUserExtraFields(); }
+function openAddUserModal()  { document.getElementById('addUserModal').classList.add('open'); }
 function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('open'); }
-function toggleAddUserExtraFields() {
-  const role = document.getElementById('addUserRole').value;
-  const facFields = document.getElementById('addUserFacultyFields');
-  if (facFields) facFields.style.display = (role === 'Faculty') ? 'grid' : 'none';
-}
 async function submitAddUser() {
   const name=document.getElementById('addUserName').value.trim(), email=document.getElementById('addUserEmail').value.trim(), password=document.getElementById('addUserPassword').value, role=document.getElementById('addUserRole').value, dept=document.getElementById('addUserDept').value;
   if(!name||!email||!password)return alert('Name, email, and password are required.');
-  
-  const payload = {name,email,password,role,department:dept};
-  if (role === 'Faculty') {
-    payload.designation = document.getElementById('addUserFacDesignation')?.value.trim();
-    payload.research_domains = document.getElementById('addUserFacDomains')?.value.trim();
-  }
-  
-  const res=await fetch('/api/admin/add_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const res=await fetch('/api/admin/add_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password,role,department:dept})});
   const data=await res.json(); if(data.success){alert(data.message);closeAddUserModal();loadAdminPanel();}else alert(data.message);
 }
 async function adminDeleteLab(labId) { if(!confirm('Delete this lab?'))return; const res=await fetch('/api/admin/delete_lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lab_id:labId})}); const data=await res.json(); alert(data.message); loadLabBoard(); }
@@ -539,6 +527,57 @@ async function sendChatMessage() {
   await fetch('/api/chat/group/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sender_id: currentUser.user_id, group_id: window._activeGroupId, text}) });
   input.value = ''; fetchChatMessages();
 }
+
+// ── Direct Chat Window ────────────────────────────────────
+let directChatPollInterval = null;
+
+function openDirectChat(receiverId, receiverName) {
+  if (!currentUser) return alert('Please log in to send messages.');
+  document.getElementById('directChatUserName').innerText = 'Chat with ' + receiverName;
+  document.getElementById('directChatWindow').classList.add('open');
+  window._activeReceiverId = receiverId;
+  fetchDirectChatMessages();
+  if (directChatPollInterval) clearInterval(directChatPollInterval);
+  directChatPollInterval = setInterval(fetchDirectChatMessages, 2500);
+}
+
+function closeDirectChat() { 
+  document.getElementById('directChatWindow').classList.remove('open'); 
+  window._activeReceiverId = null; 
+  if (directChatPollInterval) clearInterval(directChatPollInterval); 
+}
+
+async function fetchDirectChatMessages() {
+  if (!window._activeReceiverId || !currentUser) return;
+  const res  = await fetch(`/api/messages/history?user1=${currentUser.user_id}&user2=${window._activeReceiverId}`);
+  const data = await res.json();
+  const container = document.getElementById('directChatMessages');
+  if (!data.messages) return;
+  container.innerHTML = data.messages.map(m => {
+    const mine = m.sender_id === currentUser.user_id;
+    return `<div class="chat-bubble ${mine?'mine':'other'}">
+      <div>${m.message_text}</div>
+      <div style="font-size:0.65rem;opacity:0.6;text-align:right;margin-top:0.2rem;">${m.timestamp.substring(11,16)}</div>
+    </div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendDirectChatMessage() {
+  const input = document.getElementById('directChatInput');
+  const text  = input.value.trim();
+  if (!text || !window._activeReceiverId) return;
+  await fetch('/api/messages/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sender_id: currentUser.user_id, receiver_id: window._activeReceiverId, message_text: text}) });
+  input.value = ''; fetchDirectChatMessages();
+}
+
+// Event listeners for close button
+document.getElementById('closeDirectChatBtn')?.addEventListener('click', closeDirectChat);
+document.getElementById('directChatSendBtn')?.addEventListener('click', sendDirectChatMessage);
+document.getElementById('directChatInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendDirectChatMessage();
+});
+
 
 // FEATURE 5: Availability Tracker
 async function loadAvailabilityTracker() {
