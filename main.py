@@ -136,6 +136,8 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(FacultyController.search_faculty(params_flat))
             elif path == "/api/faculty/profile":
                 self.send_json(FacultyController.get_faculty_profile(params_flat.get('faculty_id')))
+            elif path == "/api/faculty/me":
+                self.send_json(FacultyController.get_my_profile(params_flat.get('faculty_id')))
             elif path == "/api/matching/search":
                 from controllers.matching_controller import MatchingController
                 self.send_json(MatchingController.search(params_flat))
@@ -195,6 +197,9 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(res)
         elif path == "/api/faculty/add_project":
             res = FacultyController.add_lab_project(data)
+            self.send_json(res)
+        elif path == "/api/papers/add":
+            res = PaperController.add_paper(data)
             self.send_json(res)
         elif path == "/api/labs/post_ra":
             res = LabController.post_ra(data.get('lab_id'), data)

@@ -24,6 +24,23 @@ class PaperController:
         return {"success": True, "query": query, "count": len(results), "papers": results}
 
     @staticmethod
+    def add_paper(data):
+        faculty_id = data.get('faculty_id')
+        title = data.get('title')
+        authors = data.get('authors', [])
+        domain = data.get('domain')
+        year = data.get('year')
+        abstract = data.get('abstract')
+        
+        if not title or not domain or not year or not abstract:
+            return {"success": False, "message": "Missing required fields."}
+            
+        paper_id = ResearchPaperModel.add_paper(
+            faculty_id, title, authors, domain, year, abstract
+        )
+        return {"success": True, "paper_id": paper_id, "message": "Publication added successfully."}
+
+    @staticmethod
     def export_citation(paper_id, style="IEEE"):
         citation = ResearchPaperModel.export_citation(paper_id, format_style=style)
         return {"success": True, "paper_id": paper_id, "style": style, "citation": citation}

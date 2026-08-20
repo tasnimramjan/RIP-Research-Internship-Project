@@ -48,6 +48,10 @@ function renderUserNav() {
     const facultyChatMenuItem = document.getElementById('facultyChatMenuItem');
     if (facultyChatMenuItem) facultyChatMenuItem.style.display = (currentUser.role === 'Faculty') ? 'block' : 'none';
 
+    // Faculty Profile: shown only for Faculty
+    const facultyProfileMenuItem = document.getElementById('facultyProfileMenuItem');
+    if (facultyProfileMenuItem) facultyProfileMenuItem.style.display = (currentUser.role === 'Faculty') ? 'block' : 'none';
+
     container.innerHTML = `
       <div class="user-chip">
         <span style="font-weight:600;">${currentUser.name}</span>
@@ -110,7 +114,125 @@ function switchView(viewId) {
   else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
   else if (viewId === 'faculty-chat')      loadFacultyChat();
+  else if (viewId === 'faculty-profile')   loadFacultyProfileSettings();
 }
+
+// ── Faculty Profile Settings ──────────────────────────────
+async function loadFacultyProfileSettings() {
+  if (!currentUser || currentUser.role !== 'Faculty') return;
+  const res = await fetch(`/api/faculty/me?faculty_id=${currentUser.user_id}`);
+  const data = await res.json();
+  if (data.success) {
+    const f = data.faculty;
+    document.getElementById('facProfDomains').value = f.research_domains || '';
+    document.getElementById('facProfDesignation').value = f.designation || '';
+    document.getElementById('facProfHIndex').value = f.h_index || 0;
+    document.getElementById('facProfSlots').value = f.remaining_slots || 0;
+    document.getElementById('facProfCgpa').value = f.min_cgpa_req || 3.0;
+    
+    // Render Labs
+    const labsList = document.getElementById('facProfLabsList');
+    if (data.labs.length === 0) {
+      labsList.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No directed labs found.</p>';
+    } else {
+      labsList.innerHTML = data.labs.map(l => `
+        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color);">
+          <h4 style="color:var(--accent-cyan); font-weight:700;">${l.lab_name}</h4>
+          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Focus:</strong> ${l.focus_area}</p>
+          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Facilities:</strong> ${l.facilities}</p>
+        </div>
+      `).join('');
+    }
+
+    // Render Papers
+    const papersList = document.getElementById('facProfPapersList');
+    if (data.papers.length === 0) {
+      papersList.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No publications found.</p>';
+    } else {
+      papersList.innerHTML = data.papers.map(p => `
+        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color);">
+          <h4 style="color:var(--accent-pink); font-weight:700;">${p.title}</h4>
+          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Authors:</strong> ${p.authors.join(', ')}</p>
+          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Venue/Domain:</strong> ${p.domain} (${p.publication_year})</p>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+async function saveFacultyProfileStats() {
+  const data = {
+    faculty_id: currentUser.user_id,
+    research_domains: document.getElementById('facProfDomains').value,
+    designation: document.getElementById('facProfDesignation').value,
+    h_index: document.getElementById('facProfHIndex').value,
+    remaining_slots: document.getElementById('facProfSlots').value,
+    min_cgpa_req: document.getElementById('facProfCgpa').value,
+    thesis_available: 1
+  };
+  const res = await fetch('/api/faculty/update_profile', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (json.success) {
+    showToast('Profile stats updated successfully.');
+    loadFacultyProfileSettings();
+  } else {
+    alert(json.message || 'Error updating profile.');
+  }
+}
+
+function openCreateLabModal() {
+  document.getElementById('createLabModal').style.display = 'flex';
+}
+
+async function submitCreateLab() {
+  const name = document.getElementById('newLabName').value.trim();
+  const focus = document.getElementById('newLabFocus').value.trim();
+  const facs = document.getElementById('newLabFacilities').value.trim();
+  if (!name || !focus) return alert('Lab Name and Focus Area are required.');
+  
+  const res = await fetch('/api/faculty/create_lab', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ faculty_id: currentUser.user_id, lab_name: name, focus_area: focus, facilities: facs })
+  });
+  const json = await res.json();
+  if (json.success) {
+    document.getElementById('createLabModal').style.display = 'none';
+    showToast('Lab created successfully.');
+    loadFacultyProfileSettings();
+  } else alert(json.message);
+}
+
+function openAddPaperModal() {
+  document.getElementById('addPaperModal').style.display = 'flex';
+}
+
+async function submitAddPaper() {
+  const title = document.getElementById('newPaperTitle').value.trim();
+  const authorsStr = document.getElementById('newPaperAuthors').value.trim();
+  const domain = document.getElementById('newPaperDomain').value.trim();
+  const year = document.getElementById('newPaperYear').value.trim();
+  const abstract = document.getElementById('newPaperAbstract').value.trim();
+  
+  if (!title || !authorsStr || !domain || !year || !abstract) {
+    return alert('All fields are required.');
+  }
+  const authors = authorsStr.split(',').map(s => s.trim()).filter(s => s);
+  
+  const res = await fetch('/api/papers/add', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ faculty_id: currentUser.user_id, title, authors, domain, year: parseInt(year), abstract })
+  });
+  const json = await res.json();
+  if (json.success) {
+    document.getElementById('addPaperModal').style.display = 'none';
+    showToast('Publication added successfully.');
+    loadFacultyProfileSettings();
+  } else alert(json.message);
+}
+
 
 // ── Authentication ───────────────────────────────────────
 function openAuthModal(mode = 'login') { toggleAuthMode(mode); document.getElementById('authModal').classList.add('open'); }

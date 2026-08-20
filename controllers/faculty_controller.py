@@ -16,6 +16,50 @@ class FacultyController:
         return {"success": True, "faculty": profile}
 
     @staticmethod
+    def get_my_profile(faculty_id):
+        from db import get_db
+        import json
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 1. Faculty Details
+        cursor.execute("""
+            SELECT f.*, u.name, u.email, u.department 
+            FROM faculty f
+            JOIN users u ON f.faculty_id = u.user_id
+            WHERE f.faculty_id = ?
+        """, (faculty_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            conn.close()
+            return {"success": False, "message": "Faculty not found."}
+            
+        faculty = dict(row)
+        
+        # 2. Labs
+        cursor.execute("SELECT * FROM research_labs WHERE faculty_id = ?", (faculty_id,))
+        labs = [dict(r) for r in cursor.fetchall()]
+        
+        # 3. Publications
+        cursor.execute("SELECT * FROM research_papers WHERE faculty_id = ?", (faculty_id,))
+        papers = []
+        for p in cursor.fetchall():
+            paper = dict(p)
+            paper['authors'] = json.loads(paper['authors'])
+            papers.append(paper)
+            
+        conn.close()
+        
+        return {
+            "success": True,
+            "faculty": faculty,
+            "labs": labs,
+            "papers": papers
+        }
+
+    @staticmethod
     def search_faculty(params):
         from models.faculty import FacultyModel
         keywords = params.get('keywords')

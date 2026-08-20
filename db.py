@@ -161,7 +161,8 @@ def init_db():
         abstract TEXT NOT NULL,
         vector_embedding TEXT NOT NULL,
         doi TEXT,
-        download_url TEXT
+        download_url TEXT,
+        faculty_id TEXT
     )
     """)
     

@@ -116,3 +116,26 @@ class ResearchPaperModel:
             return f'{author_str}. "{title}." {domain}, {year}.'
         else: # Default IEEE
             return f'{author_str}, "{title}," in {domain}, {year}. doi: {doi}'
+
+    @staticmethod
+    def add_paper(faculty_id, title, authors, domain, year, abstract, doi="", download_url=""):
+        import uuid
+        conn = get_db()
+        cursor = conn.cursor()
+        paper_id = "paper_" + str(uuid.uuid4())[:8]
+        
+        # Generate pseudo vector
+        vec = ResearchPaperModel._text_to_pseudo_vector(title + " " + abstract)
+        
+        cursor.execute("""
+            INSERT INTO research_papers 
+            (paper_id, title, authors, domain, publication_year, abstract, vector_embedding, doi, download_url, faculty_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            paper_id, title, json.dumps(authors), domain, year, abstract, 
+            json.dumps(vec), doi, download_url, faculty_id
+        ))
+        
+        conn.commit()
+        conn.close()
+        return paper_id
