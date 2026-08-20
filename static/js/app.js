@@ -115,6 +115,11 @@ function switchView(viewId) {
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
   else if (viewId === 'faculty-chat')      loadFacultyChat();
   else if (viewId === 'faculty-profile')   loadFacultyProfileSettings();
+  else if (viewId === 'tab-tracker')       { if (window.loadThesisTracker) window.loadThesisTracker(); }
+  else if (viewId === 'tab-overleaf')      { if (window.loadOverleafEditor) window.loadOverleafEditor(); }
+  else if (viewId === 'tab-citations')     { if (window.loadCitationsManager) window.loadCitationsManager(); }
+  else if (viewId === 'tab-resources')     { if (window.loadResourceLibrary) window.loadResourceLibrary(); }
+  else if (viewId === 'tab-archive')       { if (window.loadPeerArchive) window.loadPeerArchive(); }
 }
 
 // ── Faculty Profile Settings ──────────────────────────────
