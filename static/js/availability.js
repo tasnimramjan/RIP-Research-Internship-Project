@@ -120,14 +120,42 @@ function renderAvailabilityResults(results) {
             <div style="font-size:0.7rem; color:${badgeColor}; text-transform:uppercase; letter-spacing:0.5px;">Remaining</div>
           </div>
         </div>
+        </div>
+        
+        ${(window.currentUser && window.currentUser.user_id === f.faculty_id) ? `
+          <div style="margin-top:1rem;">
+            <button class="btn btn-sm btn-cyan" style="width:100%;" onclick="openUpdateAvailabilityModal('${f.faculty_id}')">Update Availability & Profile</button>
+          </div>
+        ` : ''}
       </div>
     `;
   }).join('');
 }
 
+async function openUpdateAvailabilityModal(facultyId) {
+  try {
+    const res = await fetch(`/api/faculty/profile?faculty_id=${facultyId}`);
+    const data = await res.json();
+    if (data.success && data.faculty) {
+      const fac = data.faculty;
+      document.getElementById('editFacDesignation').value = fac.designation || '';
+      document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
+      document.getElementById('editFacHIndex').value = fac.h_index || 0;
+      document.getElementById('editFacSlots').value = fac.remaining_slots || 0;
+      document.getElementById('editFacCgpa').value = fac.min_cgpa_req || 0.0;
+      document.getElementById('editFacThesisAvail').checked = !!fac.thesis_available;
+      
+      document.getElementById('editFacultyProfileModal').classList.add('open');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 // Global exposure
 window.runAvailabilitySearch = runAvailabilitySearch;
 window.debounceAvailabilitySearch = debounceAvailabilitySearch;
+window.openUpdateAvailabilityModal = openUpdateAvailabilityModal;
 
 function initAvailabilityTracker() {
   runAvailabilitySearch();

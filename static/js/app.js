@@ -44,6 +44,10 @@ function renderUserNav() {
     const thesisMenuItem = document.getElementById('thesisGroupMenuItem');
     if (thesisMenuItem) thesisMenuItem.style.display = (currentUser.role === 'Faculty') ? 'none' : 'block';
 
+    // Faculty Messages: shown only for Faculty
+    const facultyChatMenuItem = document.getElementById('facultyChatMenuItem');
+    if (facultyChatMenuItem) facultyChatMenuItem.style.display = (currentUser.role === 'Faculty') ? 'block' : 'none';
+
     container.innerHTML = `
       <div class="user-chip">
         <span style="font-weight:600;">${currentUser.name}</span>
@@ -105,6 +109,7 @@ function switchView(viewId) {
   else if (viewId === 'availability-tracker') { if (window.initAvailabilityTracker) window.initAvailabilityTracker(); }
   else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
+  else if (viewId === 'faculty-chat')      loadFacultyChat();
 }
 
 // ── Authentication ───────────────────────────────────────
@@ -197,7 +202,11 @@ async function loadLabBoard() {
             <div class="card-title">${l.lab_name}</div>
             <div style="font-size:0.85rem; color:var(--accent-cyan);">Director: ${l.faculty_name} (${l.department})</div>
           </div>
-          ${isAdmin ? `<button class="btn btn-sm btn-danger" onclick="adminDeleteLab('${l.lab_id}')">Delete Lab</button>` : ''}
+          ${isOwner ? `
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn btn-sm btn-danger" onclick="deleteLab('${l.lab_id}')">Delete Lab</button>
+            </div>
+          ` : ''}
         </div>
         <p style="font-size:0.85rem; color:var(--text-muted);">${l.focus_area}</p>
         <div>
@@ -302,6 +311,7 @@ async function loadInternships() {
           ${int.contact_email ? `<div style="font-size:0.83rem; margin-bottom:0.2rem;">Email: <a href="mailto:${int.contact_email}" style="color:var(--accent-cyan);">${int.contact_email}</a></div>` : ''}
           ${int.contact_phone ? `<div style="font-size:0.83rem;">Phone: <strong>${int.contact_phone}</strong></div>` : ''}
         </div>
+        ${(isStudent && int.eligible) ? `<div style="margin-top:0.8rem; text-align:right;"><button class="btn btn-sm btn-cyan" onclick="applyInternship('${int.opportunity_id}')">Apply Now</button></div>` : ''}
       </div>`;
   }).join('');
 }
@@ -327,6 +337,13 @@ async function adminDeleteInternship(oppId) {
   const res = await fetch('/api/admin/delete_internship', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({opportunity_id: oppId}) });
   const data = await res.json();
   alert(data.message); loadInternships();
+}
+
+async function applyInternship(oppId) {
+  if (!confirm('Submit application for this internship?')) return;
+  const res = await fetch('/api/internships/apply', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({student_id: currentUser.user_id, opportunity_id: oppId}) });
+  const data = await res.json();
+  alert(data.message);
 }
 
 // ── FEATURE 4: Research Paper Discovery ─────────────────
@@ -489,7 +506,7 @@ async function submitAddUser() {
   const res=await fetch('/api/admin/add_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password,role,department:dept})});
   const data=await res.json(); if(data.success){alert(data.message);closeAddUserModal();loadAdminPanel();}else alert(data.message);
 }
-async function adminDeleteLab(labId) { if(!confirm('Delete this lab?'))return; const res=await fetch('/api/admin/delete_lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lab_id:labId})}); const data=await res.json(); alert(data.message); loadLabBoard(); }
+async function deleteLab(labId) { if(!confirm('Delete this lab?'))return; const res=await fetch('/api/labs/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lab_id:labId, user_id: currentUser.user_id})}); const data=await res.json(); alert(data.message); loadLabBoard(); }
 async function adminDeleteThesisGroup(groupId) { if(!confirm('Delete this group?'))return; const res=await fetch('/api/admin/delete_group',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_id:groupId})}); const data=await res.json(); alert(data.message); loadThesisGroups(); }
 
 // ── Group Chat Drawer ────────────────────────────────────
@@ -583,3 +600,62 @@ document.getElementById('directChatInput')?.addEventListener('keydown', (e) => {
 // FEATURE 5: Availability Tracker
 
 
+
+// ── FEATURE: Dedicated Faculty Chat ────────────────────────
+window._activeFacultyChatStudentId = null;
+
+async function loadFacultyChat() {
+  if (!currentUser || currentUser.role !== 'Faculty') return;
+  const res = await fetch(`/api/messages/contacts?user_id=${currentUser.user_id}`);
+  const data = await res.json();
+  const list = document.getElementById('facultyChatContactList');
+  if (data.success && data.contacts.length > 0) {
+    list.innerHTML = data.contacts.map(c => `
+      <div class="chat-contact" style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="openFacultyChat('${c.user_id}', '${c.name}')">
+        <div style="font-weight: 600;">${c.name}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">${c.role}</div>
+      </div>
+    `).join('');
+  } else {
+    list.innerHTML = `<p style="color:var(--text-muted);">No messages yet.</p>`;
+  }
+}
+
+async function openFacultyChat(studentId, name) {
+  window._activeFacultyChatStudentId = studentId;
+  document.getElementById('facultyChatTitle').innerText = `Chat with ${name}`;
+  document.getElementById('facultyChatWindow').style.display = 'flex';
+  
+  if (window._facultyChatInterval) clearInterval(window._facultyChatInterval);
+  fetchFacultyChatMessages();
+  window._facultyChatInterval = setInterval(fetchFacultyChatMessages, 3000);
+}
+
+async function fetchFacultyChatMessages() {
+  if (!window._activeFacultyChatStudentId || !currentUser) return;
+  const res  = await fetch(`/api/messages/history?user1=${currentUser.user_id}&user2=${window._activeFacultyChatStudentId}`);
+  const data = await res.json();
+  const box  = document.getElementById('facultyChatMessages');
+  if (data.success) {
+    box.innerHTML = data.messages.map(m => {
+      const mine = m.sender_id === currentUser.user_id;
+      return `
+        <div style="align-self: ${mine ? 'flex-end' : 'flex-start'}; background: ${mine ? 'var(--accent-indigo)' : 'rgba(255,255,255,0.1)'}; padding: 0.5rem 0.8rem; border-radius: 8px; max-width: 80%; font-size: 0.9rem;">
+          <div style="font-weight:600; font-size:0.75rem; margin-bottom:0.2rem; opacity:0.8;">${mine ? 'You' : data.chat_with}</div>
+          <div>${m.message_text}</div>
+          <div style="font-size:0.65rem; opacity:0.6; text-align:right; margin-top:0.2rem;">${m.timestamp}</div>
+        </div>
+      `;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+async function sendFacultyChatMessage() {
+  const text = document.getElementById('facultyChatInput').value.trim();
+  if (!text) return;
+  if (!window._activeFacultyChatStudentId || !currentUser) return;
+  await fetch('/api/messages/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sender_id: currentUser.user_id, receiver_id: window._activeFacultyChatStudentId, message_text: text}) });
+  document.getElementById('facultyChatInput').value = '';
+  fetchFacultyChatMessages();
+}

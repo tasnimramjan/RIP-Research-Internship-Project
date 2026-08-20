@@ -131,8 +131,8 @@ def seed_data():
         cursor.execute("INSERT INTO internship_opportunities (opportunity_id, company_name, title, requirements, min_cgpa, department, deadline, contact_email, contact_phone, external_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                        (item["id"], item["company"], item["title"], item["requirements"], item["min_cgpa"], item["dept"], item["deadline"], item["contact_email"], item["contact_phone"], item["external_url"]))
 
-    # Add sample applications (3)
-    for i in range(1, 4):
+    # Add sample applications (20)
+    for i in range(1, 21):
         cursor.execute("INSERT INTO internship_applications VALUES (?, ?, ?, ?, ?)",
                        (f"app_{i}", f"int_{i}", f"stu_{i}", "Pending", "2026-07-20 10:00:00"))
 

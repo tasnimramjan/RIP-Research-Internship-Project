@@ -129,6 +129,8 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(ProjectController.get_all_posts())
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
+            elif path == '/api/messages/contacts':
+                self.send_json(MessageController.get_chat_contacts(params_flat.get('user_id')))
 
             elif path == "/api/faculty/search":
                 self.send_json(FacultyController.search_faculty(params_flat))
@@ -197,6 +199,9 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/labs/post_ra":
             res = LabController.post_ra(data.get('lab_id'), data)
             self.send_json(res)
+        elif path == "/api/labs/delete":
+            res = LabController.delete_lab(data.get('lab_id'), data.get('user_id'))
+            self.send_json(res)
 
         # Admin — User Management
         elif path == "/api/admin/toggle_user":
@@ -234,10 +239,16 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ForumController.add_reaction(data.get('user_id'), data))
         elif path == '/api/forums/reminder':
             self.send_json(ForumController.set_reminder(data.get('user_id'), data))
+        elif path == '/api/forums/delete':
+            self.send_json(ForumController.delete_thread(data.get('user_id'), data))
         elif path == '/api/projects/create':
             self.send_json(ProjectController.create_post(data.get('student_id'), data))
         elif path == '/api/projects/join':
             self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
+        elif path == '/api/projects/delete':
+            self.send_json(ProjectController.delete_post(data.get('user_id'), data.get('post_id')))
+        elif path == '/api/internships/apply':
+            self.send_json(InternshipController.apply(data.get('opportunity_id'), data.get('student_id')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
 

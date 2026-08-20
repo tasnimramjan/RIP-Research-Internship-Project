@@ -45,6 +45,7 @@
     <button class="menu-item" onclick="switchView('discussion-forums')">Discussion Forums</button>
     <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
     <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
+    <button id="facultyChatMenuItem" class="menu-item" style="display:none;" onclick="switchView('faculty-chat')">Faculty Messages</button>
   </div>
 
   <!-- MAIN WRAPPER -->
@@ -60,6 +61,31 @@
             their research, internship, and thesis-related activities in one place.
           </p>
           <div id="landingAuthSection"></div>
+        </div>
+      </section>
+
+      <!-- FACULTY MESSAGES PANEL -->
+      <section id="faculty-chat" class="view-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" style="color:var(--accent-purple);">Faculty Messages</h2>
+            <p class="panel-subtitle">View and reply to messages from students who contacted you.</p>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1rem; align-items: start;">
+          <div id="facultyChatContactList" class="card" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
+            <!-- Contacts loaded here -->
+          </div>
+          <div id="facultyChatWindow" class="card" style="display: none; padding: 1rem; max-height: 60vh; display: flex; flex-direction: column;">
+            <div style="font-weight: 700; color: var(--accent-indigo); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);" id="facultyChatTitle">Chat</div>
+            <div id="facultyChatMessages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+              <!-- Messages loaded here -->
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="facultyChatInput" class="form-control" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendFacultyChatMessage()">
+              <button class="btn-primary" onclick="sendFacultyChatMessage()">Send</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -492,7 +518,6 @@
             <select id="signupRole">
               <option value="Student">Student</option>
               <option value="Faculty">Faculty</option>
-              <option value="Admin">Admin</option>
             </select>
           </div>
           <div class="form-group">
@@ -788,9 +813,12 @@
         <div id="facDetailsPublications"></div>
       </div>
 
-      <button class="btn btn-secondary" style="width:100%;" onclick="closeFacultyDetailsModal()">Close Profile</button>
+      <div style="display:flex; gap:0.6rem; margin-top:1rem;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeFacultyDetailsModal()">Close Profile</button>
+      <button id="editFacultyProfileBtn" class="btn btn-cyan" style="flex:1; display:none;" onclick="openEditFacultyProfileModal()">Edit Profile</button>
     </div>
   </div>
+</div>
 
   <script src="/static/forums.js"></script>
   <script src="/static/teammates.js"></script>
@@ -798,6 +826,49 @@
   <script src="/static/js/matching.js"></script>
   <script src="/static/js/availability.js"></script>
   <script src="/static/js/app.js"></script>
+  <!-- FACULTY EDIT PROFILE MODAL -->
+<div id="editFacultyProfileModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:1rem;">Edit Faculty Profile</h3>
+    <form id="editFacultyProfileForm" onsubmit="event.preventDefault(); submitEditFacultyProfile();">
+      <div class="form-group">
+        <label>Designation</label>
+        <input type="text" id="editFacDesignation" required placeholder="e.g. Professor">
+      </div>
+      <div class="form-group">
+        <label>Research Domains (comma separated)</label>
+        <input type="text" id="editFacDomains" required placeholder="e.g. AI, Machine Learning">
+      </div>
+      <div style="display:flex; gap:1rem;">
+        <div class="form-group" style="flex:1;">
+          <label>h-index</label>
+          <input type="number" id="editFacHIndex" required min="0">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Remaining Slots</label>
+          <input type="number" id="editFacSlots" required min="0">
+        </div>
+      </div>
+      <div style="display:flex; gap:1rem;">
+        <div class="form-group" style="flex:1;">
+          <label>Min CGPA Req</label>
+          <input type="number" id="editFacCgpa" step="0.01" required min="0" max="4.0">
+        </div>
+        <div class="form-group" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
+          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+            <input type="checkbox" id="editFacThesisAvail">
+            Thesis Available
+          </label>
+        </div>
+      </div>
+      <div style="display:flex; gap:0.6rem; margin-top:1rem;">
+        <button type="submit" class="btn btn-cyan" style="flex:1;">Save Changes</button>
+        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="document.getElementById('editFacultyProfileModal').classList.remove('open')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
   <!-- CREATE THREAD MODAL -->
   <div id="createThreadModal" class="modal-overlay">
     <div class="modal-box">
