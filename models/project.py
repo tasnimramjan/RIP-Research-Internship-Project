@@ -80,3 +80,18 @@ class ProjectModel:
         conn.commit()
         conn.close()
         return {"success": True, "message": "Joined project team successfully."}
+
+    @staticmethod
+    def delete_post(post_id, user_id, is_admin):
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        if is_admin:
+            cursor.execute("DELETE FROM project_posts WHERE post_id = ?", (post_id,))
+        else:
+            cursor.execute("DELETE FROM project_posts WHERE post_id = ? AND student_id = ?", (post_id, user_id))
+            
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return success

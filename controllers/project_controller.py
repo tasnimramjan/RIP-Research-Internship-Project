@@ -26,3 +26,15 @@ class ProjectController:
     def join_team(post_id, student_id):
         res = ProjectModel.add_teammate(post_id, student_id)
         return res
+
+    @staticmethod
+    def delete_post(user_id, post_id):
+        if not user_id or not post_id:
+            return {"success": False, "message": "User ID and Post ID required."}
+            
+        from models.user import UserModel
+        user = UserModel.get_user_by_id(user_id)
+        is_admin = user and user['role'] == 'Admin'
+        
+        success = ProjectModel.delete_post(post_id, user_id, is_admin)
+        return {"success": success, "message": "Project post deleted." if success else "Unauthorized or failed."}

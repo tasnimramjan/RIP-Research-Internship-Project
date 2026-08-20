@@ -109,6 +109,20 @@ class DiscussionModel:
         return True, action
 
     @staticmethod
+    def delete_thread(thread_id, user_id, is_admin):
+        conn = get_db()
+        cursor = conn.cursor()
+        if is_admin:
+            cursor.execute("DELETE FROM discussion_threads WHERE thread_id = ?", (thread_id,))
+        else:
+            cursor.execute("DELETE FROM discussion_threads WHERE thread_id = ? AND user_id = ?", (thread_id, user_id))
+        
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return success
+
+    @staticmethod
     def set_reminder(thread_id, user_id, remind_at, note=None):
         conn = get_db()
         cursor = conn.cursor()

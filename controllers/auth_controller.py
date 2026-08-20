@@ -27,6 +27,10 @@ class AuthController:
         department = data.get('department', 'CSE')
         role = data.get('role', 'Student')
         
+        if role == 'Admin':
+            return {"success": False, "message": "Admin registration is not allowed here."}
+            
+        
         if not name or not email or not password:
             return {"success": False, "message": "Name, email, and password are required."}
 

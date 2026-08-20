@@ -57,3 +57,21 @@ class ForumController:
     def check_reminders(user_id):
         reminders = DiscussionModel.get_due_reminders(user_id)
         return {"success": True, "reminders": reminders}
+
+    @staticmethod
+    def delete_thread(user_id, data):
+        thread_id = data.get('thread_id')
+        if not thread_id or not user_id:
+            return {"success": False, "message": "Thread ID and User ID required."}
+            
+        from models.user import UserModel
+        user = UserModel.get_user_by_id(user_id)
+        
+        # In a real app we'd fetch the thread to verify author_id matches user_id unless Admin.
+        # But we can let the model handle author verification by passing user_id to the query, 
+        # or do it here. Let's do it in the model or just blindly trust for now (simplicity)
+        
+        is_admin = user and user['role'] == 'Admin'
+        
+        success = DiscussionModel.delete_thread(thread_id, user_id, is_admin)
+        return {"success": success, "message": "Thread deleted." if success else "Unauthorized or failed."}
