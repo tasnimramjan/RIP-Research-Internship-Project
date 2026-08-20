@@ -101,7 +101,8 @@ function switchView(viewId) {
   else if (viewId === 'paper-discovery')   loadPapers();
   else if (viewId === 'thesis-groups')     loadThesisGroups();
   else if (viewId === 'admin-panel')       loadAdminPanel();
-  else if (viewId === 'availability-tracker') loadAvailabilityTracker();
+  else if (viewId === 'interest-matching') { if (window.loadInterestMatching) window.loadInterestMatching(); }
+  else if (viewId === 'availability-tracker') { if (window.initAvailabilityTracker) window.initAvailabilityTracker(); }
   else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
 }
@@ -528,48 +529,57 @@ async function sendChatMessage() {
   input.value = ''; fetchChatMessages();
 }
 
-// FEATURE 5: Availability Tracker
-async function loadAvailabilityTracker() {
-  const container = document.getElementById('trackerContainer');
-  if(!container) return;
-  container.innerHTML = '<div style="color:var(--text-muted);">Loading availability data...</div>';
-  
-  try {
-    const res = await fetch('/api/supervisors/search');
-    const data = await res.json();
-    
-    if (!data.supervisors || data.supervisors.length === 0) {
-      container.innerHTML = '<div style="color:var(--text-muted);">No faculty data available.</div>';
-      return;
-    }
-    
-    container.innerHTML = data.supervisors.map(f => {
-      const isAvailable = f.thesis_available === 1 && f.remaining_slots > 0;
-      const badgeClass = isAvailable ? 'available' : 'full';
-      const badgeText = isAvailable ? 'Accepting Students' : 'Full / Unavailable';
-      
-      return `
-        <div class="tracker-card">
-          <div class="tracker-header">
-            <div>
-              <h3 style="margin-bottom:0.2rem; font-size:1.2rem;">${f.name}</h3>
-              <div style="font-size:0.9rem; color:var(--text-muted);">${f.designation} &bull; ${f.department}</div>
-            </div>
-            <div class="tracker-badge ${badgeClass}">${badgeText}</div>
-          </div>
-          <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 0.5rem;">
-            Min CGPA Required: <strong style="color:var(--text-color);">${f.min_cgpa_req}</strong>
-          </div>
-          <div class="tracker-slots">
-            <h3>${f.remaining_slots}</h3>
-            <p>Estimated Slots Left</p>
-          </div>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = '<div style="color:red;">Error loading availability data.</div>';
-  }
+// ── Direct Chat Window ────────────────────────────────────
+let directChatPollInterval = null;
+
+function openDirectChat(receiverId, receiverName) {
+  if (!currentUser) return alert('Please log in to send messages.');
+  document.getElementById('directChatUserName').innerText = 'Chat with ' + receiverName;
+  document.getElementById('directChatWindow').classList.add('open');
+  window._activeReceiverId = receiverId;
+  fetchDirectChatMessages();
+  if (directChatPollInterval) clearInterval(directChatPollInterval);
+  directChatPollInterval = setInterval(fetchDirectChatMessages, 2500);
 }
+
+function closeDirectChat() { 
+  document.getElementById('directChatWindow').classList.remove('open'); 
+  window._activeReceiverId = null; 
+  if (directChatPollInterval) clearInterval(directChatPollInterval); 
+}
+
+async function fetchDirectChatMessages() {
+  if (!window._activeReceiverId || !currentUser) return;
+  const res  = await fetch(`/api/messages/history?user1=${currentUser.user_id}&user2=${window._activeReceiverId}`);
+  const data = await res.json();
+  const container = document.getElementById('directChatMessages');
+  if (!data.messages) return;
+  container.innerHTML = data.messages.map(m => {
+    const mine = m.sender_id === currentUser.user_id;
+    return `<div class="chat-bubble ${mine?'mine':'other'}">
+      <div>${m.message_text}</div>
+      <div style="font-size:0.65rem;opacity:0.6;text-align:right;margin-top:0.2rem;">${m.timestamp.substring(11,16)}</div>
+    </div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendDirectChatMessage() {
+  const input = document.getElementById('directChatInput');
+  const text  = input.value.trim();
+  if (!text || !window._activeReceiverId) return;
+  await fetch('/api/messages/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sender_id: currentUser.user_id, receiver_id: window._activeReceiverId, message_text: text}) });
+  input.value = ''; fetchDirectChatMessages();
+}
+
+// Event listeners for close button
+document.getElementById('closeDirectChatBtn')?.addEventListener('click', closeDirectChat);
+document.getElementById('directChatSendBtn')?.addEventListener('click', sendDirectChatMessage);
+document.getElementById('directChatInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendDirectChatMessage();
+});
+
+
+// FEATURE 5: Availability Tracker
+
 

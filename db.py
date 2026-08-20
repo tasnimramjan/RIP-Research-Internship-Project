@@ -43,6 +43,8 @@ def init_db():
         h_index INTEGER NOT NULL DEFAULT 0,
         research_domains TEXT NOT NULL,
         remaining_slots INTEGER NOT NULL DEFAULT 5,
+        max_capacity INTEGER NOT NULL DEFAULT 5,
+        current_students INTEGER NOT NULL DEFAULT 0,
         min_cgpa_req REAL DEFAULT 3.0,
         thesis_available INTEGER DEFAULT 1,
         FOREIGN KEY (faculty_id) REFERENCES users(user_id) ON DELETE CASCADE

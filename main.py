@@ -130,9 +130,18 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
 
+            elif path == "/api/faculty/search":
+                self.send_json(FacultyController.search_faculty(params_flat))
+            elif path == "/api/faculty/profile":
+                self.send_json(FacultyController.get_faculty_profile(params_flat.get('faculty_id')))
+            elif path == "/api/matching/search":
+                from controllers.matching_controller import MatchingController
+                self.send_json(MatchingController.search(params_flat))
+            elif path == "/api/availability/search":
+                from controllers.availability_controller import AvailabilityController
+                self.send_json(AvailabilityController.search(params_flat))
+            
             # -- REMOVED routes return 404 --
-            # /api/matching/*          → Research Interest Matching (REMOVED)
-            # /api/faculty/<id> GET    → Faculty Profile Explorer (REMOVED)
             else:
                 self.send_json({"error": "Endpoint not found"}, status=404)
             return

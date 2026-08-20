@@ -5,8 +5,16 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from models.user import UserModel
 from models.supervisor import SupervisorModel
 from models.message import ChatMessageModel
+from models.matching import MatchingModel
 
 class MatchingController:
+    @staticmethod
+    def search(params):
+        keywords = params.get('keywords', '')
+        results = MatchingModel.search_all(keywords)
+        results["success"] = True
+        return results
+
     @staticmethod
     def match_student_with_faculty(student_id):
         student = UserModel.get_user_profile(student_id)
