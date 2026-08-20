@@ -26,3 +26,14 @@ class ProjectController:
     def join_team(post_id, student_id):
         res = ProjectModel.add_teammate(post_id, student_id)
         return res
+
+    @staticmethod
+    def respond_to_request(post_id, student_id, action):
+        status = "Accepted" if action == "accept" else "Rejected"
+        res = ProjectModel.update_teammate_status(post_id, student_id, status)
+        return res
+
+    @staticmethod
+    def delete_post(post_id):
+        res = ProjectModel.delete_post(post_id)
+        return res

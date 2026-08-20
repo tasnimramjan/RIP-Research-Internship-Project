@@ -71,12 +71,43 @@ class ProjectModel:
         cursor.execute("SELECT * FROM project_teammates WHERE post_id = ? AND student_id = ?", (post_id, student_id))
         if cursor.fetchone():
             conn.close()
-            return {"success": False, "message": "Already a member of this project team."}
+            return {"success": False, "message": "Already sent a request or member of this project team."}
             
         cursor.execute(
             "INSERT INTO project_teammates (post_id, student_id, status) VALUES (?, ?, ?)",
-            (post_id, student_id, "Accepted")
+            (post_id, student_id, "Pending")
         )
         conn.commit()
         conn.close()
-        return {"success": True, "message": "Joined project team successfully."}
+        return {"success": True, "message": "Request to join sent successfully."}
+
+    @staticmethod
+    def update_teammate_status(post_id, student_id, status):
+        if status not in ["Accepted", "Rejected"]:
+            return {"success": False, "message": "Invalid status."}
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE project_teammates SET status = ? WHERE post_id = ? AND student_id = ?",
+            (status, post_id, student_id)
+        )
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": f"Request {status.lower()} successfully."}
+
+    @staticmethod
+    def delete_post(post_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM project_posts WHERE post_id = ?", (post_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return {"success": False, "message": "Project post not found."}
+            
+        cursor.execute("DELETE FROM project_teammates WHERE post_id = ?", (post_id,))
+        cursor.execute("DELETE FROM project_posts WHERE post_id = ?", (post_id,))
+        
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": "Project post deleted successfully."}

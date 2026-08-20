@@ -233,6 +233,8 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ProjectController.create_post(data.get('student_id'), data))
         elif path == '/api/projects/join':
             self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
+        elif path == '/api/projects/delete':
+            self.send_json(ProjectController.delete_post(data.get('post_id')))
         elif path == '/api/projects/respond':
             self.send_json(ProjectController.respond_to_request(data.get('post_id'), data.get('student_id'), data.get('action')))
         elif path == '/api/messages/send':

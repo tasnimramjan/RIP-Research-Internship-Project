@@ -52,7 +52,7 @@ window.Teammates = {
     async loadProjects() {
         if(!this.currentUser) return;
         try {
-            const res = await fetch('/api/projects/all');
+            const res = await fetch('/api/projects/all', { cache: 'no-store' });
             const data = await res.json();
             const container = document.getElementById('projectBoardContainer');
             if(!container) return;
@@ -64,7 +64,13 @@ window.Teammates = {
                     const myRequest = p.teammates.find(t => t.student_id === this.currentUser.user_id);
                     
                     let actionHtml = '';
-                    if (this.currentUser.role === 'Faculty') {
+                    const isAdmin = this.currentUser.role === 'Admin';
+                    
+                    if (isAdmin) {
+                        actionHtml = `<div style="display:flex; justify-content:flex-end; align-items:center; width:100%;">
+                                        <button class="btn btn-sm btn-danger" onclick="Teammates.deleteProject('${p.post_id}')">Delete Post</button>
+                                      </div>`;
+                    } else if (this.currentUser.role === 'Faculty') {
                         actionHtml = `<span style="font-size:0.8rem; color:var(--text-muted);">Faculty cannot join student projects.</span>`;
                     } else if (isOwner) {
                         actionHtml = `<div style="width:100%;">
@@ -154,6 +160,22 @@ window.Teammates = {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ student_id: this.currentUser.user_id, post_id: postId })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) this.loadProjects();
+        } catch(err) {
+            console.error(err);
+        }
+    },
+
+    async deleteProject(postId) {
+        if (!confirm('Are you sure you want to delete this project post?')) return;
+        try {
+            const res = await fetch('/api/projects/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ post_id: postId })
             });
             const data = await res.json();
             alert(data.message);
