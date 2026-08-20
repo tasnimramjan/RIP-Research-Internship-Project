@@ -40,9 +40,9 @@ function renderUserNav() {
     if (burgerBtn)     burgerBtn.style.display = 'inline-flex';
     if (adminMenuItem) adminMenuItem.style.display = (currentUser.role === 'Admin') ? 'block' : 'none';
 
-    // Thesis Group Finder: hidden for Faculty
+    // Thesis Group Finder: visible for all users so they can view groups
     const thesisMenuItem = document.getElementById('thesisGroupMenuItem');
-    if (thesisMenuItem) thesisMenuItem.style.display = (currentUser.role === 'Faculty') ? 'none' : 'block';
+    if (thesisMenuItem) thesisMenuItem.style.display = 'block';
 
     // Faculty Messages: shown only for Faculty
     const facultyChatMenuItem = document.getElementById('facultyChatMenuItem');
@@ -517,9 +517,13 @@ async function loadThesisGroups() {
   const data  = await res.json();
   const container = document.getElementById('thesisGroupList');
   const isAdmin   = currentUser?.role === 'Admin';
+  
+  const createBtn = document.querySelector('#thesis-groups .btn-cyan[onclick="openNewGroupModal()"]');
+  if (createBtn) createBtn.style.display = (currentUser?.role === 'Student') ? 'inline-flex' : 'none';
+
   if (!data.groups?.length) { container.innerHTML = `<p style="color:var(--text-muted); grid-column:1/-1; padding:2rem;">No thesis groups found.</p>`; return; }
   container.innerHTML = data.groups.map(g => {
-    const alreadyMember = currentUser && g.members.some(m => m.student_id === currentUser.user_id);
+    const alreadyMember = currentUser && g.members.some(m => m.student_id == currentUser.user_id);
     const canJoin = currentUser?.role === 'Student';
     return `
       <div class="card">
@@ -535,7 +539,7 @@ async function loadThesisGroups() {
           ${canJoin && !alreadyMember ? `<button class="btn btn-sm btn-cyan" onclick="joinThesisGroup('${g.group_id}')">Join Study Circle</button>` : ''}
           ${alreadyMember ? `<span class="tag" style="background:rgba(16,185,129,0.2); color:#10b981; font-weight:700;">Member</span>` : ''}
           ${alreadyMember ? `<button class="btn btn-sm btn-danger" onclick="leaveThesisGroup('${g.group_id}')">Leave Study Circle</button>` : ''}
-          ${currentUser ? `<button class="btn btn-sm btn-secondary" onclick="openChat('${g.group_id}','${g.group_name}')">Group Chat</button>` : ''}
+          ${alreadyMember ? `<button class="btn btn-sm btn-secondary" onclick="openChat('${g.group_id}','${g.group_name}')">Group Chat</button>` : ''}
         </div>
       </div>`;
   }).join('');
@@ -645,9 +649,13 @@ function closeChat() { document.getElementById('chatDrawer').classList.remove('o
 
 async function fetchChatMessages() {
   if (!window._activeGroupId || !currentUser) return;
-  const res  = await fetch(`/api/chat/group?group_id=${window._activeGroupId}`);
+  const res  = await fetch(`/api/chat/group?group_id=${window._activeGroupId}&user_id=${currentUser.user_id}`);
   const data = await res.json();
   const container = document.getElementById('chatMessages');
+  if (!data.success) {
+    container.innerHTML = `<div style="padding:1rem; text-align:center; color:var(--text-muted);">${data.message || 'Access denied.'}</div>`;
+    return;
+  }
   if (!data.messages) return;
   container.innerHTML = data.messages.map(m => {
     const mine = m.sender_id === currentUser.user_id;

@@ -45,6 +45,13 @@ class ThesisGroupModel:
     def create_group(creator_id, group_name, topic, description):
         conn = get_db()
         cursor = conn.cursor()
+        
+        # Validate that the user exists in the students table
+        cursor.execute("SELECT 1 FROM students WHERE student_id = ?", (creator_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return None # Indicate failure
+            
         group_id = "grp_" + str(uuid.uuid4())[:6]
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
@@ -64,6 +71,13 @@ class ThesisGroupModel:
     def join_group(group_id, student_id):
         conn = get_db()
         cursor = conn.cursor()
+        
+        # Validate that the user exists in the students table
+        cursor.execute("SELECT 1 FROM students WHERE student_id = ?", (student_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return {"success": False, "message": "Session expired or user not found. Please log out and log in again."}
+            
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             cursor.execute(

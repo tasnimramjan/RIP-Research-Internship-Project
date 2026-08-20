@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from models.thesis_group import ThesisGroupModel
 from models.message import ChatMessageModel
+from db import get_db
 
 class ThesisGroupController:
     @staticmethod
@@ -21,6 +22,9 @@ class ThesisGroupController:
             return {"success": False, "message": "Group name, topic, and description are required."}
             
         group_id = ThesisGroupModel.create_group(student_id, g_name, topic, desc)
+        if not group_id:
+            return {"success": False, "message": "Session expired or user not found. Please log out and log in again."}
+            
         return {"success": True, "group_id": group_id, "message": "Thesis group created successfully."}
 
     @staticmethod
@@ -34,12 +38,29 @@ class ThesisGroupController:
         return res
 
     @staticmethod
-    def get_group_messages(group_id):
+    def get_group_messages(group_id, user_id=None):
+        if user_id:
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT 1 FROM thesis_group_members WHERE group_id = ? AND student_id = ?", (group_id, user_id))
+            if not c.fetchone():
+                conn.close()
+                return {"success": False, "message": "Access denied. Not a member of this group."}
+            conn.close()
+
         messages = ChatMessageModel.get_group_messages(group_id)
         return {"success": True, "messages": messages}
 
     @staticmethod
     def send_group_message(sender_id, group_id, text):
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT 1 FROM thesis_group_members WHERE group_id = ? AND student_id = ?", (group_id, sender_id))
+        if not c.fetchone():
+            conn.close()
+            return {"success": False, "message": "Access denied. Not a member of this group."}
+        conn.close()
+
         if not text or not text.strip():
             return {"success": False, "message": "Message text cannot be empty."}
         msg_id = ChatMessageModel.send_message(sender_id, group_id=group_id, message_text=text.strip())

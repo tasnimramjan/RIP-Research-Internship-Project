@@ -108,7 +108,8 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(res)
             elif path == "/api/chat/group":
                 grp_id = params_flat.get('group_id')
-                res = ThesisGroupController.get_group_messages(grp_id)
+                user_id = params_flat.get('user_id')
+                res = ThesisGroupController.get_group_messages(grp_id, user_id=user_id)
                 self.send_json(res)
 
             # -- Admin Control Panel (KEPT) --
