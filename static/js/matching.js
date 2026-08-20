@@ -136,3 +136,16 @@ function renderMatchingResults(data) {
 // Global exposure
 window.runMatchingSearch = runMatchingSearch;
 window.debounceMatchingSearch = debounceMatchingSearch;
+
+function loadInterestMatching() {
+  // Auto-fill research interests if the user is a student
+  if (window.currentUser && window.currentUser.role === 'Student' && window.currentUser.student_profile) {
+    const interests = window.currentUser.student_profile.research_interests || '';
+    const input = document.getElementById('matchingSearchInput');
+    if (interests && !input.value) {
+      input.value = interests;
+      runMatchingSearch();
+    }
+  }
+}
+window.loadInterestMatching = loadInterestMatching;

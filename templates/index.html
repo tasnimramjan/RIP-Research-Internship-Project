@@ -186,14 +186,12 @@
         </div>
       </div>
       
-      <div class="form-grid" style="margin-bottom:1.5rem;">
-        <div class="form-group" style="grid-column: 1 / -1; display:flex; gap:0.5rem; align-items:flex-end;">
-          <div style="flex:1;">
-            <label>Search by Keywords, Topics, or Interests</label>
-            <input type="text" id="matchingSearchInput" placeholder="e.g. Artificial Intelligence, Data Science, NLP" oninput="debounceMatchingSearch()">
-          </div>
-          <button class="btn btn-secondary" onclick="document.getElementById('matchingSearchInput').value=''; runMatchingSearch();">Clear</button>
+      <div style="margin-bottom:1.5rem; display:flex; gap:0.5rem; align-items:flex-end; max-width:450px; justify-content:flex-start;">
+        <div style="flex:1;">
+          <label style="display:block; margin-bottom:0.4rem; font-weight:600; font-size:0.85rem;">Search by Keywords, Topics, or Interests</label>
+          <input type="text" id="matchingSearchInput" placeholder="e.g. Artificial Intelligence, Data Science, NLP" oninput="debounceMatchingSearch()" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius); background:var(--bg-card); color:var(--text-main);">
         </div>
+        <button class="btn btn-secondary" style="padding:0.6rem 1.2rem; height:41px;" onclick="document.getElementById('matchingSearchInput').value=''; runMatchingSearch();">Clear</button>
       </div>
       
       <div id="matchingEmptyState" style="text-align:center; padding:3rem; color:var(--text-muted);">

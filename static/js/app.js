@@ -101,6 +101,7 @@ function switchView(viewId) {
   else if (viewId === 'paper-discovery')   loadPapers();
   else if (viewId === 'thesis-groups')     loadThesisGroups();
   else if (viewId === 'admin-panel')       loadAdminPanel();
+  else if (viewId === 'interest-matching') { if (window.loadInterestMatching) window.loadInterestMatching(); }
   else if (viewId === 'availability-tracker') loadAvailabilityTracker();
   else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
