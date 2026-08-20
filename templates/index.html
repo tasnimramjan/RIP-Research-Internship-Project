@@ -29,6 +29,7 @@
 <!-- Removed: interest-matching, faculty-explorer, availability-tracker, teammate-finder, discussion-forums -->
 <div id="menuDrawer" class="menu-drawer">
   <button id="adminMenuItem" class="menu-item" style="display:none; color:var(--accent-pink); font-weight:700;" onclick="switchView('admin-panel')">Admin Control Panel</button>
+  <button class="menu-item" onclick="switchView('faculty-explorer')">Faculty Profile Explorer</button>
   <button class="menu-item" onclick="switchView('supervisor-finder')">Smart Supervisor Finder</button>
   <button class="menu-item" onclick="switchView('lab-board')">Research Lab Board</button>
   <button class="menu-item" onclick="switchView('internship-portal')">Internship Opportunity Portal</button>
@@ -129,6 +130,51 @@
         <button class="btn btn-sm btn-secondary" onclick="loadAvailabilityTracker()">Refresh Status</button>
       </div>
       <div class="card-grid" id="trackerContainer" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));"></div>
+    </section>
+
+    <!-- FACULTY PROFILE EXPLORER -->
+    <section id="faculty-explorer" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Faculty Profile Explorer</h2>
+          <p class="panel-subtitle">Search and view detailed faculty profiles, including research interests, expertise, labs, and publications.</p>
+        </div>
+      </div>
+      
+      <div class="form-grid" style="margin-bottom:1.5rem;">
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label>Search Faculty</label>
+          <input type="text" id="facultySearchInput" placeholder="Search by name, research interest, expertise, domain, lab, or publication title..." oninput="debounceFacultySearch()">
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <select id="facultyDeptFilter" onchange="runFacultySearch()">
+            <option value="">All Departments</option>
+            <option value="CSE">CSE</option>
+            <option value="EEE">EEE</option>
+            <option value="BBA">BBA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Research Domain</label>
+          <select id="facultyDomainFilter" onchange="runFacultySearch()">
+            <option value="">All Domains</option>
+            <option value="Computer Vision">Computer Vision</option>
+            <option value="Deep Learning">Deep Learning</option>
+            <option value="NLP">NLP</option>
+            <option value="IoT">IoT</option>
+            <option value="Robotics">Robotics</option>
+            <option value="Cybersecurity">Cybersecurity</option>
+            <option value="Blockchain">Blockchain</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Lab Keyword</label>
+          <input type="text" id="facultyLabFilter" placeholder="Lab name or focus..." oninput="runFacultySearch()">
+        </div>
+      </div>
+      <div id="facultyListEmpty" style="display:none; text-align:center; padding:3rem; color:var(--text-muted);">No results found.</div>
+      <div class="card-grid" id="facultyList"></div>
     </section>
 
     <!-- FEATURE 1: Smart Supervisor Finder (KEPT) -->
@@ -351,7 +397,7 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
       <div class="form-group">
         <label>Role</label>
-        <select id="addUserRole">
+        <select id="addUserRole" onchange="toggleAddUserExtraFields()">
           <option value="Student">Student</option>
           <option value="Faculty">Faculty</option>
           <option value="Admin">Admin</option>
@@ -364,6 +410,16 @@
           <option value="EEE">EEE</option>
           <option value="BBA">BBA</option>
         </select>
+      </div>
+    </div>
+    <div id="addUserFacultyFields" style="display:none; grid-template-columns:1fr 1fr; gap:0.7rem; margin-top:0.7rem;">
+      <div class="form-group">
+        <label>Designation</label>
+        <input type="text" id="addUserFacDesignation" placeholder="e.g. Assistant Professor">
+      </div>
+      <div class="form-group">
+        <label>Domains (comma-separated)</label>
+        <input type="text" id="addUserFacDomains" placeholder="e.g. AI, Systems">
       </div>
     </div>
     <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
@@ -567,8 +623,42 @@
   </div>
 </div>
 
+<!-- FACULTY DETAILS MODAL -->
+<div id="facultyDetailsModal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 700px; width: 95%;">
+    <h3 id="facDetailsName" style="font-size:1.5rem; font-weight:800; margin-bottom:0.2rem;"></h3>
+    <p id="facDetailsDesigDept" style="color:var(--text-muted); margin-bottom:1rem;"></p>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+      <div style="background:var(--bg-lighter); padding:1rem; border-radius:8px;">
+        <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Research Domains & Expertise</h4>
+        <div id="facDetailsDomains" style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
+      </div>
+      <div style="background:var(--bg-lighter); padding:1rem; border-radius:8px;">
+        <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Key Stats</h4>
+        <p><strong>h-index:</strong> <span id="facDetailsHIndex"></span></p>
+        <p><strong>Open Slots:</strong> <span id="facDetailsSlots"></span></p>
+        <p><strong>Min CGPA Req:</strong> <span id="facDetailsCgpa"></span></p>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:1.5rem;">
+      <h4 style="font-size:1rem; font-weight:700; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem; margin-bottom:0.8rem;">Directed Labs</h4>
+      <div id="facDetailsLabs"></div>
+    </div>
+    
+    <div style="margin-bottom:1.5rem;">
+      <h4 style="font-size:1rem; font-weight:700; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem; margin-bottom:0.8rem;">Selected Publications</h4>
+      <div id="facDetailsPublications"></div>
+    </div>
+    
+    <button class="btn btn-secondary" style="width:100%;" onclick="closeFacultyDetailsModal()">Close Profile</button>
+  </div>
+</div>
+
 <script src="/static/forums.js"></script>
 <script src="/static/teammates.js"></script>
+<script src="/static/js/faculty_explorer.js"></script>
 <script src="/static/js/app.js"></script>
 <!-- CREATE THREAD MODAL -->
 <div id="createThreadModal" class="modal-overlay">

@@ -9,15 +9,22 @@ from models.supervisor import SupervisorModel
 class FacultyController:
     @staticmethod
     def get_faculty_profile(faculty_id):
-        profile = UserModel.get_user_profile(faculty_id)
-        if not profile or profile.get('role') != 'Faculty':
+        from models.faculty import FacultyModel
+        profile = FacultyModel.get_faculty_details(faculty_id)
+        if not profile:
             return {"success": False, "message": "Faculty profile not found."}
-            
-        all_labs = LabModel.get_all_labs()
-        directed_labs = [l for l in all_labs if l['faculty_id'] == faculty_id]
-        profile['directed_labs'] = directed_labs
-        
         return {"success": True, "faculty": profile}
+
+    @staticmethod
+    def search_faculty(params):
+        from models.faculty import FacultyModel
+        keywords = params.get('keywords')
+        department = params.get('department')
+        domain = params.get('domain')
+        lab = params.get('lab')
+        
+        results = FacultyModel.search_faculty(keywords, department, domain, lab)
+        return {"success": True, "faculties": results}
 
     @staticmethod
     def update_faculty_profile(faculty_id, data):

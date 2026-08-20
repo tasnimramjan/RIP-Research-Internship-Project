@@ -480,12 +480,24 @@ async function loadAdminPanel() {
 
 async function adminToggleUserStatus(userId) { const res = await fetch('/api/admin/toggle_user', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId})}); const data=await res.json(); alert(data.message); loadAdminPanel(); }
 async function adminDeleteUser(userId) { if(!confirm('Delete this user?'))return; const res=await fetch('/api/admin/delete_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId})}); const data=await res.json(); alert(data.message); loadAdminPanel(); }
-function openAddUserModal()  { document.getElementById('addUserModal').classList.add('open'); }
+function openAddUserModal()  { document.getElementById('addUserModal').classList.add('open'); toggleAddUserExtraFields(); }
 function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('open'); }
+function toggleAddUserExtraFields() {
+  const role = document.getElementById('addUserRole').value;
+  const facFields = document.getElementById('addUserFacultyFields');
+  if (facFields) facFields.style.display = (role === 'Faculty') ? 'grid' : 'none';
+}
 async function submitAddUser() {
   const name=document.getElementById('addUserName').value.trim(), email=document.getElementById('addUserEmail').value.trim(), password=document.getElementById('addUserPassword').value, role=document.getElementById('addUserRole').value, dept=document.getElementById('addUserDept').value;
   if(!name||!email||!password)return alert('Name, email, and password are required.');
-  const res=await fetch('/api/admin/add_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password,role,department:dept})});
+  
+  const payload = {name,email,password,role,department:dept};
+  if (role === 'Faculty') {
+    payload.designation = document.getElementById('addUserFacDesignation')?.value.trim();
+    payload.research_domains = document.getElementById('addUserFacDomains')?.value.trim();
+  }
+  
+  const res=await fetch('/api/admin/add_user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const data=await res.json(); if(data.success){alert(data.message);closeAddUserModal();loadAdminPanel();}else alert(data.message);
 }
 async function adminDeleteLab(labId) { if(!confirm('Delete this lab?'))return; const res=await fetch('/api/admin/delete_lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lab_id:labId})}); const data=await res.json(); alert(data.message); loadLabBoard(); }
