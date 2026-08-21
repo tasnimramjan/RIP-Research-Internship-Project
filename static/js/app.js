@@ -104,6 +104,9 @@ function switchView(viewId) {
   else if (viewId === 'availability-tracker') loadAvailabilityTracker();
   else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
+  else if (viewId === 'events-hub')                 loadEventsHub();
+  else if (viewId === 'notification-center')        loadNotificationsHub();
+  else if (viewId === 'personalized-dashboard')     loadPersonalizedDashboard();
 }
 
 // ── Authentication ───────────────────────────────────────

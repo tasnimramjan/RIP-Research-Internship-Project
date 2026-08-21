@@ -37,6 +37,10 @@
   <button class="menu-item" onclick="switchView('discussion-forums')">Discussion Forums</button>
   <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
   <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
+  <button class="menu-item" onclick="switchView('events-hub')">Research Events & Hub</button> <!--features:16,18,19,20 -->
+  <button class="menu-item" onclick="switchView('notification-center')">Notification Center</button>
+  <button class="menu-item" onclick="switchView('personalized-dashboard')">Personalized Dashboard</button>
+  <button class="menu-item" onclick="switchView('academic-chatbot')">Academic FAQ Chatbot</button>
 </div>
 
 <!-- MAIN WRAPPER -->
@@ -243,6 +247,66 @@
         <input type="text" id="groupSearchInput" placeholder="Search by topic or group name..." oninput="loadThesisGroups()">
       </div>
       <div class="card-grid" id="thesisGroupList"></div>
+    </section>
+
+    <!-- FEATURE 16: Research Event & Conference Hub -->
+    <section id="events-hub" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Research Event & Conference Hub</h2>
+          <p class="panel-subtitle">Discover and register for upcoming research events.</p>
+        </div>
+        <button class="btn btn-sm btn-cyan" onclick="openCreateEventModal()">+ Create Event</button>
+      </div>
+      <div class="form-group" style="max-width:300px; margin-bottom:1.5rem;">
+        <label>Filter by Category</label>
+        <select id="eventCategoryFilter" onchange="loadEventsHub()">
+          <option value="">All Categories</option>
+          <option value="Conference">Conference</option>
+          <option value="Workshop">Workshop</option>
+          <option value="Seminar">Seminar</option>
+          <option value="Hackathon">Hackathon</option>
+          <option value="Academic Event">Academic Event</option>
+        </select>
+      </div>
+      <div class="card-grid" id="events-container">Loading...</div>
+    </section>
+
+    <!-- FEATURE 18: Notification Center -->
+    <section id="notification-center" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Real-Time Notification Center</h2>
+          <p class="panel-subtitle">Stay updated on supervisor updates, deadlines, and announcements.</p>
+        </div>
+      </div>
+      <div id="notif-container">Loading notifications...</div>
+    </section>
+
+    <!-- FEATURE 19: Personalized Dashboard -->
+    <section id="personalized-dashboard" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Personalized Dashboard</h2>
+          <p class="panel-subtitle">A quick summary tailored to your role — events, deadlines, and shortcuts.</p>
+        </div>
+      </div>
+      <div id="dashboard-content">Loading...</div>
+    </section>
+
+    <!-- FEATURE 20: Academic FAQ Chatbot -->
+    <section id="academic-chatbot" class="view-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Academic FAQ Assistant</h2>
+          <p class="panel-subtitle">Ask questions about thesis processes, internships, and university procedures.</p>
+        </div>
+      </div>
+      <div id="faq-chat" style="border: 1px solid var(--border-color); height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: var(--bg-card);"></div>
+      <div style="display:flex; gap:0.5rem;">
+        <input type="text" id="faq-query" placeholder="Ask a question..." style="flex:1; padding: 8px;">
+        <button class="btn btn-cyan" onclick="askFaqBot()">Ask</button>
+      </div>
     </section>
 
   </main>
@@ -637,6 +701,250 @@
     <button type="button" class="btn btn-secondary btn-sm" style="align-self:center; margin-top:0.5rem;" onclick="document.getElementById('postProjectModal').classList.remove('open')">Cancel</button>
   </div>
 </div>
+
+<!-- FEATURE 16: CREATE EVENT MODAL -->
+<div id="createEventModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 style="font-size:1.2rem; font-weight:700;">Create Research Event</h3>
+    <div class="form-group">
+      <label>Event Title</label>
+      <input type="text" id="newEventTitle" placeholder="e.g. Annual AI Symposium">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="newEventCategory">
+        <option value="Conference">Conference</option>
+        <option value="Workshop">Workshop</option>
+        <option value="Seminar">Seminar</option>
+        <option value="Hackathon">Hackathon</option>
+        <option value="Academic Event">Academic Event</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Organizer</label>
+      <input type="text" id="newEventOrganizer" placeholder="e.g. Department of CSE">
+    </div>
+    <div class="form-group">
+      <label>Date & Time</label>
+      <input type="datetime-local" id="newEventDate">
+    </div>
+    <div class="form-group">
+      <label>Location</label>
+      <input type="text" id="newEventLocation" placeholder="e.g. Auditorium A">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="newEventDesc" rows="3" placeholder="What is this event about?"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Registration Link (optional)</label>
+      <input type="text" id="newEventLink" placeholder="https://...">
+    </div>
+    <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
+      <button class="btn btn-cyan" style="flex:1;" onclick="submitCreateEvent()">Create Event</button>
+      <button class="btn btn-secondary" onclick="closeCreateEventModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Helper: fall back to demo student id when nobody is logged in yet,
+  // matching the default main.py already uses server-side.
+  function ripUserId() {
+    return (typeof currentUser !== 'undefined' && currentUser) ? currentUser.user_id : 'u_student_1';
+  }
+
+  // ── FEATURE 16: Research Event & Conference Hub ──────────────────
+  function loadEventsHub() {
+    const category = document.getElementById('eventCategoryFilter')?.value || '';
+    const url = category ? `/api/events?category=${encodeURIComponent(category)}` : '/api/events';
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const list = data.events || [];
+        document.getElementById('events-container').innerHTML = list.map(e => `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="card-title">${e.title}</div>
+              <span class="tag">${e.category}</span>
+            </div>
+            <div class="project-meta" style="color:var(--text-muted); font-size:0.85rem;">
+              ${e.organizer} &bull; ${e.event_date} &bull; ${e.location}
+            </div>
+            <p style="color:var(--text-muted); font-size:0.9rem;">${e.description || ''}</p>
+            <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
+              <button class="btn btn-sm btn-cyan" onclick="registerForEvent('${e.event_id}')">Register</button>
+            </div>
+          </div>
+        `).join('') || '<p style="color:var(--text-muted);">No events found for this category.</p>';
+      });
+  }
+
+  function registerForEvent(eventId) {
+    fetch('/api/events/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ event_id: eventId, user_id: ripUserId() })
+    })
+    .then(res => res.json())
+    .then(res => {
+      alert(res.message);
+      loadEventsHub();
+    });
+  }
+
+  function openCreateEventModal()  { document.getElementById('createEventModal').classList.add('open'); }
+  function closeCreateEventModal() { document.getElementById('createEventModal').classList.remove('open'); }
+
+  function submitCreateEvent() {
+    const title = document.getElementById('newEventTitle').value.trim();
+    const category = document.getElementById('newEventCategory').value;
+    const organizer = document.getElementById('newEventOrganizer').value.trim();
+    const rawDate = document.getElementById('newEventDate').value; // yyyy-MM-ddTHH:mm
+    const location = document.getElementById('newEventLocation').value.trim();
+    const description = document.getElementById('newEventDesc').value.trim();
+    const registration_link = document.getElementById('newEventLink').value.trim();
+
+    if (!title || !organizer || !rawDate || !location) {
+      alert('Please fill in title, organizer, date, and location.');
+      return;
+    }
+    const event_date = rawDate.replace('T', ' ') + ':00';
+
+    fetch('/api/events/create', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ title, category, organizer, event_date, location, description, registration_link })
+    })
+    .then(res => res.json())
+    .then(res => {
+      alert(res.message);
+      if (res.success) {
+        closeCreateEventModal();
+        loadEventsHub();
+      }
+    });
+  }
+
+  // ── FEATURE 18: Real-Time Notification Center ────────────────────
+  function loadNotificationsHub() {
+    fetch(`/api/notifications?user_id=${encodeURIComponent(ripUserId())}`)
+      .then(res => res.json())
+      .then(data => {
+        const notifs = data.notifications || [];
+        document.getElementById('notif-container').innerHTML = notifs.map(n => `
+          <div style="padding:12px 16px; border-left:4px solid ${n.is_read ? 'var(--border-color)' : 'var(--accent-cyan)'};
+                      background:var(--bg-card); margin-bottom:10px; border-radius:8px;
+                      opacity:${n.is_read ? '0.65' : '1'};">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+              <div>
+                <h4 style="margin-bottom:0.2rem;">${n.title} <span class="tag" style="margin-left:0.4rem;">${n.category}</span></h4>
+                <p style="color:var(--text-muted); font-size:0.9rem;">${n.message}</p>
+                <small style="color:var(--text-muted);">${n.created_at}</small>
+              </div>
+              ${n.is_read ? '' : `<button class="btn btn-sm btn-secondary" onclick="markNotifRead('${n.notif_id}')">Mark Read</button>`}
+            </div>
+          </div>
+        `).join('') || '<p style="color:var(--text-muted);">No notifications found.</p>';
+      });
+  }
+
+  function markNotifRead(notifId) {
+    fetch('/api/notifications/read', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ notif_id: notifId })
+    })
+    .then(res => res.json())
+    .then(() => loadNotificationsHub());
+  }
+
+  // ── FEATURE 19: Personalized Dashboard ────────────────────────────
+  function loadPersonalizedDashboard() {
+    const container = document.getElementById('dashboard-content');
+    fetch(`/api/dashboard?user_id=${encodeURIComponent(ripUserId())}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          container.innerHTML = `<p style="color:var(--text-muted);">${data.message || 'Unable to load dashboard.'}</p>`;
+          return;
+        }
+        const db = data.dashboard || {};
+        const profile = db.user_profile || {};
+
+        const header = `
+          <div class="card" style="background:var(--bg-card); padding:1rem 1.4rem; border-radius:8px; margin-bottom:1rem;">
+            <p style="font-weight:700; font-size:1.05rem;">${profile.name || 'User'}</p>
+            <p style="color:var(--text-muted); font-size:0.85rem;">${profile.role || ''} &bull; ${profile.department || ''}</p>
+          </div>`;
+
+        // Faculty dashboard: thesis supervision status instead of events/internships/groups
+        if (db.status) {
+          const s = db.status;
+          container.innerHTML = header + `
+            <div class="card" style="background:var(--bg-card); padding:1rem; border-radius:8px;">
+              <h3 style="margin-bottom:0.8rem;">Thesis Supervision Status</h3>
+              <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+                <div><strong>${s.remaining_slots ?? '—'}</strong><div style="color:var(--text-muted); font-size:0.8rem;">Remaining Slots</div></div>
+                <div><strong>${s.min_cgpa_req ?? '—'}</strong><div style="color:var(--text-muted); font-size:0.8rem;">Min CGPA Required</div></div>
+                <div><strong>${s.thesis_available ? 'Yes' : 'No'}</strong><div style="color:var(--text-muted); font-size:0.8rem;">Accepting Thesis Students</div></div>
+              </div>
+            </div>`;
+          return;
+        }
+
+        // Student dashboard
+        const events = db.upcoming_events || [];
+        const internships = db.upcoming_internships || [];
+        const groups = db.my_thesis_groups || [];
+
+        container.innerHTML = header + `
+          <div class="card" style="background:var(--bg-card); padding:1rem; border-radius:8px; margin-bottom:1rem;">
+            <h3 style="margin-bottom:0.6rem;">Upcoming Events</h3>
+            <ul>${events.map(e => `<li style="margin-bottom:0.4rem;"><strong>${e.title}</strong> — ${e.event_date} (${e.location})</li>`).join('') || '<li>No upcoming events.</li>'}</ul>
+          </div>
+          <div class="card" style="background:var(--bg-card); padding:1rem; border-radius:8px; margin-bottom:1rem;">
+            <h3 style="margin-bottom:0.6rem;">Internship Deadlines</h3>
+            <ul>${internships.map(i => `<li style="margin-bottom:0.4rem;"><strong>${i.title}</strong> at ${i.company_name} — <em>Due: ${i.deadline}</em></li>`).join('') || '<li>No upcoming internship deadlines.</li>'}</ul>
+          </div>
+          <div class="card" style="background:var(--bg-card); padding:1rem; border-radius:8px;">
+            <h3 style="margin-bottom:0.6rem;">My Thesis Groups</h3>
+            <ul>${groups.map(g => `<li style="margin-bottom:0.4rem;"><strong>${g.group_name}</strong> — ${g.topic}</li>`).join('') || '<li>You have not joined any thesis groups yet.</li>'}</ul>
+          </div>`;
+      });
+  }
+
+  // ── FEATURE 20: Academic FAQ Chatbot ──────────────────────────────
+  function askFaqBot() {
+    const input = document.getElementById('faq-query');
+    const q = input.value.trim();
+    if (!q) return;
+    const chat = document.getElementById('faq-chat');
+    chat.innerHTML += `<p style="color:var(--accent-cyan);"><strong>You:</strong> ${q}</p>`;
+    input.value = '';
+
+    fetch('/api/faq/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ question: q })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const answer = (data.data && data.data.response) || data.message || "Sorry, I couldn't process that.";
+      chat.innerHTML += `<p style="color:#22c55e;"><strong>Bot:</strong> ${answer}</p>`;
+      chat.scrollTop = chat.scrollHeight;
+    });
+  }
+
+  // Allow pressing Enter to submit a FAQ question
+  document.addEventListener('DOMContentLoaded', () => {
+    const faqInput = document.getElementById('faq-query');
+    if (faqInput) {
+      faqInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askFaqBot(); });
+    }
+  });
+</script>
 
 </body>
 </html>

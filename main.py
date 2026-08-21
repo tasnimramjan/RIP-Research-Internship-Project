@@ -17,6 +17,11 @@ from controllers.admin_controller       import AdminController
 from controllers.forum_controller       import ForumController
 from controllers.project_controller     import ProjectController
 from controllers.message_controller     import MessageController
+#controllers below only needed for feature(16-20)
+from controllers.event_controller import EventController
+from controllers.notification_controller import NotificationController
+from controllers.dashboard_controller import DashboardController
+from controllers.faq_controller import FAQController
 
 # Removed (features stripped from v2, now restored):
 #   MatchingController   — Research Interest Matching & 1-to-1 Chat (Partially restored)
@@ -129,7 +134,20 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(ProjectController.get_all_posts())
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
+            elif path == "/api/events": # -- Features 16-20 Routes --
+                category = params_flat.get('category')
+                res = EventController.get_events(category=category)
+                self.send_json(res)
 
+            elif path == "/api/notifications":
+                user_id = params_flat.get('user_id', 'u_student_1')
+                res = NotificationController.fetch_notifications(user_id)
+                self.send_json(res)
+
+            elif path == "/api/dashboard":
+                user_id = params_flat.get('user_id', 'u_student_1')
+                res = DashboardController.get_dashboard_data(user_id)
+                self.send_json(res)
             # -- REMOVED routes return 404 --
             # /api/matching/*          → Research Interest Matching (REMOVED)
             # /api/faculty/<id> GET    → Faculty Profile Explorer (REMOVED)
@@ -231,6 +249,19 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
+        elif path == "/api/events/create":  # -- Features 16-20 POST Endpoints --
+            res = EventController.create_event(data)
+            self.send_json(res)
+        elif path == "/api/events/register":
+            res = EventController.register_event(data.get('event_id'), data.get('user_id'))
+            self.send_json(res)
+        elif path == "/api/notifications/read":
+            res = NotificationController.mark_read(data.get('notif_id'))
+            self.send_json(res)
+
+        elif path == "/api/faq/ask":
+            res = FAQController.ask_question(data)
+            self.send_json(res)
 
         else:
             self.send_json({"error": "POST endpoint not found"}, status=404)

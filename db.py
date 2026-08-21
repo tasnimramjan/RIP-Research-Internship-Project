@@ -257,62 +257,72 @@ def init_db():
     # Feature 16: Research Event & Conference Hub
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS events (
-    event_id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    category TEXT NOT NULL CHECK(category IN ('Conference', 'Workshop', 'Seminar', 'Hackathon', 'Academic Event')),
-    description TEXT NOT NULL,
-    date TEXT NOT NULL,
-    location TEXT NOT NULL,
-    organizer_id TEXT NOT NULL,
-    FOREIGN KEY (organizer_id) REFERENCES users(user_id)
+        event_id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL,
+        organizer TEXT NOT NULL,
+        event_date TEXT NOT NULL,
+        location TEXT NOT NULL,
+        description TEXT,
+        registration_link TEXT,
+        created_at TEXT NOT NULL
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS event_registrations (
-    registration_id TEXT PRIMARY KEY,
-    event_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    registered_at TEXT NOT NULL,
-    UNIQUE(event_id, user_id),
-    FOREIGN KEY (event_id) REFERENCES events(event_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-   )
-   """)
+        registration_id TEXT PRIMARY KEY,
+        event_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        registered_at TEXT NOT NULL,
+        UNIQUE(event_id, user_id),
+        FOREIGN KEY (event_id) REFERENCES events(event_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    )
+    """)
 
-   # Feature 18: Real-Time Notification Center
+    # Feature 17: Admin Logs & Verification
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS admin_logs (
+        log_id TEXT PRIMARY KEY,
+        action TEXT NOT NULL,
+        target_user TEXT,
+        timestamp TEXT NOT NULL
+    )
+    """)
+
+    # Feature 18: Real-Time Notification Center
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS notifications (
-    notification_id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    message TEXT NOT NULL,
-    is_read INTEGER DEFAULT 0,
-    created_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-  )
-   """)
+        notif_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        category TEXT DEFAULT 'General',
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT NOT NULL
+    )
+    """)
 
-   # Feature 19: Personalized Dashboard Tasks
+    # Feature 19: Personalized Dashboard Tasks
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS dashboard_tasks (
-    task_id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    title TEXT NOT NULL,
-    deadline TEXT NOT NULL,
-    status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'In Progress', 'Completed')),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-  )
-   """)
+    CREATE TABLE IF NOT EXISTS user_tasks (
+        task_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        task_title TEXT NOT NULL,
+        due_date TEXT NOT NULL,
+        status TEXT DEFAULT 'Pending'
+    )
+    """)
 
-  # Feature 20: Academic FAQ Chatbot
+    # Feature 20: Academic FAQ Chatbot
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS faqs (
-    faq_id TEXT PRIMARY KEY,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL,
-    category TEXT NOT NULL
-  )
-  """)
+    CREATE TABLE IF NOT EXISTS faq_chatbot (
+        faq_id TEXT PRIMARY KEY,
+        keywords TEXT NOT NULL,
+        answer TEXT NOT NULL
+    )
+    """)
     conn.commit()
     conn.close()
 

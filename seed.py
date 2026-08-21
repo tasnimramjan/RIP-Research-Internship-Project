@@ -385,7 +385,81 @@ def seed_data():
     # 13. Group Chat Messages
     cursor.execute("INSERT INTO chat_messages VALUES (?, ?, ?, ?, ?, ?)",
                    ("msg_3", "stu_alice", None, "grp_1", "Hey team, let's start the literature review this weekend.", "2026-07-23 10:00:00"))
+    # 14. Research Events & Conferences (Feature 16)
+    events = [
+        {
+            "id": "evt_01",
+            "title": "Annual AI & Machine Learning Symposium",
+            "category": "Conference",
+            "organizer": "Department of CSE",
+            "date": "2026-11-15 10:00:00",
+            "location": "Auditorium A",
+            "desc": "National conference on AI innovations and research presentations.",
+            "link": "https://univ.edu/ml2026",
+            "created_at": "2026-07-20 09:00:00"
+        },
+        {
+            "id": "evt_02",
+            "title": "LaTeX Thesis Formatting & Defense Workshop",
+            "category": "Workshop",
+            "organizer": "Research Committee",
+            "date": "2026-10-05 14:00:00",
+            "location": "Lab 402",
+            "desc": "Hands-on guide to formatting thesis documents and presentation slides.",
+            "link": "https://univ.edu/latex-workshop",
+            "created_at": "2026-07-21 11:30:00"
+        }
+    ]
 
+    for e in events:
+        cursor.execute(
+            "INSERT OR IGNORE INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (e["id"], e["title"], e["category"], e["organizer"], e["date"], e["location"], e["desc"], e["link"], e["created_at"])
+        )
+
+    # 15. Real-Time Notification Center (Feature 18)
+    notifications = [
+        {
+            "id": "notif_01",
+            "user": "stu_alice",
+            "title": "Thesis Proposal Deadline",
+            "message": "Your draft thesis proposal submission is due next week.",
+            "category": "Academic",
+            "is_read": 0,
+            "created_at": "2026-07-22 08:00:00"
+        },
+        {
+            "id": "notif_02",
+            "user": "stu_alice",
+            "title": "Event Registration Open",
+            "message": "Annual AI & Machine Learning Symposium registration is now active.",
+            "category": "Events",
+            "is_read": 0,
+            "created_at": "2026-07-22 09:15:00"
+        }
+    ]
+
+    for n in notifications:
+        cursor.execute(
+            "INSERT OR IGNORE INTO notifications VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (n["id"], n["user"], n["title"], n["message"], n["category"], n["is_read"], n["created_at"])
+        )
+        
+        # Feature 17: Admin Logs
+    cursor.execute("INSERT OR IGNORE INTO admin_logs VALUES (?, ?, ?, ?)",
+                   ("log_01", "Verified Faculty Profile", "fac_rahman", "2026-07-20 10:00:00"))
+
+    # Feature 19: User Tasks
+    cursor.execute("INSERT OR IGNORE INTO user_tasks VALUES (?, ?, ?, ?, ?)",
+                   ("task_01", "stu_alice", "Submit Thesis First Draft", "2026-09-01", "Pending"))
+    cursor.execute("INSERT OR IGNORE INTO user_tasks VALUES (?, ?, ?, ?, ?)",
+                   ("task_02", "stu_alice", "Register for AI Symposium", "2026-10-15", "Completed"))
+
+    # Feature 20: FAQ Chatbot Knowledgebase
+    cursor.execute("INSERT OR IGNORE INTO faq_chatbot VALUES (?, ?, ?)",
+                   ("faq_01", "thesis,supervisor,defence", "To register for a thesis supervisor, check the Smart Supervisor Finder tab and submit your application with your CGPA and research statement."))
+    cursor.execute("INSERT OR IGNORE INTO faq_chatbot VALUES (?, ?, ?)",
+                   ("faq_02", "internship,job,career", "Internship listings are updated weekly under the Internship Opportunity Portal."))
     conn.commit()
     conn.close()
     print("Database seeded successfully with initial data.")

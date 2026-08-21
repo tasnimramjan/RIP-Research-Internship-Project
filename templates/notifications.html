@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notification Center</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .notif { padding: 12px; border-left: 4px solid #007bff; background: #e9ecef; margin-bottom: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Real-Time Notification Center</h1>
+    <div id="notif-container">Loading notifications...</div>
+
+    <script>
+        fetch('/api/notifications?user_id=u_student_1')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('notif-container').innerHTML = data.notifications.map(n => `
+                    <div class="notif">
+                        <h3>${n.title} [${n.category}]</h3>
+                        <p>${n.message}</p>
+                        <small>${n.created_at}</small>
+                    </div>
+                `).join('') || '<p>No notifications found.</p>';
+            });
+    </script>
+</body>
+</html>

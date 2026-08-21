@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Research Event & Conference Hub</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .event-card { border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        button { background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Research Event & Conference Hub</h1>
+    <div id="events-container">Loading...</div>
+
+    <script>
+        function loadEvents() {
+            fetch('/api/events')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('events-container').innerHTML = data.events.map(e => `
+                        <div class="event-card">
+                            <h3>${e.title} (${e.category})</h3>
+                            <p><strong>Organizer:</strong> ${e.organizer} | <strong>Date:</strong> ${e.event_date}</p>
+                            <p>${e.description}</p>
+                            <button onclick="register('${e.event_id}')">Register for Event</button>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function register(eventId) {
+            fetch('/api/events/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ event_id: eventId, user_id: 'u_student_1' })
+            })
+            .then(res => res.json())
+            .then(res => alert(res.message));
+        }
+
+        loadEvents();
+    </script>
+</body>
+</html>
