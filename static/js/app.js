@@ -59,7 +59,7 @@ function renderUserNav() {
       </div>
       <button class="btn btn-sm btn-secondary" onclick="logout()">Log Out</button>`;
   } else {
-    if (burgerBtn)     burgerBtn.style.display = 'none';
+    if (burgerBtn)     burgerBtn.style.display = 'inline-flex';
     if (adminMenuItem) adminMenuItem.style.display = 'none';
     closeMenuDrawer();
     container.innerHTML = `
@@ -115,6 +115,11 @@ function switchView(viewId) {
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
   else if (viewId === 'faculty-chat')      loadFacultyChat();
   else if (viewId === 'faculty-profile')   loadFacultyProfileSettings();
+  else if (viewId === 'tab-tracker')       { if (window.loadThesisTracker) window.loadThesisTracker(); }
+  else if (viewId === 'tab-overleaf')      { if (window.loadOverleafEditor) window.loadOverleafEditor(); }
+  else if (viewId === 'tab-citations')     { if (window.loadCitationsManager) window.loadCitationsManager(); }
+  else if (viewId === 'tab-resources')     { if (window.loadResourceLibrary) window.loadResourceLibrary(); }
+  else if (viewId === 'tab-archive')       { if (window.loadPeerArchive) window.loadPeerArchive(); }
 }
 
 // ── Faculty Profile Settings ──────────────────────────────
@@ -517,7 +522,6 @@ async function loadThesisGroups() {
   const data  = await res.json();
   const container = document.getElementById('thesisGroupList');
   const isAdmin   = currentUser?.role === 'Admin';
-  
   const createBtn = document.querySelector('#thesis-groups .btn-cyan[onclick="openNewGroupModal()"]');
   if (createBtn) createBtn.style.display = (currentUser?.role === 'Student') ? 'inline-flex' : 'none';
 

@@ -17,6 +17,7 @@ from controllers.admin_controller       import AdminController
 from controllers.forum_controller       import ForumController
 from controllers.project_controller     import ProjectController
 from controllers.message_controller     import MessageController
+from controllers.thesis_hub_controller  import ThesisHubController
 
 # Removed (features stripped from v2, now restored):
 #   MatchingController   — Research Interest Matching & 1-to-1 Chat (Partially restored)
@@ -146,6 +147,26 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 from controllers.availability_controller import AvailabilityController
                 self.send_json(AvailabilityController.search(params_flat))
             
+            # -- Thesis Management Hub Features --
+            elif path.startswith("/api/download/"):
+                filename = os.path.basename(path)
+                content = ThesisHubController.get_download(filename)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+                self.end_headers()
+                self.wfile.write(content.encode("utf-8"))
+                return
+            elif path == "/api/milestones":
+                self.send_json(ThesisHubController.get_milestones())
+            elif path == "/api/documents":
+                self.send_json(ThesisHubController.get_documents())
+            elif path == "/api/citations":
+                self.send_json(ThesisHubController.get_citations())
+            elif path == "/api/resources":
+                self.send_json(ThesisHubController.get_resources())
+            elif path == "/api/archive":
+                self.send_json(ThesisHubController.search_archive(params_flat))
             # -- REMOVED routes return 404 --
             else:
                 self.send_json({"error": "Endpoint not found"}, status=404)
@@ -258,6 +279,21 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
 
+        # -- Thesis Management Hub Features --
+        elif path == "/api/milestones/update":
+            self.send_json(ThesisHubController.update_milestone(data))
+        elif path == "/api/milestones/add":
+            self.send_json(ThesisHubController.add_milestone(data))
+        elif path == "/api/documents/save":
+            self.send_json(ThesisHubController.save_document(data))
+        elif path == "/api/documents/feedback":
+            self.send_json(ThesisHubController.update_document_feedback(data))
+        elif path == "/api/citations/add":
+            self.send_json(ThesisHubController.add_citation(data))
+        elif path == "/api/resources/add":
+            self.send_json(ThesisHubController.add_resource(data))
+        elif path == "/api/ai-assistant":
+            self.send_json(ThesisHubController.ask_ai_assistant(data))
         else:
             self.send_json({"error": "POST endpoint not found"}, status=404)
 
