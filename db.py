@@ -196,14 +196,20 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS forum_reactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        thread_id TEXT NOT NULL,
+        thread_id TEXT,
+        comment_id TEXT,
         user_id TEXT NOT NULL,
         reaction_type TEXT NOT NULL,
-        UNIQUE(thread_id, user_id, reaction_type),
-        FOREIGN KEY (thread_id) REFERENCES discussion_threads(thread_id),
-        FOREIGN KEY (user_id) REFERENCES users(user_id)
+        FOREIGN KEY (thread_id) REFERENCES discussion_threads(thread_id) ON DELETE CASCADE,
+        FOREIGN KEY (comment_id) REFERENCES forum_comments(comment_id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
     )
     """)
+    try:
+        cursor.execute("ALTER TABLE forum_reactions ADD COLUMN comment_id TEXT")
+    except Exception:
+        pass
+
     
     # 16. Thread Reminders
     cursor.execute("""

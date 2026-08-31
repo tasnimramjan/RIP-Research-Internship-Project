@@ -111,7 +111,7 @@ function switchView(viewId) {
   else if (viewId === 'admin-panel')       loadAdminPanel();
   else if (viewId === 'interest-matching') { if (window.loadInterestMatching) window.loadInterestMatching(); }
   else if (viewId === 'availability-tracker') { if (window.initAvailabilityTracker) window.initAvailabilityTracker(); }
-  else if (viewId === 'discussion-forums' && window.Forums) Forums.loadThreads();
+  else if (viewId === 'discussion-forums' && window.Forums) { Forums.init(currentUser); }
   else if (viewId === 'teammate-finder' && window.Teammates) Teammates.loadProjects();
   else if (viewId === 'faculty-chat')      loadFacultyChat();
   else if (viewId === 'faculty-profile')   loadFacultyProfileSettings();
