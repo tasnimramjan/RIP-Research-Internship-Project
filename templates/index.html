@@ -24,7 +24,26 @@
       <div class="brand" onclick="showLandingPage()">
         <span>R.I.P.</span>
       </div>
-      <div style="display:flex; align-items:center; gap:1rem;">
+      <div style="display:flex; align-items:center; gap:0.8rem;">
+        <!-- STUDENT ONLY: JOIN REQUESTS NOTIFICATION MENU -->
+        <div id="joinRequestsNavContainer" class="join-requests-nav" style="display:none; position:relative;">
+          <button id="joinRequestsNavBtn" class="btn btn-sm btn-secondary" onclick="Teammates.toggleJoinRequestsMenu()" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; position:relative;">
+            <i class="fa-solid fa-user-group"></i>
+            <span>Join Requests</span>
+            <span id="joinRequestsBadge" class="badge-notif-counter" style="display:none;">0</span>
+          </button>
+          
+          <div id="joinRequestsDropdown" class="join-requests-dropdown">
+            <div class="join-requests-dropdown-header">
+              <span style="font-weight:700; color:var(--text-main); font-size:0.9rem;">Join Requests</span>
+              <button class="btn-close-sm" onclick="Teammates.closeJoinRequestsMenu()">&times;</button>
+            </div>
+            <div id="joinRequestsDropdownList" class="join-requests-dropdown-list">
+              <p style="color:var(--text-muted); font-size:0.85rem; padding:1rem; text-align:center;">Loading requests...</p>
+            </div>
+          </div>
+        </div>
+
         <div id="userNavStatus" class="user-nav-status"></div>
         <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleMenuDrawer()" title="Menu">&#9776;</button>
       </div>
@@ -201,11 +220,36 @@
         <div class="panel-header">
           <div>
             <h2 class="panel-title">Discussion Forums</h2>
-            <p class="panel-subtitle">Engage with peers, ask questions, and set thread reminders.</p>
+            <p class="panel-subtitle">Dedicated spaces for Thesis, Projects, Internships, Defense Preparation, and General Academic Discussions.</p>
           </div>
-          <button id="openCreateThreadBtn" class="btn btn-sm btn-cyan">+ New Thread</button>
+          <button id="openCreateThreadBtn" class="btn btn-sm btn-cyan" onclick="Forums.openCreateModal()">+ New Thread</button>
         </div>
-        <div id="forums-app"></div>
+
+        <div class="forum-layout">
+          <!-- Left Sidebar: Dedicated Discussion Spaces -->
+          <div class="forum-sidebar">
+            <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:0.6rem; padding-left:0.4rem;">
+              Discussion Spaces
+            </div>
+            <ul id="forumSpacesList" class="forum-spaces-list"></ul>
+          </div>
+
+          <!-- Right Content: Space Info + Threads List -->
+          <div class="forum-main-content">
+            <div id="activeSpaceHeader" class="active-space-header">
+              <div>
+                <h3 id="currentSpaceTitle" style="font-size:1.15rem; font-weight:700; color:var(--text-main); margin:0;">All Discussions</h3>
+                <p id="currentSpaceDesc" style="font-size:0.82rem; color:var(--text-muted); margin:0.2rem 0 0 0;">View accessible discussions from all relevant spaces.</p>
+              </div>
+              <div id="currentSpaceAccessBadge"></div>
+            </div>
+
+            <!-- Threads Container -->
+            <div id="threadsContainer" class="threads-container">
+              <p style="color:var(--text-muted); padding:2rem; text-align:center;">Loading discussion threads...</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- FEATURE 7: Project Teammate Finder -->
@@ -1146,70 +1190,6 @@
   </div>
 </div>
 
-  <!-- CREATE THREAD MODAL -->
-  <div id="createThreadModal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 550px;">
-      <h3 style="font-size:1.2rem; font-weight:700; color:var(--accent-cyan); margin-bottom: 0.8rem;">Start New Discussion Thread</h3>
-      <form id="createThreadForm">
-        <div class="form-group" style="margin-bottom:0.7rem;">
-          <label>Discussion Title</label>
-          <input type="text" id="threadTitle" required placeholder="Enter thread title...">
-        </div>
-        <div class="form-group" style="margin-bottom:0.7rem;">
-          <label>Discussion Space</label>
-          <select id="threadCategory" style="width:100%; padding:0.65rem; background:var(--bg-dark); color:#fff; border:1px solid var(--border-color); border-radius:8px;">
-            <option value="General Academic Discussions">General Academic Discussions</option>
-            <option value="Thesis">Thesis</option>
-            <option value="Projects">Projects</option>
-            <option value="Internships">Internships</option>
-            <option value="Defense Preparation">Defense Preparation</option>
-          </select>
-          <div id="threadCategoryNotice" style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;"></div>
-        </div>
-        <div class="form-group" style="margin-bottom:1rem;">
-          <label>Content</label>
-          <textarea id="threadContent" required rows="5" placeholder="Share your insights, ask questions, or provide updates..."></textarea>
-        </div>
-        <div style="display:flex; gap:0.6rem; justify-content:flex-end;">
-          <button type="button" id="closeThreadModalBtn" class="btn btn-secondary"
-            onclick="document.getElementById('createThreadModal').classList.remove('open')">Cancel</button>
-          <button type="submit" class="btn btn-cyan">Post Discussion</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- SET REMINDER MODAL -->
-  <div id="setReminderModal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 480px;">
-      <h3 style="font-size:1.2rem; font-weight:700; color:#fbbf24; margin-bottom:0.4rem;">Schedule Thread Reminder</h3>
-      <p id="reminderThreadTitle" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;"></p>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem; margin-bottom:0.8rem;">
-        <div class="form-group">
-          <label>Date (e.g. 25/08/2026)</label>
-          <input type="date" id="reminderDateInput" required style="width:100%; padding:0.65rem; background:var(--bg-dark); color:#fff; border:1px solid var(--border-color); border-radius:8px;">
-        </div>
-        <div class="form-group">
-          <label>Time (e.g. 10:30 PM)</label>
-          <input type="time" id="reminderTimeInput" required style="width:100%; padding:0.65rem; background:var(--bg-dark); color:#fff; border:1px solid var(--border-color); border-radius:8px;">
-        </div>
-      </div>
-      <div id="reminderLivePreview" style="background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.25); border-radius:8px; padding:0.6rem 0.8rem; font-size:0.82rem; color:#fde68a; margin-bottom:0.8rem;">
-        Target: Please choose a date and time
-      </div>
-      <div class="form-group" style="margin-bottom:1.2rem;">
-        <label>Reminder Note (Optional)</label>
-        <input type="text" id="reminderNote" placeholder="e.g. Review thesis comments before advisor meeting">
-      </div>
-      <div style="display:flex; gap:0.6rem; justify-content:flex-end;">
-        <button type="button" class="btn btn-secondary"
-          onclick="document.getElementById('setReminderModal').classList.remove('open')">Cancel</button>
-        <button type="button" class="btn btn-cyan"
-          onclick="Forums.submitReminder()">Save Reminder</button>
-      </div>
-    </div>
-  </div>
-
   <!-- POST PROJECT MODAL -->
   <div id="postProjectModal" class="modal-overlay">
     <div class="modal-box">
@@ -1369,7 +1349,71 @@
     </div>
   </div>
 
+  <!-- Create Discussion Thread Modal -->
+  <div id="createThreadModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:550px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="font-size:1.2rem; font-weight:700; color:var(--text-main);">Create Discussion Thread</h3>
+        <button type="button" class="btn-close-sm" onclick="Forums.closeCreateModal()">&times;</button>
+      </div>
+      <form id="createThreadForm" onsubmit="Forums.handleCreateThread(event)">
+        <div class="form-group" style="margin-bottom:0.8rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Discussion Space</label>
+          <select id="threadCategory" class="form-control" required></select>
+        </div>
+        <div class="form-group" style="margin-bottom:0.8rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Thread Title</label>
+          <input type="text" id="threadTitle" class="form-control" required placeholder="e.g. Tips for Literature Review or Defense Questions">
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Content</label>
+          <textarea id="threadContent" class="form-control" rows="4" required placeholder="Share your question, discussion topic, or insight..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary" onclick="Forums.closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Post Thread</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Set Thread Reminder Modal -->
+  <div id="setReminderModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:480px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="font-size:1.2rem; font-weight:700; color:var(--text-main);">Set Thread Reminder</h3>
+        <button type="button" class="btn-close-sm" onclick="Forums.closeReminderModal()">&times;</button>
+      </div>
+      <form id="setReminderForm" onsubmit="Forums.handleSetReminder(event)">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:0.8rem;">
+          <div class="form-group">
+            <label style="font-size:0.85rem; font-weight:600;">Date</label>
+            <input type="date" id="reminderDate" class="form-control" required oninput="Forums.updateReminderPreview()">
+          </div>
+          <div class="form-group">
+            <label style="font-size:0.85rem; font-weight:600;">Time</label>
+            <input type="time" id="reminderTime" class="form-control" required oninput="Forums.updateReminderPreview()">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0.8rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Scheduled Reminder</label>
+          <div id="reminderFormattedPreview" style="font-size:0.85rem; color:var(--accent-cyan); font-weight:600; padding:0.5rem 0.8rem; background:rgba(6,182,212,0.1); border-radius:6px; border:1px solid rgba(6,182,212,0.25);">
+            Please select date &amp; time
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:1.2rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Note (Optional)</label>
+          <input type="text" id="reminderNote" class="form-control" placeholder="e.g. Check defense prep feedback tomorrow">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary" onclick="Forums.closeReminderModal()">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Set Reminder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/static/js/thesis_hub.js"></script>
 </body>
 
-</html>
+</html>

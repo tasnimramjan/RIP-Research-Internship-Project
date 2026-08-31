@@ -122,22 +122,17 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(res)
 
             # -- Forum & Project & Chat APIs --
-            elif path == '/api/forums/spaces':
-                self.send_json(ForumController.get_user_spaces(params_flat.get('user_id')))
             elif path == '/api/forums/threads':
                 category = params_flat.get('category')
-                user_id = params_flat.get('user_id')
-                self.send_json(ForumController.get_threads(category=category, user_id=user_id))
+                self.send_json(ForumController.get_threads(category))
+            elif path == '/api/forums/access':
+                self.send_json(ForumController.get_spaces_access(params_flat.get('user_id')))
             elif path == '/api/forums/reminders':
                 self.send_json(ForumController.check_reminders(params_flat.get('user_id')))
-            elif path == '/api/forums/my_reminders':
-                self.send_json(ForumController.get_my_reminders(params_flat.get('user_id')))
-            elif path == '/api/forums/admin/stats':
-                self.send_json(ForumController.get_admin_stats(params_flat.get('user_id')))
-            elif path == '/api/forums/admin/reminders':
-                self.send_json(ForumController.get_admin_reminders(params_flat.get('user_id')))
             elif path == '/api/projects/all':
                 self.send_json(ProjectController.get_all_posts())
+            elif path == '/api/projects/requests':
+                self.send_json(ProjectController.get_join_requests(params_flat.get('user_id')))
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
             elif path == '/api/messages/contacts':
@@ -271,24 +266,22 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ForumController.create_thread(data.get('user_id'), data))
         elif path == '/api/forums/comment':
             self.send_json(ForumController.add_comment(data.get('user_id'), data))
-        elif path == '/api/forums/comment/delete':
-            self.send_json(ForumController.delete_comment(data.get('user_id'), data))
         elif path == '/api/forums/react':
             self.send_json(ForumController.add_reaction(data.get('user_id'), data))
-        elif path == '/api/forums/react/moderate':
-            self.send_json(ForumController.moderate_reactions(data.get('user_id'), data))
-        elif path in ('/api/forums/reminder', '/api/forums/remind'):
+        elif path == '/api/forums/reminder':
             self.send_json(ForumController.set_reminder(data.get('user_id'), data))
-        elif path == '/api/forums/reminder/delete':
-            self.send_json(ForumController.delete_reminder(data.get('user_id'), data))
         elif path == '/api/forums/delete':
             self.send_json(ForumController.delete_thread(data.get('user_id'), data))
         elif path == '/api/projects/create':
-            self.send_json(ProjectController.create_post(data.get('student_id'), data))
+            self.send_json(ProjectController.create_post(data.get('student_id') or data.get('user_id'), data))
         elif path == '/api/projects/join':
-            self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
+            self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id') or data.get('user_id')))
+        elif path == '/api/projects/respond_join':
+            self.send_json(ProjectController.respond_join(data))
         elif path == '/api/projects/delete':
             self.send_json(ProjectController.delete_post(data.get('user_id'), data.get('post_id')))
+        elif path == '/api/papers/delete':
+            self.send_json(PaperController.delete_paper(data.get('user_id'), data))
         elif path == '/api/internships/apply':
             self.send_json(InternshipController.apply(data.get('opportunity_id'), data.get('student_id')))
         elif path == '/api/messages/send':

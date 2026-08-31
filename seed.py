@@ -189,77 +189,13 @@ def seed_data():
         })
 
     for p in papers:
-        fac_id = f"fac_{((int(p['id'].split('_')[1]) - 1) % 20) + 1}"
-        cursor.execute("INSERT INTO research_papers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                       (p["id"], p["title"], json.dumps(p["authors"]), p["domain"], p["year"], p["abstract"], json.dumps(p["vector"]), p["doi"], p["url"], fac_id))
-
-    # 9. Discussion Threads, Comments, Reactions, and Reminders
-    forum_threads_seed = [
-        # Thesis
-        ("th_101", "fac_1", "Best Practices for Structuring Your Thesis Literature Review", "Thesis", "When drafting the literature review, ensure you categorize previous literature methodologically rather than chronologically. Focus on highlighting research gaps.", "2026-08-15 09:30:00"),
-        ("th_102", "stu_1", "Selecting Standard Benchmark Datasets for NLP Thesis", "Thesis", "We are finalizing our dataset choices for NLP transfer learning evaluation. What are the recommended open benchmarks for domain adaptation?", "2026-08-18 14:15:00"),
-        # Projects
-        ("th_103", "stu_2", "Architecture Choices for Real-Time IoT Data Streaming", "Projects", "For the automated smart monitor project, what streaming pipeline works best: MQTT with Kafka or direct WebSockets?", "2026-08-20 11:00:00"),
-        ("th_104", "fac_2", "Capstone Project Evaluation Criteria & Milestones", "Projects", "Please review the semester project rubric. Teams must demonstrate unit testing, clean git commit history, and a deployed demo.", "2026-08-21 16:45:00"),
-        # Internships
-        ("th_105", "stu_3", "Tips for Technical Coding & System Design Interviews", "Internships", "Sharing key takeaways from recent technical screening interviews at DataTech Inc and WebSphere Solutions. Focus heavily on DSA and clean coding!", "2026-08-22 10:20:00"),
-        ("th_106", "fac_3", "Industry Internship Credit Transfer Guidelines", "Internships", "Students currently undergoing summer internships must submit their mid-term supervisor evaluations by next week.", "2026-08-23 15:30:00"),
-        # Defense Preparation
-        ("th_107", "fac_4", "Defense Committee Expectations & Presentation Slide Guidelines", "Defense Preparation", "Keep defense presentations under 20 minutes. Allocate at least 8 minutes to your experimental evaluation and novel contributions.", "2026-08-24 13:00:00"),
-        ("th_108", "stu_1", "Defense Q&A: Common Questions on Methodology & Limitations", "Defense Preparation", "Compiling a checklist of questions previous defense candidates faced regarding methodology threats to validity.", "2026-08-25 18:00:00"),
-        # General Academic Discussions
-        ("th_109", "stu_4", "Balancing Coursework, Lab Research, and Project Deadlines", "General Academic Discussions", "How do you manage time when balancing 4 courses alongside lab research work? What scheduling techniques work best?", "2026-08-26 12:00:00"),
-        ("th_110", "fac_5", "Academic Integrity & Proper Citation Formats for Publications", "General Academic Discussions", "A reminder to all students to use verified reference managers (e.g. BibTeX, Zotero) and avoid plagiarism when preparing submissions.", "2026-08-27 10:00:00")
-    ]
-
-    for t in forum_threads_seed:
-        cursor.execute("INSERT INTO discussion_threads (thread_id, user_id, title, category, content, created_at) VALUES (?, ?, ?, ?, ?, ?)", t)
-
-    # Comments
-    comments_seed = [
-        ("c_201", "th_101", "stu_1", "This is very helpful, Professor. Should we also include comparative summary tables in Chapter 2?", "2026-08-15 10:15:00"),
-        ("c_202", "th_101", "fac_1", "Yes, comparative taxonomy tables are strongly recommended by the review committee.", "2026-08-15 10:45:00"),
-        ("c_203", "th_102", "fac_1", "Look into GLUE, SuperGLUE, and domain-specific benchmarks like BioASQ if you are evaluating specialized texts.", "2026-08-18 15:00:00"),
-        ("c_204", "th_103", "stu_1", "MQTT with EMQX broker or Kafka has worked very reliably for our IoT testbed experiments.", "2026-08-20 12:30:00"),
-        ("c_205", "th_105", "stu_2", "Great tips! Practicing mock interviews on LeetCode Mediums made a huge difference.", "2026-08-22 11:05:00"),
-        ("c_206", "th_107", "stu_1", "Thank you Dr.! Should demo recordings be embedded directly in the slide deck?", "2026-08-24 14:10:00"),
-        ("c_207", "th_107", "fac_4", "Yes, have a backup local video recording in case live internet connection lags.", "2026-08-24 14:30:00"),
-        ("c_208", "th_109", "stu_2", "Time-blocking 2 hours early in the morning specifically for research helped me stay consistent.", "2026-08-26 13:20:00")
-    ]
-
-    for c in comments_seed:
-        cursor.execute("INSERT INTO forum_comments (comment_id, thread_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)", c)
-
-    # Reactions (on threads and comments)
-    reactions_seed = [
-        ("th_101", None, "stu_1", "like"),
-        ("th_101", None, "stu_2", "like"),
-        ("th_101", None, "fac_2", "like"),
-        ("th_102", None, "fac_1", "like"),
-        ("th_103", None, "stu_3", "like"),
-        ("th_105", None, "stu_1", "like"),
-        ("th_107", None, "stu_1", "like"),
-        ("th_107", None, "stu_4", "like"),
-        (None, "c_201", "fac_1", "like"),
-        (None, "c_203", "stu_1", "like"),
-        (None, "c_205", "stu_3", "like")
-    ]
-
-    for r in reactions_seed:
-        cursor.execute("INSERT INTO forum_reactions (thread_id, comment_id, user_id, reaction_type) VALUES (?, ?, ?, ?)", r)
-
-    # Sample Reminders
-    reminders_seed = [
-        ("rem_301", "th_107", "stu_1", "2026-08-25 22:30:00", "Review defense slide guidelines before advisor meeting", 0),
-        ("rem_302", "th_101", "stu_1", "2026-09-05 10:00:00", "Complete literature review synthesis chapter", 0)
-    ]
-
-    for rem in reminders_seed:
-        cursor.execute("INSERT INTO thread_reminders (reminder_id, thread_id, user_id, remind_at, note, is_triggered) VALUES (?, ?, ?, ?, ?, ?)", rem)
+        cursor.execute("INSERT INTO research_papers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       (p["id"], p["title"], json.dumps(p["authors"]), p["domain"], p["year"], p["abstract"], json.dumps(p["vector"]), p["doi"], p["url"]))
 
     conn.commit()
     conn.close()
-    print("Database seeded successfully with generated data and discussion forums.")
+    print("Database seeded successfully with generated data.")
 
 if __name__ == "__main__":
+    seed_data()
     seed_data()

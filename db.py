@@ -196,20 +196,14 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS forum_reactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        thread_id TEXT,
-        comment_id TEXT,
+        thread_id TEXT NOT NULL,
         user_id TEXT NOT NULL,
         reaction_type TEXT NOT NULL,
-        FOREIGN KEY (thread_id) REFERENCES discussion_threads(thread_id) ON DELETE CASCADE,
-        FOREIGN KEY (comment_id) REFERENCES forum_comments(comment_id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        UNIQUE(thread_id, user_id, reaction_type),
+        FOREIGN KEY (thread_id) REFERENCES discussion_threads(thread_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
     )
     """)
-    try:
-        cursor.execute("ALTER TABLE forum_reactions ADD COLUMN comment_id TEXT")
-    except Exception:
-        pass
-
     
     # 16. Thread Reminders
     cursor.execute("""
@@ -261,6 +255,22 @@ def init_db():
         message_text TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         FOREIGN KEY (sender_id) REFERENCES users(user_id)
+    )
+    """)
+    
+    # 20. Notifications Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notifications (
+        notification_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        reference_id TEXT,
+        sender_id TEXT,
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
     )
     """)
     

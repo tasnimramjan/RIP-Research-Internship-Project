@@ -1,925 +1,519 @@
 // ==========================================================
-// Discussion Forums & Thread Reminders — Client Controller & View
+// Discussion Forums & Thread Reminders (Role & Activity Aware)
+// Dedicated Spaces:
+// 1. Thesis (Relevant to Thesis activity/role)
+// 2. Projects (Relevant to Project activity/role)
+// 3. Internships (Relevant to Internship activity/role)
+// 4. Defense Preparation (Relevant to Defense activity/role)
+// 5. General Academic Discussions (Open to all registered users)
 // ==========================================================
 
-const Forums = {
-  currentUser: null,
-  currentSpace: 'General Academic Discussions',
-  spacesData: {
-    accessible_spaces: ['General Academic Discussions'],
-    all_spaces: ['Thesis', 'Projects', 'Internships', 'Defense Preparation', 'General Academic Discussions'],
-    space_status: {},
-    space_reasons: {},
-    is_admin: false
-  },
-  threads: [],
-  searchQuery: '',
-  pollingInterval: null,
-  activeReminderThread: null,
-  activeReminderTitle: '',
-  socket: null,
-  audioChime: null,
+window.Forums = {
+    currentUser: null,
+    currentSpace: 'All',
+    spacesAccess: {},
+    pollingInterval: null,
+    activeReminderThreadId: null,
 
-  init(user) {
-    this.currentUser = user || (window.currentUser || null);
-    if (!this.currentUser) return;
+    spaces: [
+        { id: 'All', name: 'All Accessible', desc: 'Browse discussions across all accessible spaces.' },
+        { id: 'Thesis', name: 'Thesis', desc: 'Dedicated space for thesis proposals, literature reviews, and research methodology.' },
+        { id: 'Projects', name: 'Projects', desc: 'Dedicated space for capstone projects, software development, and technical collaboration.' },
+        { id: 'Internships', name: 'Internships', desc: 'Dedicated space for industrial internships, placement tips, and job experiences.' },
+        { id: 'Defense Preparation', name: 'Defense Preparation', desc: 'Dedicated space for presentation slides, defense questions, and panel preparation.' },
+        { id: 'General Academic Discussions', name: 'General Academic Discussions', desc: 'Open discussion space for general academic queries and university announcements.' }
+    ],
 
-    this.initSocket();
-    this.initAudio();
-    this.setupModalEvents();
-    this.loadSpacesAndThreads();
-    this.startReminderPolling();
-  },
+    getUser() {
+        this.currentUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null) || JSON.parse(localStorage.getItem('rip_user') || 'null');
+        return this.currentUser;
+    },
 
-  initAudio() {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.audioCtx = new AudioContext();
-      }
-    } catch (e) {
-      console.warn("AudioContext not supported", e);
-    }
-  },
+    async fetchSpacesAccess() {
+        const user = this.getUser();
+        if (!user) {
+            this.spacesAccess = {
+                "Thesis": false,
+                "Projects": false,
+                "Internships": false,
+                "Defense Preparation": false,
+                "General Academic Discussions": true
+            };
+            return this.spacesAccess;
+        }
 
-  playChime() {
-    try {
-      if (!this.audioCtx) return;
-      if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
-      }
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, this.audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, this.audioCtx.currentTime + 0.15); // A5
-      gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.4);
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.4);
-    } catch (e) {
-      // Audio autoplay restrictions fallback
-    }
-  },
+        try {
+            const res = await fetch(`/api/forums/access?user_id=${user.user_id}`);
+            const data = await res.json();
+            if (data.success && data.access) {
+                this.spacesAccess = data.access;
+            }
+        } catch (e) {
+            console.error('Error fetching forum spaces access', e);
+        }
+        return this.spacesAccess;
+    },
 
-  initSocket() {
-    this.socket = {
-      on: (event, callback) => {
-        window.addEventListener('rip_socket_' + event, (e) => callback(e.detail));
-      },
-      emit: (event, data) => {
-        window.dispatchEvent(new CustomEvent('rip_socket_' + event, { detail: data }));
-      }
-    };
+    hasSpaceAccess(spaceId) {
+        if (spaceId === 'All' || spaceId === 'General Academic Discussions') return true;
+        const user = this.getUser();
+        if (!user) return false;
+        if (user.role === 'Admin') return true;
+        return !!this.spacesAccess[spaceId];
+    },
 
-    // Bind real-time thread reminder receiver
-    this.socket.on('thread_reminder', (reminder) => {
-      this.showReminderAlert(reminder);
-    });
+    async init(user) {
+        if (user) this.currentUser = user;
+        else this.getUser();
 
-    this.socket.on('forum_thread_created', (data) => {
-      if (data && data.category === this.currentSpace) {
-        this.loadThreads(false);
-      }
-    });
-  },
+        await this.fetchSpacesAccess();
+        this.renderSpacesSidebar();
+        this.loadThreads();
+        this.startReminderPolling();
+    },
 
-  setupModalEvents() {
-    const openBtn = document.getElementById('openCreateThreadBtn');
-    const modal = document.getElementById('createThreadModal');
-    const form = document.getElementById('createThreadForm');
+    renderSpacesSidebar() {
+        const listEl = document.getElementById('forumSpacesList');
+        if (!listEl) return;
 
-    if (openBtn) {
-      openBtn.onclick = () => {
-        if (!this.currentUser) return alert('Please log in to start a discussion thread.');
-        this.populateCreateModalCategoryOptions();
+        listEl.innerHTML = this.spaces.map(s => {
+            const hasAccess = this.hasSpaceAccess(s.id);
+            const isActive = this.currentSpace === s.id;
+            const badgeHtml = s.id === 'All' ? '' : (hasAccess 
+                ? `<span class="space-active-pill">Active</span>` 
+                : `<span class="space-locked-pill">Locked</span>`);
+
+            return `
+                <li class="forum-space-item ${isActive ? 'active' : ''}" onclick="Forums.selectSpace('${s.id}')">
+                    <span>${s.name}</span>
+                    ${badgeHtml}
+                </li>
+            `;
+        }).join('');
+    },
+
+    selectSpace(spaceId) {
+        this.currentSpace = spaceId;
+        this.renderSpacesSidebar();
+        
+        const spaceObj = this.spaces.find(s => s.id === spaceId) || this.spaces[0];
+        const titleEl = document.getElementById('currentSpaceTitle');
+        const descEl = document.getElementById('currentSpaceDesc');
+        const badgeEl = document.getElementById('currentSpaceAccessBadge');
+        const newThreadBtn = document.getElementById('openCreateThreadBtn');
+
+        if (titleEl) titleEl.innerText = spaceObj.name;
+        if (descEl) descEl.innerText = spaceObj.desc;
+
+        const hasAccess = this.hasSpaceAccess(spaceId);
+        if (badgeEl) {
+            if (spaceId === 'All') {
+                badgeEl.innerHTML = '';
+            } else if (hasAccess) {
+                badgeEl.innerHTML = `<span class="space-active-pill">Active Space</span>`;
+            } else {
+                badgeEl.innerHTML = `<span class="space-locked-pill">Locked Space</span>`;
+            }
+        }
+
+        if (newThreadBtn) {
+            newThreadBtn.style.display = hasAccess ? 'inline-block' : 'none';
+        }
+
+        this.loadThreads();
+    },
+
+    async loadThreads() {
+        const container = document.getElementById('threadsContainer');
+        if (!container) return;
+
+        const user = this.getUser();
+        const hasAccess = this.hasSpaceAccess(this.currentSpace);
+
+        if (!hasAccess) {
+            container.innerHTML = `
+                <div style="background:var(--bg-card); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius); padding:2.5rem; text-align:center;">
+                    <h4 style="color:#ef4444; margin-bottom:0.5rem; font-size:1.1rem;">Discussion Space Locked</h4>
+                    <p style="color:var(--text-muted); font-size:0.95rem; max-width:540px; margin:0 auto 1.2rem; line-height:1.6;">
+                        Access to ${this.currentSpace} is restricted. Students and faculty can see their respective discussion space.
+                    </p>
+                    <button class="btn btn-sm btn-secondary" onclick="Forums.selectSpace('General Academic Discussions')">
+                        Go to General Academic Discussions
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        try {
+            const url = (this.currentSpace === 'All')
+                ? '/api/forums/threads'
+                : `/api/forums/threads?category=${encodeURIComponent(this.currentSpace)}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success || !data.threads || data.threads.length === 0) {
+                container.innerHTML = `
+                    <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:3rem 1.5rem; text-align:center;">
+                        <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">No discussion threads found in this space.</p>
+                        ${hasAccess ? `<button class="btn btn-sm btn-cyan" onclick="Forums.openCreateModal()">+ Start First Thread</button>` : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            // Filter out any threads from spaces the user has no access to when on 'All'
+            const visibleThreads = data.threads.filter(t => this.hasSpaceAccess(t.category));
+
+            if (visibleThreads.length === 0) {
+                container.innerHTML = `
+                    <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:3rem 1.5rem; text-align:center;">
+                        <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">No threads found in your accessible spaces.</p>
+                        <button class="btn btn-sm btn-cyan" onclick="Forums.openCreateModal()">+ Start First Thread</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = visibleThreads.map(t => {
+                const likeCount = (t.reactions && t.reactions.like) ? t.reactions.like : 0;
+                const commentsCount = (t.comments && Array.isArray(t.comments)) ? t.comments.length : 0;
+                const isAuthorOrAdmin = user && (user.user_id === t.user_id || user.role === 'Admin');
+
+                return `
+                    <div class="thread-card" id="thread-${t.thread_id}">
+                        <div class="thread-meta">
+                            <span class="badge">${this.escapeHtml(t.category)}</span>
+                            <span>Posted by <strong>${this.escapeHtml(t.author_name)}</strong> (${this.escapeHtml(t.author_role || 'Member')})</span>
+                            <span style="margin-left:auto;">${t.created_at ? t.created_at : ''}</span>
+                        </div>
+                        <div class="thread-title">${this.escapeHtml(t.title)}</div>
+                        <div class="thread-content">${this.escapeHtml(t.content)}</div>
+
+                        <div class="thread-actions">
+                            <button class="forum-action-btn" onclick="Forums.reactToThread('${t.thread_id}')">
+                                Like (${likeCount})
+                            </button>
+                            <button class="forum-action-btn" onclick="Forums.toggleComments('${t.thread_id}')">
+                                Comments (${commentsCount})
+                            </button>
+                            <button class="forum-action-btn" onclick="Forums.openReminderModal('${t.thread_id}')">
+                                Remind Me
+                            </button>
+                            ${isAuthorOrAdmin ? `
+                                <button class="btn btn-sm btn-danger" style="margin-left:auto; padding:0.25rem 0.65rem; font-size:0.75rem;" onclick="Forums.deleteThread('${t.thread_id}')">
+                                    Delete
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <div class="comments-section" id="comments-${t.thread_id}">
+                            <div class="comments-list">
+                                ${(t.comments && t.comments.length > 0) ? t.comments.map(c => `
+                                    <div class="comment-item">
+                                        <div class="comment-meta">
+                                            <strong>${this.escapeHtml(c.author_name)}</strong> (${this.escapeHtml(c.author_role || 'Member')}) &bull; ${c.created_at ? c.created_at : ''}
+                                        </div>
+                                        <div class="comment-content">${this.escapeHtml(c.content)}</div>
+                                    </div>
+                                `).join('') : `<p style="color:var(--text-muted); font-size:0.85rem; padding:0.5rem 0;">No comments yet. Be the first to share your thoughts!</p>`}
+                            </div>
+                            <div class="comment-input-row">
+                                <input type="text" id="comment-input-${t.thread_id}" placeholder="Write a comment...">
+                                <button class="btn btn-sm btn-cyan" onclick="Forums.postComment('${t.thread_id}')">Post</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Error loading threads', err);
+            container.innerHTML = `<p style="color:var(--accent-pink); padding:2rem; text-align:center;">Failed to load discussions. Please refresh.</p>`;
+        }
+    },
+
+    toggleComments(threadId) {
+        const sec = document.getElementById(`comments-${threadId}`);
+        if (sec) sec.classList.toggle('open');
+    },
+
+    // ── Create Thread Modal ──
+    openCreateModal() {
+        const user = this.getUser();
+        if (!user) return alert('Please log in to create a discussion thread.');
+
+        const modal = document.getElementById('createThreadModal');
+        const catSelect = document.getElementById('threadCategory');
+        if (!modal || !catSelect) return;
+
+        // Populate only spaces the user has verified access to
+        const allowed = this.spaces.filter(s => s.id !== 'All' && this.hasSpaceAccess(s.id));
+        catSelect.innerHTML = allowed.map(s => `
+            <option value="${s.id}" ${s.id === this.currentSpace ? 'selected' : ''}>${s.name}</option>
+        `).join('');
+
         modal.classList.add('open');
-      };
-    }
+    },
 
-    if (form) {
-      form.onsubmit = async (e) => {
+    closeCreateModal() {
+        const modal = document.getElementById('createThreadModal');
+        if (modal) modal.classList.remove('open');
+        document.getElementById('createThreadForm')?.reset();
+    },
+
+    async handleCreateThread(e) {
         e.preventDefault();
+        const user = this.getUser();
+        if (!user) return alert('Please log in.');
+
         const title = document.getElementById('threadTitle').value.trim();
         const category = document.getElementById('threadCategory').value;
         const content = document.getElementById('threadContent').value.trim();
-        if (!title || !content) return alert('Title and content are required.');
-        await this.createThread(title, category, content);
-      };
-    }
 
-    // Reminder date and time live preview
-    const dateInput = document.getElementById('reminderDateInput');
-    const timeInput = document.getElementById('reminderTimeInput');
-    const updatePreview = () => {
-      const d = dateInput ? dateInput.value : '';
-      const t = timeInput ? timeInput.value : '';
-      const previewEl = document.getElementById('reminderLivePreview');
-      if (!previewEl) return;
-      if (!d || !t) {
-        previewEl.innerHTML = 'Target: Please select a valid date and time';
-        return;
-      }
-      const [year, month, day] = d.split('-');
-      const formattedDate = `${day}/${month}/${year}`;
-      const [hours, mins] = t.split(':');
-      let hourNum = parseInt(hours, 10);
-      const ampm = hourNum >= 12 ? 'PM' : 'AM';
-      hourNum = hourNum % 12 || 12;
-      const formattedTime = `${hourNum}:${mins} ${ampm}`;
-      previewEl.innerHTML = `<strong>Scheduled for:</strong> ${formattedDate} at ${formattedTime}`;
-    };
+        if (!title || !category || !content) return alert('All fields are required.');
 
-    if (dateInput) dateInput.addEventListener('input', updatePreview);
-    if (timeInput) timeInput.addEventListener('input', updatePreview);
-  },
-
-  populateCreateModalCategoryOptions() {
-    const select = document.getElementById('threadCategory');
-    const notice = document.getElementById('threadCategoryNotice');
-    if (!select) return;
-
-    select.innerHTML = '';
-    const allSpaces = this.spacesData.all_spaces || [
-      'General Academic Discussions',
-      'Thesis',
-      'Projects',
-      'Internships',
-      'Defense Preparation'
-    ];
-
-    allSpaces.forEach(s => {
-      const isAllowed = this.spacesData.is_admin || (this.spacesData.accessible_spaces && this.spacesData.accessible_spaces.includes(s));
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = isAllowed ? s : `${s} (Locked)`;
-      opt.disabled = !isAllowed;
-      if (s === this.currentSpace && isAllowed) opt.selected = true;
-      select.appendChild(opt);
-    });
-
-    const updateNotice = () => {
-      const val = select.value;
-      const reason = this.spacesData.space_reasons ? this.spacesData.space_reasons[val] : '';
-      if (notice) notice.textContent = reason || '';
-    };
-
-    select.onchange = updateNotice;
-    updateNotice();
-  },
-
-  async loadSpacesAndThreads() {
-    if (!this.currentUser) return;
-    try {
-      const res = await fetch(`/api/forums/spaces?user_id=${this.currentUser.user_id}`);
-      const data = await res.json();
-      if (data.success) {
-        this.spacesData = data;
-        // If current space is not accessible, default to first accessible space
-        if (!data.is_admin && !data.accessible_spaces.includes(this.currentSpace)) {
-          this.currentSpace = data.accessible_spaces[0] || 'General Academic Discussions';
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load forum spaces', e);
-    }
-
-    this.renderContainerStructure();
-    await this.loadThreads();
-
-    if (this.spacesData.is_admin) {
-      this.loadAdminStats();
-    }
-  },
-
-  renderContainerStructure() {
-    const root = document.getElementById('forums-app');
-    if (!root) return;
-
-    const allSpaces = this.spacesData.all_spaces || [
-      'Thesis',
-      'Projects',
-      'Internships',
-      'Defense Preparation',
-      'General Academic Discussions'
-    ];
-
-    root.innerHTML = `
-      <div class="forums-wrapper">
-        ${this.spacesData.is_admin ? `
-          <div id="forumAdminBanner" class="forum-admin-banner">
-            <div class="forum-admin-header">
-              <div class="forum-admin-title">
-                <span>Discussion Space Moderation & Analytics</span>
-              </div>
-              <button class="btn btn-sm btn-secondary" onclick="Forums.openAdminRemindersModal()">Manage Reminders</button>
-            </div>
-            <div id="forumAdminStats" class="forum-admin-stats-grid">
-              <div class="forum-stat-card"><div class="forum-stat-num" id="statTotalThreads">-</div><div class="forum-stat-label">Threads</div></div>
-              <div class="forum-stat-card"><div class="forum-stat-num" id="statTotalComments">-</div><div class="forum-stat-label">Comments</div></div>
-              <div class="forum-stat-card"><div class="forum-stat-num" id="statTotalReactions">-</div><div class="forum-stat-label">Reactions</div></div>
-              <div class="forum-stat-card"><div class="forum-stat-num" id="statActiveReminders">-</div><div class="forum-stat-label">Active Reminders</div></div>
-            </div>
-          </div>
-        ` : ''}
-
-        <div class="forums-main-layout">
-          <!-- Sidebar: Dedicated Discussion Spaces -->
-          <div class="forums-sidebar">
-            <div class="forums-sidebar-title">
-              <span>Discussion Spaces</span>
-              <span style="font-size:0.75rem; color:var(--accent-cyan);">${this.currentUser.role}</span>
-            </div>
-            <ul class="space-nav-list" id="spaceNavList">
-              ${allSpaces.map(s => {
-                const isAccessible = this.spacesData.is_admin || (this.spacesData.accessible_spaces && this.spacesData.accessible_spaces.includes(s));
-                const isActive = (s === this.currentSpace);
-
-                return `
-                  <li class="space-nav-item ${isActive ? 'active' : ''} ${!isAccessible ? 'locked' : ''}" 
-                      onclick="Forums.selectSpace('${s}')" title="${this.spacesData.space_reasons ? (this.spacesData.space_reasons[s] || '') : ''}">
-                    <div class="space-item-label">
-                      <span>${s}</span>
-                    </div>
-                    <div>
-                      ${!isAccessible ? '<span class="space-locked-pill">Locked</span>' : '<span class="space-active-pill">Active</span>'}
-                    </div>
-                  </li>
-                `;
-              }).join('')}
-            </ul>
-          </div>
-
-          <!-- Content: Threads & Toolbar -->
-          <div class="forums-content">
-            <div class="forums-toolbar">
-              <div class="forums-search-box">
-                <input type="text" id="forumSearchInput" placeholder="Search discussions in ${this.currentSpace}..." oninput="Forums.handleSearch(this.value)" style="padding-left:1rem;">
-              </div>
-              <div style="display:flex; gap:0.5rem; align-items:center;">
-                <span style="font-size:0.85rem; color:var(--text-muted);">Current Space:</span>
-                <span class="space-badge space-${this.currentSpace.replace(/\s+/g, '-')}">${this.currentSpace}</span>
-              </div>
-            </div>
-
-            <!-- Inaccessible Space Warning -->
-            <div id="lockedSpaceBanner" style="display:none;" class="locked-space-notice">
-              <h3>Space Access Restricted</h3>
-              <p id="lockedSpaceReasonText"></p>
-              <div id="lockedSpaceActionBtn"></div>
-            </div>
-
-            <!-- Threads List -->
-            <div id="threadsContainer" class="threads-container">
-              <div style="text-align:center; padding:2rem; color:var(--text-muted);">Loading discussions...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  },
-
-  async loadAdminStats() {
-    if (!this.spacesData.is_admin) return;
-    try {
-      const res = await fetch(`/api/forums/admin/stats?user_id=${this.currentUser.user_id}`);
-      const data = await res.json();
-      if (data.success && data.stats) {
-        document.getElementById('statTotalThreads').innerText = data.stats.total_threads || 0;
-        document.getElementById('statTotalComments').innerText = data.stats.total_comments || 0;
-        document.getElementById('statTotalReactions').innerText = data.stats.total_reactions || 0;
-        document.getElementById('statActiveReminders').innerText = data.stats.active_reminders || 0;
-      }
-    } catch (e) {
-      console.error('Failed to load admin forum stats', e);
-    }
-  },
-
-  selectSpace(spaceName) {
-    this.currentSpace = spaceName;
-    this.renderContainerStructure();
-    this.loadThreads();
-  },
-
-  handleSearch(query) {
-    this.searchQuery = (query || '').toLowerCase().trim();
-    this.renderThreadsList();
-  },
-
-  async loadThreads(showLoader = true) {
-    const isAccessible = this.spacesData.is_admin || (this.spacesData.accessible_spaces && this.spacesData.accessible_spaces.includes(this.currentSpace));
-    const lockedBanner = document.getElementById('lockedSpaceBanner');
-    const container = document.getElementById('threadsContainer');
-
-    if (!isAccessible) {
-      if (lockedBanner) {
-        lockedBanner.style.display = 'flex';
-        const reason = (this.spacesData.space_reasons && this.spacesData.space_reasons[this.currentSpace]) || 'You do not have active participation in this discussion space.';
-        document.getElementById('lockedSpaceReasonText').innerText = reason;
-        
-        const actionBtn = document.getElementById('lockedSpaceActionBtn');
-        if (this.currentSpace === 'Thesis') {
-          actionBtn.innerHTML = `<button class="btn btn-sm btn-cyan" onclick="switchView('thesis-groups')">Explore Thesis Groups</button>`;
-        } else if (this.currentSpace === 'Projects') {
-          actionBtn.innerHTML = `<button class="btn btn-sm btn-cyan" onclick="switchView('teammate-finder')">Explore Project Teammates</button>`;
-        } else if (this.currentSpace === 'Internships') {
-          actionBtn.innerHTML = `<button class="btn btn-sm btn-cyan" onclick="switchView('internship-portal')">View Internship Portal</button>`;
-        } else {
-          actionBtn.innerHTML = '';
-        }
-      }
-      if (container) container.innerHTML = '';
-      return;
-    } else {
-      if (lockedBanner) lockedBanner.style.display = 'none';
-    }
-
-    if (showLoader && container) {
-      container.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-muted);">Loading discussions...</div>';
-    }
-
-    try {
-      const url = `/api/forums/threads?category=${encodeURIComponent(this.currentSpace)}&user_id=${this.currentUser.user_id}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.success) {
-        this.threads = data.threads || [];
-        this.renderThreadsList();
-      }
-    } catch (e) {
-      console.error('Failed to load threads', e);
-      if (container) container.innerHTML = '<p style="color:#ef4444; text-align:center; padding:1.5rem;">Failed to load threads. Please try again.</p>';
-    }
-  },
-
-  renderThreadsList() {
-    const container = document.getElementById('threadsContainer');
-    if (!container) return;
-
-    let list = this.threads;
-    if (this.searchQuery) {
-      list = list.filter(t => 
-        (t.title && t.title.toLowerCase().includes(this.searchQuery)) ||
-        (t.content && t.content.toLowerCase().includes(this.searchQuery)) ||
-        (t.author_name && t.author_name.toLowerCase().includes(this.searchQuery))
-      );
-    }
-
-    if (list.length === 0) {
-      container.innerHTML = `
-        <div style="background:var(--bg-card); border:1px dashed var(--border-color); border-radius:var(--radius); padding:3rem; text-align:center;">
-          <p style="font-size:1.1rem; color:var(--text-muted); margin-bottom:0.8rem;">No discussion threads found in <strong>${this.currentSpace}</strong>.</p>
-          <button class="btn btn-sm btn-cyan" onclick="document.getElementById('openCreateThreadBtn').click()">+ Start the First Discussion</button>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = list.map(t => {
-      const likeCount = (t.reactions && t.reactions.like) ? t.reactions.like : 0;
-      const commentsCount = (t.comments && t.comments.length) ? t.comments.length : 0;
-      const userReacted = Boolean(t.user_reacted);
-      const hasReminder = Boolean(t.user_reminder);
-
-      return `
-        <div class="thread-card" id="thread-card-${t.thread_id}">
-          <div class="thread-header">
-            <div class="thread-meta-left">
-              <span class="space-badge space-${(t.category || '').replace(/\s+/g, '-')}">${t.category}</span>
-              <span class="thread-author-chip">Posted by <strong>${t.author_name}</strong> &bull; <span class="role-pill role-${t.author_role}">${t.author_role}</span> (${t.department})</span>
-              <span class="thread-timestamp">&bull; ${this.formatDateTime(t.created_at)}</span>
-            </div>
-            ${t.can_delete ? `
-              <button class="btn btn-sm btn-danger" style="padding:0.25rem 0.6rem; font-size:0.75rem;" onclick="Forums.deleteThread('${t.thread_id}')">
-                Delete
-              </button>
-            ` : ''}
-          </div>
-
-          <h3 class="thread-title">${this.escapeHtml(t.title)}</h3>
-          <div class="thread-body">${this.escapeHtml(t.content)}</div>
-
-          <div class="thread-actions-bar">
-            <div class="thread-actions-left">
-              <button class="btn-forum-action ${userReacted ? 'reacted' : ''}" onclick="Forums.toggleReaction('${t.thread_id}')">
-                <span>❤️</span>
-                <span>${likeCount} ${likeCount === 1 ? 'Reaction' : 'Reactions'}</span>
-              </button>
-
-              <button class="btn-forum-action" onclick="Forums.toggleComments('${t.thread_id}')">
-                <span>💬</span>
-                <span>${commentsCount} ${commentsCount === 1 ? 'Comment' : 'Comments'}</span>
-              </button>
-
-              <button class="btn-forum-action ${hasReminder ? 'reminded' : ''}" onclick="Forums.promptReminder('${t.thread_id}', '${this.escapeJs(t.title)}')">
-                <span>⏰</span>
-                <span>${hasReminder ? `Reminder set: ${this.formatDateTime(t.user_reminder.remind_at)}` : 'Remind Me'}</span>
-              </button>
-            </div>
-
-            ${this.spacesData.is_admin ? `
-              <button class="btn-forum-action" style="color:var(--accent-pink);" onclick="Forums.moderateReactions('${t.thread_id}')">
-                Moderate Reactions
-              </button>
-            ` : ''}
-          </div>
-
-          <!-- Comments Accordion -->
-          <div class="comments-accordion" id="comments-${t.thread_id}">
-            <div class="comments-list">
-              ${(t.comments && t.comments.length > 0) ? t.comments.map(c => `
-                <div class="comment-card" id="comment-${c.comment_id}">
-                  <div class="comment-meta">
-                    <span class="comment-author">
-                      <strong>${this.escapeHtml(c.author_name)}</strong> 
-                      <span class="role-pill role-${c.author_role}" style="font-size:0.68rem; padding:0.1rem 0.4rem;">${c.author_role}</span>
-                      &bull; <span style="font-size:0.72rem; color:var(--text-muted);">${this.formatDateTime(c.created_at)}</span>
-                    </span>
-                    ${c.can_delete ? `
-                      <button class="btn btn-sm btn-danger" style="padding:0.15rem 0.45rem; font-size:0.7rem;" onclick="Forums.deleteComment('${c.comment_id}')">Delete</button>
-                    ` : ''}
-                  </div>
-                  <div class="comment-text">${this.escapeHtml(c.content)}</div>
-                  <div class="comment-actions">
-                    <button class="btn-forum-action ${c.user_reacted ? 'reacted' : ''}" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="Forums.toggleCommentReaction('${c.comment_id}')">
-                      ❤️ <span>${(c.reactions && c.reactions.like) || 0}</span>
-                    </button>
-                  </div>
-                </div>
-              `).join('') : '<p style="color:var(--text-muted); font-size:0.85rem; padding:0.5rem 0;">No comments yet. Be the first to reply!</p>'}
-            </div>
-
-            <div class="comment-input-bar">
-              <input type="text" id="comment-input-${t.thread_id}" placeholder="Write a comment..." onkeypress="if(event.key==='Enter') Forums.postComment('${t.thread_id}')">
-              <button class="btn btn-sm btn-cyan" onclick="Forums.postComment('${t.thread_id}')">Post</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  },
-
-  toggleComments(threadId) {
-    const el = document.getElementById(`comments-${threadId}`);
-    if (el) {
-      el.classList.toggle('open');
-    }
-  },
-
-  async createThread(title, category, content) {
-    try {
-      const res = await fetch('/api/forums/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          title,
-          category,
-          content
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('createThreadModal').classList.remove('open');
-        document.getElementById('createThreadForm').reset();
-        this.currentSpace = category;
-        this.renderContainerStructure();
-        await this.loadThreads();
-        if (this.socket) {
-          this.socket.emit('forum_thread_created', { category });
-        }
-      } else {
-        alert(data.message || 'Failed to create thread.');
-      }
-    } catch (e) {
-      console.error('Thread creation error', e);
-    }
-  },
-
-  async postComment(threadId) {
-    const input = document.getElementById(`comment-input-${threadId}`);
-    if (!input) return;
-    const content = input.value.trim();
-    if (!content) return;
-
-    try {
-      const res = await fetch('/api/forums/comment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          thread_id: threadId,
-          content
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        input.value = '';
-        await this.loadThreads(false);
-        const sec = document.getElementById(`comments-${threadId}`);
-        if (sec) sec.classList.add('open');
-      } else {
-        alert(data.message || 'Failed to post comment.');
-      }
-    } catch (e) {
-      console.error('Comment posting error', e);
-    }
-  },
-
-  async deleteComment(commentId) {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
-    try {
-      const res = await fetch('/api/forums/comment/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          comment_id: commentId
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        await this.loadThreads(false);
-      } else {
-        alert(data.message || 'Failed to delete comment.');
-      }
-    } catch (e) {
-      console.error('Delete comment error', e);
-    }
-  },
-
-  async toggleReaction(threadId) {
-    try {
-      const res = await fetch('/api/forums/react', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          thread_id: threadId,
-          reaction_type: 'like'
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        await this.loadThreads(false);
-      } else {
-        alert(data.message || 'Reaction failed.');
-      }
-    } catch (e) {
-      console.error('Reaction toggle error', e);
-    }
-  },
-
-  async toggleCommentReaction(commentId) {
-    try {
-      const res = await fetch('/api/forums/react', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          comment_id: commentId,
-          reaction_type: 'like'
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        await this.loadThreads(false);
-      }
-    } catch (e) {
-      console.error('Comment reaction error', e);
-    }
-  },
-
-  async moderateReactions(threadId) {
-    if (!confirm('Admin: Clear all reactions for this thread?')) return;
-    try {
-      const res = await fetch('/api/forums/react/moderate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          thread_id: threadId
-        })
-      });
-      const data = await res.json();
-      alert(data.message);
-      if (data.success) {
-        await this.loadThreads(false);
-      }
-    } catch (e) {
-      console.error('Moderation error', e);
-    }
-  },
-
-  async deleteThread(threadId) {
-    if (!confirm('Are you sure you want to delete this discussion thread?')) return;
-    try {
-      const res = await fetch('/api/forums/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          thread_id: threadId
-        })
-      });
-      const data = await res.json();
-      alert(data.message);
-      if (data.success) {
-        await this.loadThreads();
-        if (this.spacesData.is_admin) this.loadAdminStats();
-      }
-    } catch (e) {
-      console.error('Delete thread error', e);
-    }
-  },
-
-  promptReminder(threadId, threadTitle) {
-    this.activeReminderThread = threadId;
-    this.activeReminderTitle = threadTitle;
-
-    const titleEl = document.getElementById('reminderThreadTitle');
-    if (titleEl) titleEl.innerText = `Thread: "${threadTitle}"`;
-
-    // Default to 1 hour from now formatted
-    const now = new Date();
-    now.setHours(now.getHours() + 1);
-
-    const pad = n => (n < 10 ? '0' + n : n);
-    const dateVal = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-    const timeVal = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
-    const dateInput = document.getElementById('reminderDateInput');
-    const timeInput = document.getElementById('reminderTimeInput');
-    const noteInput = document.getElementById('reminderNote');
-
-    if (dateInput) dateInput.value = dateVal;
-    if (timeInput) timeInput.value = timeVal;
-    if (noteInput) noteInput.value = '';
-
-    const previewEl = document.getElementById('reminderLivePreview');
-    if (previewEl) {
-      const [year, month, day] = dateVal.split('-');
-      const [h, m] = timeVal.split(':');
-      let hNum = parseInt(h, 10);
-      const ampm = hNum >= 12 ? 'PM' : 'AM';
-      hNum = hNum % 12 || 12;
-      previewEl.innerHTML = `<strong>Scheduled for:</strong> ${day}/${month}/${year} at ${hNum}:${m} ${ampm}`;
-    }
-
-    document.getElementById('setReminderModal').classList.add('open');
-  },
-
-  async submitReminder() {
-    const dateVal = document.getElementById('reminderDateInput').value;
-    const timeVal = document.getElementById('reminderTimeInput').value;
-    const note = document.getElementById('reminderNote').value.trim();
-
-    if (!dateVal || !timeVal) {
-      return alert('Please select both a date and time for the reminder.');
-    }
-
-    const remind_at = `${dateVal} ${timeVal}:00`;
-
-    try {
-      const res = await fetch('/api/forums/reminder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          thread_id: this.activeReminderThread,
-          remind_at,
-          note: note || `Reminder for "${this.activeReminderTitle}"`
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('setReminderModal').classList.remove('open');
-        this.showToastNotification(`Reminder set for ${remind_at}!`);
-        await this.loadThreads(false);
-
-        // Notify real-time socket layer
-        if (this.socket) {
-          this.socket.emit('reminder_scheduled', {
-            reminder_id: data.reminder_id,
-            remind_at,
-            thread_id: this.activeReminderThread
-          });
-        }
-      } else {
-        alert(data.message || 'Failed to schedule reminder.');
-      }
-    } catch (e) {
-      console.error('Reminder error', e);
-    }
-  },
-
-  startReminderPolling() {
-    if (this.pollingInterval) clearInterval(this.pollingInterval);
-
-    // Poll every 6 seconds for due reminders in SQLite
-    this.pollingInterval = setInterval(async () => {
-      if (!this.currentUser) return;
-      try {
-        const res = await fetch(`/api/forums/reminders?user_id=${this.currentUser.user_id}`);
-        const data = await res.json();
-        if (data.success && data.reminders && data.reminders.length > 0) {
-          data.reminders.forEach(r => {
-            if (this.socket) {
-              this.socket.emit('thread_reminder', r);
+        try {
+            const res = await fetch('/api/forums/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.user_id,
+                    title: title,
+                    category: category,
+                    content: content
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.closeCreateModal();
+                this.currentSpace = category;
+                this.renderSpacesSidebar();
+                this.loadThreads();
             } else {
-              this.showReminderAlert(r);
+                alert(data.message || 'Failed to create thread.');
             }
-          });
+        } catch (err) {
+            console.error('Create thread error', err);
         }
-      } catch (e) {
-        // network polling silent catch
-      }
-    }, 6000);
-  },
+    },
 
-  showReminderAlert(reminder) {
-    this.playChime();
+    async postComment(threadId) {
+        const user = this.getUser();
+        if (!user) return alert('Please log in to comment.');
 
-    // Check if duplicate toast already on screen
-    const existing = document.getElementById(`reminder-toast-${reminder.reminder_id}`);
-    if (existing) return;
+        const input = document.getElementById(`comment-input-${threadId}`);
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
 
-    const toast = document.createElement('div');
-    toast.className = 'reminder-toast-alert';
-    toast.id = `reminder-toast-${reminder.reminder_id}`;
-    toast.innerHTML = `
-      <div class="reminder-toast-header">
-        <span class="reminder-toast-title">Thread Reminder Alert</span>
-        <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.1rem;" onclick="this.closest('.reminder-toast-alert').remove()">&times;</button>
-      </div>
-      <div class="reminder-toast-body">
-        <strong>${this.escapeHtml(reminder.thread_title || 'Discussion Thread')}</strong>
-        <div style="font-size:0.78rem; color:var(--accent-cyan); margin-top:0.2rem;">Space: ${reminder.category || 'Discussion'}</div>
-      </div>
-      ${reminder.note ? `<div class="reminder-toast-note">Note: ${this.escapeHtml(reminder.note)}</div>` : ''}
-      <div class="reminder-toast-actions">
-        <button class="btn btn-sm btn-secondary" onclick="this.closest('.reminder-toast-alert').remove()">Dismiss</button>
-        <button class="btn btn-sm btn-cyan" onclick="Forums.goToReminderThread('${reminder.category || ''}', '${reminder.thread_id}', '${reminder.reminder_id}')">Open Thread</button>
-      </div>
-    `;
+        input.value = '';
 
-    document.body.appendChild(toast);
+        try {
+            const res = await fetch('/api/forums/comment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.user_id,
+                    thread_id: threadId,
+                    content: text
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.loadThreads();
+            } else {
+                alert(data.message || 'Failed to post comment.');
+            }
+        } catch (err) {
+            console.error('Post comment error', err);
+        }
+    },
 
-    // Auto-remove toast after 30 seconds
-    setTimeout(() => {
-      if (document.body.contains(toast)) toast.remove();
-    }, 30000);
-  },
+    async reactToThread(threadId) {
+        const user = this.getUser();
+        if (!user) return alert('Please log in to react.');
 
-  goToReminderThread(category, threadId, toastId) {
-    if (toastId) {
-      const t = document.getElementById(`reminder-toast-${toastId}`);
-      if (t) t.remove();
+        try {
+            const res = await fetch('/api/forums/react', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.user_id,
+                    thread_id: threadId,
+                    reaction_type: 'like'
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.loadThreads();
+            }
+        } catch (err) {
+            console.error('Reaction error', err);
+        }
+    },
+
+    async deleteThread(threadId) {
+        const user = this.getUser();
+        if (!user) return alert('Please log in.');
+        if (!confirm('Are you sure you want to delete this discussion thread?')) return;
+
+        try {
+            const res = await fetch('/api/forums/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.user_id,
+                    thread_id: threadId
+                })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) {
+                this.loadThreads();
+            }
+        } catch (err) {
+            console.error('Delete thread error', err);
+        }
+    },
+
+    // ── Reminder Modal with Specific Date & Time Selection ──
+    openReminderModal(threadId) {
+        const user = this.getUser();
+        if (!user) return alert('Please log in to set a thread reminder.');
+
+        this.activeReminderThreadId = threadId;
+        const modal = document.getElementById('setReminderModal');
+        if (!modal) return;
+
+        // Set default date & time (1 hour from now)
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+
+        const pad = n => n < 10 ? '0' + n : n;
+        const yyyy = now.getFullYear();
+        const mm = pad(now.getMonth() + 1);
+        const dd = pad(now.getDate());
+        const hh = pad(now.getHours());
+        const min = pad(now.getMinutes());
+
+        const dateInput = document.getElementById('reminderDate');
+        const timeInput = document.getElementById('reminderTime');
+        const noteInput = document.getElementById('reminderNote');
+
+        if (dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
+        if (timeInput) timeInput.value = `${hh}:${min}`;
+        if (noteInput) noteInput.value = '';
+
+        this.updateReminderPreview();
+        modal.classList.add('open');
+    },
+
+    closeReminderModal() {
+        const modal = document.getElementById('setReminderModal');
+        if (modal) modal.classList.remove('open');
+        this.activeReminderThreadId = null;
+    },
+
+    updateReminderPreview() {
+        const dVal = document.getElementById('reminderDate')?.value;
+        const tVal = document.getElementById('reminderTime')?.value;
+        const previewEl = document.getElementById('reminderFormattedPreview');
+        if (!previewEl) return;
+
+        if (!dVal || !tVal) {
+            previewEl.innerText = 'Please select date & time';
+            return;
+        }
+
+        const [y, m, d] = dVal.split('-');
+        const [hourStr, minStr] = tVal.split(':');
+        let hours = parseInt(hourStr, 10);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const formattedTime = `${hours < 10 ? '0' + hours : hours}:${minStr} ${ampm}`;
+
+        previewEl.innerHTML = `<strong>Date:</strong> ${d}/${m}/${y} &nbsp;&bull;&nbsp; <strong>Time:</strong> ${formattedTime}`;
+    },
+
+    async handleSetReminder(e) {
+        e.preventDefault();
+        const user = this.getUser();
+        if (!user || !this.activeReminderThreadId) return;
+
+        const dVal = document.getElementById('reminderDate')?.value;
+        const tVal = document.getElementById('reminderTime')?.value;
+        const note = document.getElementById('reminderNote')?.value.trim();
+
+        if (!dVal || !tVal) {
+            return alert('Please select a specific date and time for the reminder.');
+        }
+
+        const remind_at = `${dVal} ${tVal}:00`;
+
+        // Format for confirmation alert: e.g. 25/08/2026, 10:30 PM
+        const [y, m, d] = dVal.split('-');
+        const [h, min] = tVal.split(':');
+        let hourNum = parseInt(h, 10);
+        const ampm = hourNum >= 12 ? 'PM' : 'AM';
+        hourNum = hourNum % 12 || 12;
+        const readableTime = `${hourNum < 10 ? '0' + hourNum : hourNum}:${min} ${ampm}`;
+
+        try {
+            const res = await fetch('/api/forums/reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.user_id,
+                    thread_id: this.activeReminderThreadId,
+                    remind_at: remind_at,
+                    note: note || 'Discussion thread reminder'
+                })
+            });
+            const data = await res.json();
+            alert(`Reminder successfully scheduled for ${d}/${m}/${y} at ${readableTime}!`);
+            this.closeReminderModal();
+        } catch (err) {
+            console.error('Set reminder error', err);
+        }
+    },
+
+    startReminderPolling() {
+        if (this.pollingInterval) clearInterval(this.pollingInterval);
+
+        // Real-time reminder delivery check every 5 seconds
+        this.pollingInterval = setInterval(async () => {
+            const user = this.getUser();
+            if (!user) return;
+
+            try {
+                const res = await fetch(`/api/forums/reminders?user_id=${user.user_id}`);
+                const data = await res.json();
+                if (data.success && data.reminders && data.reminders.length > 0) {
+                    data.reminders.forEach(r => {
+                        const dateStr = r.remind_at || '';
+                        alert(`FORUM THREAD REMINDER\n\nThread: ${r.thread_title}\nSpace: ${r.category || 'General'}\nScheduled Time: ${dateStr}\nNote: ${r.note || 'No notes'}`);
+                    });
+                }
+            } catch (err) {
+                // Silently ignore network poll errors
+            }
+        }, 5000);
+    },
+
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    escapeJs(str) {
+        if (!str) return '';
+        return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
-
-    if (window.switchView) {
-      window.switchView('discussion-forums');
-    }
-
-    if (category && category !== this.currentSpace) {
-      this.selectSpace(category);
-    }
-
-    setTimeout(() => {
-      const card = document.getElementById(`thread-card-${threadId}`);
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        card.style.borderColor = '#fbbf24';
-        card.style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.4)';
-        setTimeout(() => {
-          card.style.borderColor = '';
-          card.style.boxShadow = '';
-        }, 4000);
-      }
-    }, 300);
-  },
-
-  async openAdminRemindersModal() {
-    if (!this.spacesData.is_admin) return;
-    try {
-      const res = await fetch(`/api/forums/admin/reminders?user_id=${this.currentUser.user_id}`);
-      const data = await res.json();
-      if (!data.success) return alert(data.message);
-
-      const reminders = data.reminders || [];
-      const modalHtml = `
-        <div id="adminRemindersModal" class="modal-overlay open" style="z-index:9999;">
-          <div class="modal-box" style="max-width: 680px; max-height: 80vh; overflow-y: auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-              <h3 style="font-size:1.2rem; font-weight:700; color:var(--accent-pink);">System Discussion Reminders</h3>
-              <button class="btn btn-sm btn-secondary" onclick="document.getElementById('adminRemindersModal').remove()">&times; Close</button>
-            </div>
-            ${reminders.length === 0 ? '<p style="color:var(--text-muted);">No thread reminders in the system.</p>' : `
-              <div style="display:flex; flex-direction:column; gap:0.6rem;">
-                ${reminders.map(r => `
-                  <div style="background:var(--bg-dark); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem; display:flex; justify-content:space-between; align-items:center; gap:0.6rem;">
-                    <div>
-                      <div style="font-weight:600; font-size:0.9rem; color:#fff;">${this.escapeHtml(r.thread_title)}</div>
-                      <div style="font-size:0.75rem; color:var(--text-muted);">User: ${r.user_name} (${r.user_email}) &bull; Target: ${r.remind_at}</div>
-                      ${r.note ? `<div style="font-size:0.75rem; color:#fbbf24;">Note: ${this.escapeHtml(r.note)}</div>` : ''}
-                    </div>
-                    <button class="btn btn-sm btn-danger" onclick="Forums.adminDeleteReminder('${r.reminder_id}')">Cancel</button>
-                  </div>
-                `).join('')}
-              </div>
-            `}
-          </div>
-        </div>
-      `;
-
-      const existing = document.getElementById('adminRemindersModal');
-      if (existing) existing.remove();
-      const div = document.createElement('div');
-      div.innerHTML = modalHtml;
-      document.body.appendChild(div.firstElementChild);
-    } catch (e) {
-      console.error('Failed to load admin reminders', e);
-    }
-  },
-
-  async adminDeleteReminder(reminderId) {
-    if (!confirm('Cancel this reminder?')) return;
-    try {
-      const res = await fetch('/api/forums/reminder/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: this.currentUser.user_id,
-          reminder_id: reminderId
-        })
-      });
-      const data = await res.json();
-      alert(data.message);
-      const m = document.getElementById('adminRemindersModal');
-      if (m) m.remove();
-      this.openAdminRemindersModal();
-      this.loadAdminStats();
-    } catch (e) {
-      console.error('Delete reminder error', e);
-    }
-  },
-
-  showToastNotification(msg) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(6, 182, 212, 0.95);
-      color: #0f172a;
-      font-weight: 700;
-      padding: 0.8rem 1.4rem;
-      border-radius: 999px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-      z-index: 9999;
-      font-size: 0.9rem;
-    `;
-    toast.innerText = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      if (document.body.contains(toast)) toast.remove();
-    }, 3500);
-  },
-
-  formatDateTime(dtStr) {
-    if (!dtStr) return '';
-    try {
-      const d = new Date(dtStr.replace(' ', 'T'));
-      if (isNaN(d.getTime())) return dtStr;
-      return d.toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      });
-    } catch (e) {
-      return dtStr;
-    }
-  },
-
-  escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  },
-
-  escapeJs(str) {
-    if (!str) return '';
-    return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
-  }
 };
-
-window.Forums = Forums;

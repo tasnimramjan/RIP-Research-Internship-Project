@@ -139,3 +139,16 @@ class ResearchPaperModel:
         conn.commit()
         conn.close()
         return paper_id
+
+    @staticmethod
+    def delete_paper(paper_id, user_id=None, is_admin=False):
+        conn = get_db()
+        cursor = conn.cursor()
+        if is_admin:
+            cursor.execute("DELETE FROM research_papers WHERE paper_id = ?", (paper_id,))
+        else:
+            cursor.execute("DELETE FROM research_papers WHERE paper_id = ? AND faculty_id = ?", (paper_id, user_id))
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return success

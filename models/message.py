@@ -18,6 +18,18 @@ class ChatMessageModel:
             "INSERT INTO chat_messages (message_id, sender_id, receiver_id, group_id, message_text, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
             (msg_id, sender_id, receiver_id, group_id, message_text, now)
         )
+        if receiver_id:
+            cursor.execute("SELECT name FROM users WHERE user_id = ?", (sender_id,))
+            s_row = cursor.fetchone()
+            sender_name = s_row['name'] if s_row else "A classmate"
+            
+            notif_id = "notif_" + str(uuid.uuid4())[:8]
+            preview = message_text if len(message_text) <= 60 else message_text[:57] + "..."
+            cursor.execute("""
+                INSERT INTO notifications (notification_id, user_id, type, title, message, reference_id, sender_id, is_read, created_at)
+                VALUES (?, ?, 'chat_message', ?, ?, ?, ?, 0, ?)
+            """, (notif_id, receiver_id, f"New message from {sender_name}", preview, sender_id, sender_id, now))
+
         conn.commit()
         conn.close()
         return msg_id
