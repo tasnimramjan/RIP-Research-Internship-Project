@@ -1,4 +1,36 @@
 let facultySearchTimeout = null;
+let currentViewingFaculty = null;
+
+function getCurrentUser() {
+  if (window.currentUser) return window.currentUser;
+  try {
+    const stored = localStorage.getItem('rip_user');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return null;
+}
+
+function clearAllSearchInputs() {
+  const inputs = ['facultySearchInput', 'facultyLabFilter', 'matchingSearchInput', 'availabilitySearchInput', 'labSearchInput', 'finderKeyword'];
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const selects = ['facultyDeptFilter', 'facultyDomainFilter', 'availDeptFilter', 'availDomainFilter', 'availStatusFilter', 'finderDept'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Remove any legacy saved search history from localStorage so nothing is saved anywhere
+  try {
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('rip_search_state_')) {
+        localStorage.removeItem(k);
+      }
+    });
+  } catch (e) {}
+}
 
 function debounceFacultySearch() {
   clearTimeout(facultySearchTimeout);
@@ -8,10 +40,10 @@ function debounceFacultySearch() {
 }
 
 async function runFacultySearch() {
-  const keywords = document.getElementById('facultySearchInput').value;
-  const department = document.getElementById('facultyDeptFilter').value;
-  const domain = document.getElementById('facultyDomainFilter').value;
-  const lab = document.getElementById('facultyLabFilter').value;
+  const keywords = document.getElementById('facultySearchInput')?.value || '';
+  const department = document.getElementById('facultyDeptFilter')?.value || '';
+  const domain = document.getElementById('facultyDomainFilter')?.value || '';
+  const lab = document.getElementById('facultyLabFilter')?.value || '';
   
   const params = new URLSearchParams();
   if (keywords) params.append('keywords', keywords);
@@ -36,16 +68,17 @@ async function runFacultySearch() {
 function renderFacultyList(faculties) {
   const list = document.getElementById('facultyList');
   const empty = document.getElementById('facultyListEmpty');
+  if (!list) return;
   list.innerHTML = '';
   
   if (!faculties || faculties.length === 0) {
     list.style.display = 'none';
-    empty.style.display = 'block';
+    if (empty) empty.style.display = 'block';
     return;
   }
   
   list.style.display = 'grid';
-  empty.style.display = 'none';
+  if (empty) empty.style.display = 'none';
   
   faculties.forEach(fac => {
     const card = document.createElement('div');
@@ -53,22 +86,25 @@ function renderFacultyList(faculties) {
     card.style.cursor = 'pointer';
     card.onclick = () => openFacultyDetailsModal(fac.user_id);
     
-    const domainsHtml = fac.research_domains.slice(0, 3).map(d => `<span class="badge" style="background:var(--accent-cyan); color:#000;">${d}</span>`).join('');
-    const moreDomains = fac.research_domains.length > 3 ? `<span class="badge" style="background:var(--bg-lighter); color:var(--text-muted);">+${fac.research_domains.length - 3} more</span>` : '';
+    // Format domains as plain clean text without square/box background
+    const domainsArr = fac.research_domains || [];
+    const domainsText = domainsArr.length > 0 
+      ? domainsArr.join(', ')
+      : 'General Research';
     
     card.innerHTML = `
-      <h3 style="font-size:1.1rem; font-weight:800; color:var(--accent-pink); margin-bottom:0.2rem;">${fac.name}</h3>
-      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">${fac.designation}, ${fac.department}</div>
+      <div style="margin-bottom:0.4rem;">
+        <h3 style="font-size:1.1rem; font-weight:800; color:var(--accent-pink); margin:0;">${fac.name}</h3>
+      </div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem;">${fac.designation}, ${fac.department}</div>
       <div style="margin-bottom:0.8rem;">
-        <div style="font-size:0.8rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Expertise & Interests:</div>
-        <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-          ${domainsHtml}${moreDomains}
-        </div>
+        <div style="font-size:0.8rem; font-weight:600; margin-bottom:0.3rem; color:var(--text-main);">Expertise & Research Domains:</div>
+        <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.4;">${domainsText}</div>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-color); padding-top:0.8rem; margin-top:auto;">
-        <span style="font-size:0.8rem; color:var(--text-muted);">h-index: <strong>${fac.h_index}</strong></span>
-        <span style="font-size:0.8rem; color:var(--text-muted);">Labs: <strong>${fac.directed_labs.length}</strong></span>
-        <span style="font-size:0.8rem; color:var(--text-muted);">Pubs: <strong>${fac.publications.length}</strong></span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">h-index: <strong>${fac.h_index || 0}</strong></span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">Labs: <strong>${(fac.directed_labs || []).length}</strong></span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">Pubs: <strong>${(fac.publications || []).length}</strong></span>
       </div>
     `;
     list.appendChild(card);
@@ -80,6 +116,8 @@ async function openFacultyDetailsModal(facultyId) {
     const res = await fetch(`/api/faculty/profile?faculty_id=${facultyId}`);
     const data = await res.json();
     if (data.success) {
+      currentViewingFaculty = data.faculty;
+      window.currentViewingFaculty = data.faculty;
       renderFacultyDetails(data.faculty);
       document.getElementById('facultyDetailsModal').classList.add('open');
     } else {
@@ -99,19 +137,25 @@ function renderFacultyDetails(fac) {
   document.getElementById('facDetailsName').textContent = fac.name;
   document.getElementById('facDetailsDesigDept').textContent = `${fac.designation}, Department of ${fac.department} | ${fac.email}`;
   
-  document.getElementById('facDetailsHIndex').textContent = fac.h_index;
-  document.getElementById('facDetailsSlots').textContent = fac.remaining_slots;
-  document.getElementById('facDetailsCgpa').textContent = fac.min_cgpa_req;
+  document.getElementById('facDetailsHIndex').textContent = fac.h_index || 0;
+  document.getElementById('facDetailsSlots').textContent = fac.remaining_slots || 0;
+  document.getElementById('facDetailsCgpa').textContent = fac.min_cgpa_req || 0.0;
   
+  // Format domains as plain clean text without square/box background tags
   const domainsContainer = document.getElementById('facDetailsDomains');
-  domainsContainer.innerHTML = fac.research_domains.map(d => `<span class="badge" style="background:var(--accent-cyan); color:#000;">${d}</span>`).join('');
+  if (domainsContainer) {
+    const domainsList = fac.research_domains || [];
+    domainsContainer.innerHTML = domainsList.length > 0 
+      ? `<div style="font-size:0.9rem; color:var(--text-main); line-height:1.5;">${domainsList.join(', ')}</div>`
+      : `<p style="font-size:0.85rem; color:var(--text-muted); margin:0;">None listed.</p>`;
+  }
   
   const labsContainer = document.getElementById('facDetailsLabs');
   if (fac.directed_labs && fac.directed_labs.length > 0) {
     labsContainer.innerHTML = fac.directed_labs.map(l => `
       <div style="background:var(--bg-card); padding:1rem; border-radius:var(--radius); border:1px solid var(--border-color); margin-bottom:0.8rem;">
         <h5 style="font-size:1rem; font-weight:700; color:var(--accent-pink); margin-bottom:0.3rem;">${l.lab_name}</h5>
-        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;"><strong>Focus:</strong> ${l.focus_area}</div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;"><strong>Focus Area:</strong> ${l.focus_area}</div>
         ${l.facilities && l.facilities.length > 0 ? `<div style="font-size:0.85rem; color:var(--text-muted);"><strong>Facilities:</strong> ${l.facilities.join(', ')}</div>` : ''}
       </div>
     `).join('');
@@ -124,7 +168,7 @@ function renderFacultyDetails(fac) {
     pubsContainer.innerHTML = fac.publications.map(p => `
       <div style="background:var(--bg-card); padding:1rem; border-radius:var(--radius); border:1px solid var(--border-color); margin-bottom:0.8rem;">
         <h5 style="font-size:0.95rem; font-weight:700; margin-bottom:0.3rem; color:var(--accent-cyan);">${p.title}</h5>
-        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.3rem;"><strong>Authors:</strong> ${p.authors.join(', ')}</div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.3rem;"><strong>Authors:</strong> ${(p.authors || []).join(', ')}</div>
         <div style="font-size:0.85rem; color:var(--text-muted);"><strong>Domain:</strong> ${p.domain} | <strong>Year:</strong> ${p.publication_year}</div>
       </div>
     `).join('');
@@ -132,23 +176,47 @@ function renderFacultyDetails(fac) {
     pubsContainer.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted);">No publications found.</p>';
   }
 
-  // Edit Profile button visibility
+  // Edit Profile button visibility (Faculty owner OR Admin)
   const editBtn = document.getElementById('editFacultyProfileBtn');
-  if (window.currentUser && window.currentUser.user_id === fac.faculty_id) {
-    editBtn.style.display = 'block';
-    // Pre-fill modal
-    document.getElementById('editFacDesignation').value = fac.designation || '';
-    document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
-    document.getElementById('editFacHIndex').value = fac.h_index || 0;
-    document.getElementById('editFacSlots').value = fac.remaining_slots || 0;
-    document.getElementById('editFacCgpa').value = fac.min_cgpa_req || 0.0;
-    document.getElementById('editFacThesisAvail').checked = !!fac.thesis_available;
-  } else {
-    editBtn.style.display = 'none';
+  const currentUser = getCurrentUser();
+  
+  const isOwner = currentUser && (currentUser.user_id === fac.user_id || currentUser.user_id === fac.faculty_id);
+  const isAdmin = currentUser && currentUser.role === 'Admin';
+  
+  if (editBtn) {
+    if (isOwner || isAdmin) {
+      editBtn.style.display = 'inline-block';
+    } else {
+      editBtn.style.display = 'none';
+    }
   }
+
+  // Pre-fill edit modal inputs
+  const desigInput = document.getElementById('editFacDesignation');
+  if (desigInput) desigInput.value = fac.designation || '';
+  const domainsInput = document.getElementById('editFacDomains');
+  if (domainsInput) domainsInput.value = (fac.research_domains || []).join(', ');
+  const hIndexInput = document.getElementById('editFacHIndex');
+  if (hIndexInput) hIndexInput.value = fac.h_index || 0;
+  const slotsInput = document.getElementById('editFacSlots');
+  if (slotsInput) slotsInput.value = fac.remaining_slots || 0;
+  const cgpaInput = document.getElementById('editFacCgpa');
+  if (cgpaInput) cgpaInput.value = fac.min_cgpa_req || 0.0;
+  const thesisInput = document.getElementById('editFacThesisAvail');
+  if (thesisInput) thesisInput.checked = !!fac.thesis_available;
+}
+
+function openEditFacultyModal() {
+  closeFacultyDetailsModal();
+  document.getElementById('editFacultyProfileModal')?.classList.add('open');
+}
+
+function closeEditFacultyModal() {
+  document.getElementById('editFacultyProfileModal')?.classList.remove('open');
 }
 
 async function submitEditFacultyProfile() {
+  if (!currentViewingFaculty) return;
   const designation = document.getElementById('editFacDesignation').value.trim();
   const domains = document.getElementById('editFacDomains').value.split(',').map(s => s.trim()).filter(Boolean);
   const hIndex = parseInt(document.getElementById('editFacHIndex').value) || 0;
@@ -156,12 +224,16 @@ async function submitEditFacultyProfile() {
   const cgpa = parseFloat(document.getElementById('editFacCgpa').value) || 0.0;
   const thesisAvail = document.getElementById('editFacThesisAvail').checked ? 1 : 0;
 
+  const targetId = currentViewingFaculty.user_id || currentViewingFaculty.faculty_id;
+  const currentUser = getCurrentUser();
+  const endpoint = (currentUser && currentUser.role === 'Admin') ? '/api/faculty/admin_edit' : '/api/faculty/update_profile';
+
   try {
-    const res = await fetch('/api/faculty/update_profile', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        faculty_id: window.currentUser.user_id,
+        faculty_id: targetId,
         designation: designation,
         research_domains: domains,
         h_index: hIndex,
@@ -172,10 +244,11 @@ async function submitEditFacultyProfile() {
     });
     const data = await res.json();
     if (data.success) {
-      alert('Profile updated successfully!');
-      document.getElementById('editFacultyProfileModal').classList.remove('open');
-      runFacultySearch(); // refresh
-      closeFacultyDetailsModal(); // close modal
+      if (window.showToast) window.showToast('Faculty profile updated successfully!');
+      else alert('Profile updated successfully!');
+      closeEditFacultyModal();
+      openFacultyDetailsModal(targetId); // Refresh modal view
+      runFacultySearch(); // Refresh list view
     } else {
       alert(data.message || 'Error updating profile');
     }
@@ -185,17 +258,20 @@ async function submitEditFacultyProfile() {
   }
 }
 
-// Ensure the function is exposed globally
+// Ensure the functions are exposed globally
+window.getCurrentUser = getCurrentUser;
 window.runFacultySearch = runFacultySearch;
 window.debounceFacultySearch = debounceFacultySearch;
 window.openFacultyDetailsModal = openFacultyDetailsModal;
 window.closeFacultyDetailsModal = closeFacultyDetailsModal;
+window.openEditFacultyModal = openEditFacultyModal;
+window.closeEditFacultyModal = closeEditFacultyModal;
 window.submitEditFacultyProfile = submitEditFacultyProfile;
+window.clearAllSearchInputs = clearAllSearchInputs;
+window.loadUserSearchState = clearAllSearchInputs;
+window.saveUserSearchState = function() {}; // No-op, do not save searches anywhere
 
-// Load initial data when entering this view
-// We can hook into the switchView from app.js by using an interval or monkey-patching it,
-// but for simplicity we will just load it on DOMContentLoaded or wait for the user to click.
-// We'll load it immediately since the panel starts hidden.
 document.addEventListener('DOMContentLoaded', () => {
+    clearAllSearchInputs();
     runFacultySearch();
 });

@@ -86,9 +86,24 @@ class SupervisorModel:
         return True
 
     @staticmethod
-    def update_faculty_profile(faculty_id, designation=None, h_index=None, research_domains=None, remaining_slots=None, min_cgpa_req=None, thesis_available=None):
+    def update_faculty_profile(faculty_id, designation=None, h_index=None, research_domains=None, remaining_slots=None, min_cgpa_req=None, thesis_available=None, name=None, department=None, max_capacity=None):
         conn = get_db()
         cursor = conn.cursor()
+
+        # Update users table if name or department are provided
+        if name is not None or department is not None:
+            user_updates = []
+            user_params = []
+            if name is not None and name.strip():
+                user_updates.append("name = ?")
+                user_params.append(name.strip())
+            if department is not None and department.strip():
+                user_updates.append("department = ?")
+                user_params.append(department.strip())
+            if user_updates:
+                user_params.append(faculty_id)
+                cursor.execute(f"UPDATE users SET {', '.join(user_updates)} WHERE user_id = ?", user_params)
+
         updates = []
         params = []
         if designation is not None:
@@ -105,6 +120,9 @@ class SupervisorModel:
         if remaining_slots is not None:
             updates.append("remaining_slots = ?")
             params.append(int(remaining_slots))
+        if max_capacity is not None:
+            updates.append("max_capacity = ?")
+            params.append(int(max_capacity))
         if min_cgpa_req is not None:
             updates.append("min_cgpa_req = ?")
             params.append(float(min_cgpa_req))
@@ -112,13 +130,11 @@ class SupervisorModel:
             updates.append("thesis_available = ?")
             params.append(1 if thesis_available else 0)
 
-        if not updates:
-            conn.close()
-            return False
+        if updates:
+            params.append(faculty_id)
+            sql = f"UPDATE faculty SET {', '.join(updates)} WHERE faculty_id = ?"
+            cursor.execute(sql, params)
 
-        params.append(faculty_id)
-        sql = f"UPDATE faculty SET {', '.join(updates)} WHERE faculty_id = ?"
-        cursor.execute(sql, params)
         conn.commit()
         conn.close()
         return True

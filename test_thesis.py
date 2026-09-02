@@ -11,8 +11,12 @@ res = AuthController.handle_signup({
     'email': 'test_student_thesis@univ.edu',
     'password': 'password123',
     'role': 'Student',
-    'department': 'CSE'
 })
+if not res.get('success'):
+    res = AuthController.handle_login({
+        'email': 'test_student_thesis@univ.edu',
+        'password': 'password123'
+    })
 user_id = res['user']['user_id']
 print("User ID:", user_id)
 

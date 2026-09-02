@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => { initApp(); });
 function initApp() {
   const stored = localStorage.getItem('rip_user');
   currentUser = stored ? JSON.parse(stored) : null;
+  window.currentUser = currentUser;
   renderUserNav();
   showLandingPage();
   if (currentUser && window.Forums) Forums.init(currentUser);
@@ -107,6 +108,10 @@ function switchView(viewId) {
   document.getElementById(viewId)?.classList.add('active');
 
   if (viewId === 'supervisor-finder') loadSupervisors();
+  else if (viewId === 'faculty-explorer') {
+    if (window.loadUserSearchState) window.loadUserSearchState();
+    if (window.runFacultySearch) window.runFacultySearch();
+  }
   else if (viewId === 'lab-board') loadLabBoard();
   else if (viewId === 'internship-portal') loadInternships();
   else if (viewId === 'paper-discovery') loadPapers();
@@ -132,11 +137,27 @@ async function loadFacultyProfileSettings() {
   const data = await res.json();
   if (data.success) {
     const f = data.faculty;
-    document.getElementById('facProfDomains').value = f.research_domains || '';
-    document.getElementById('facProfDesignation').value = f.designation || '';
-    document.getElementById('facProfHIndex').value = f.h_index || 0;
-    document.getElementById('facProfSlots').value = f.remaining_slots || 0;
-    document.getElementById('facProfCgpa').value = f.min_cgpa_req || 3.0;
+    const nameEl = document.getElementById('facProfName');
+    if (nameEl) nameEl.value = f.name || currentUser.name || '';
+    const emailEl = document.getElementById('facProfEmail');
+    if (emailEl) emailEl.value = f.email || currentUser.email || '';
+    const deptEl = document.getElementById('facProfDept');
+    if (deptEl) deptEl.value = f.department || currentUser.department || 'CSE';
+    
+    const domEl = document.getElementById('facProfDomains');
+    if (domEl) domEl.value = Array.isArray(f.research_domains) ? f.research_domains.join(', ') : (f.research_domains || '');
+    const desigEl = document.getElementById('facProfDesignation');
+    if (desigEl) desigEl.value = f.designation || '';
+    const hEl = document.getElementById('facProfHIndex');
+    if (hEl) hEl.value = f.h_index || 0;
+    const slotsEl = document.getElementById('facProfSlots');
+    if (slotsEl) slotsEl.value = f.remaining_slots || 0;
+    const capEl = document.getElementById('facProfMaxCap');
+    if (capEl) capEl.value = f.max_capacity || 5;
+    const cgpaEl = document.getElementById('facProfCgpa');
+    if (cgpaEl) cgpaEl.value = f.min_cgpa_req || 3.0;
+    const availEl = document.getElementById('facProfThesisAvail');
+    if (availEl) availEl.checked = !!f.thesis_available;
 
     // Render Labs
     const labsList = document.getElementById('facProfLabsList');
@@ -144,10 +165,13 @@ async function loadFacultyProfileSettings() {
       labsList.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No directed labs found.</p>';
     } else {
       labsList.innerHTML = data.labs.map(l => `
-        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color);">
-          <h4 style="color:var(--accent-cyan); font-weight:700;">${l.lab_name}</h4>
-          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Focus:</strong> ${l.focus_area}</p>
-          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Facilities:</strong> ${l.facilities}</p>
+        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+          <div>
+            <h4 style="color:var(--accent-cyan); font-weight:700;">${l.lab_name}</h4>
+            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Focus:</strong> ${l.focus_area}</p>
+            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Facilities:</strong> ${Array.isArray(l.facilities) ? l.facilities.join(', ') : l.facilities}</p>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="deleteLab('${l.lab_id}')">Delete Lab</button>
         </div>
       `).join('');
     }
@@ -158,25 +182,46 @@ async function loadFacultyProfileSettings() {
       papersList.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No publications found.</p>';
     } else {
       papersList.innerHTML = data.papers.map(p => `
-        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color);">
-          <h4 style="color:var(--accent-pink); font-weight:700;">${p.title}</h4>
-          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Authors:</strong> ${p.authors.join(', ')}</p>
-          <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Venue/Domain:</strong> ${p.domain} (${p.publication_year})</p>
+        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+          <div>
+            <h4 style="color:var(--accent-pink); font-weight:700;">${p.title}</h4>
+            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Authors:</strong> ${Array.isArray(p.authors) ? p.authors.join(', ') : p.authors}</p>
+            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Venue/Domain:</strong> ${p.domain} (${p.publication_year})</p>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="facultyDeletePaper('${p.paper_id}')">Delete</button>
         </div>
       `).join('');
     }
   }
 }
 
+async function facultyDeletePaper(paperId) {
+  if (!confirm('Are you sure you want to delete this publication?')) return;
+  const res = await fetch('/api/papers/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: currentUser.user_id, paper_id: paperId })
+  });
+  const data = await res.json();
+  alert(data.message);
+  loadFacultyProfileSettings();
+}
+
 async function saveFacultyProfileStats() {
+  const domStr = document.getElementById('facProfDomains')?.value || '';
+  const domainsArr = domStr.split(',').map(s => s.trim()).filter(Boolean);
+  
   const data = {
     faculty_id: currentUser.user_id,
-    research_domains: document.getElementById('facProfDomains').value,
-    designation: document.getElementById('facProfDesignation').value,
-    h_index: document.getElementById('facProfHIndex').value,
-    remaining_slots: document.getElementById('facProfSlots').value,
-    min_cgpa_req: document.getElementById('facProfCgpa').value,
-    thesis_available: 1
+    name: document.getElementById('facProfName')?.value.trim() || '',
+    department: document.getElementById('facProfDept')?.value || 'CSE',
+    designation: document.getElementById('facProfDesignation')?.value.trim() || '',
+    research_domains: domainsArr,
+    h_index: parseInt(document.getElementById('facProfHIndex')?.value) || 0,
+    remaining_slots: parseInt(document.getElementById('facProfSlots')?.value) || 0,
+    max_capacity: parseInt(document.getElementById('facProfMaxCap')?.value) || 5,
+    min_cgpa_req: parseFloat(document.getElementById('facProfCgpa')?.value) || 0.0,
+    thesis_available: document.getElementById('facProfThesisAvail')?.checked ? 1 : 0
   };
   const res = await fetch('/api/faculty/update_profile', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -184,7 +229,14 @@ async function saveFacultyProfileStats() {
   });
   const json = await res.json();
   if (json.success) {
-    showToast('Profile stats updated successfully.');
+    if (currentUser) {
+      if (data.name) currentUser.name = data.name;
+      if (data.department) currentUser.department = data.department;
+      localStorage.setItem('rip_user', JSON.stringify(currentUser));
+      if (window.renderUserNav) renderUserNav();
+    }
+    if (window.showToast) showToast('Profile updated successfully.');
+    else alert('Profile updated successfully.');
     loadFacultyProfileSettings();
   } else {
     alert(json.message || 'Error updating profile.');
@@ -259,7 +311,7 @@ async function submitLogin() {
   if (!email || !password) return alert('Please enter your email and password.');
   const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
   const data = await res.json();
-  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); if (window.Forums) Forums.init(currentUser); if (window.Teammates) Teammates.init(currentUser); }
+  if (data.success) { currentUser = data.user; window.currentUser = currentUser; localStorage.setItem('rip_user', JSON.stringify(currentUser)); if (window.loadUserSearchState) window.loadUserSearchState(); renderUserNav(); closeAuthModal(); showLandingPage(); if (window.Forums) Forums.init(currentUser); if (window.Teammates) Teammates.init(currentUser); }
   else alert(data.message);
 }
 
@@ -273,11 +325,11 @@ async function submitSignup() {
   if (password.length < 8) return alert('Password must be at least 8 characters long.');
   const res = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role, department: dept }) });
   const data = await res.json();
-  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); if (window.Forums) Forums.init(currentUser); if (window.Teammates) Teammates.init(currentUser); }
+  if (data.success) { currentUser = data.user; window.currentUser = currentUser; localStorage.setItem('rip_user', JSON.stringify(currentUser)); if (window.loadUserSearchState) window.loadUserSearchState(); renderUserNav(); closeAuthModal(); showLandingPage(); if (window.Forums) Forums.init(currentUser); if (window.Teammates) Teammates.init(currentUser); }
   else alert(data.message);
 }
 
-function logout() { currentUser = null; localStorage.removeItem('rip_user'); if (window.Forums && window.Forums.pollingInterval) clearInterval(window.Forums.pollingInterval); if (window.Teammates && window.Teammates.pollingInterval) clearInterval(window.Teammates.pollingInterval); renderUserNav(); showLandingPage(); }
+function logout() { currentUser = null; window.currentUser = null; localStorage.removeItem('rip_user'); if (window.loadUserSearchState) window.loadUserSearchState(); if (window.Forums && window.Forums.pollingInterval) clearInterval(window.Forums.pollingInterval); if (window.Teammates && window.Teammates.pollingInterval) clearInterval(window.Teammates.pollingInterval); renderUserNav(); showLandingPage(); }
 
 // ── FEATURE 1: Smart Supervisor Finder ──────────────────
 async function loadSupervisors() {
@@ -604,23 +656,59 @@ async function submitNewGroup() {
   if (data.success) { alert(`Study circle "${groupName}" created.`); closeNewGroupModal(); loadThesisGroups(); } else alert(data.message);
 }
 
-// ── Faculty Profile Update (accessible from Lab Board) ──
-function openEditFacultyProfileModal() { if (currentUser?.role !== 'Faculty') return; document.getElementById('editFacultyProfileModal').classList.add('open'); }
-function closeEditFacultyProfileModal() { document.getElementById('editFacultyProfileModal').classList.remove('open'); }
+// ── Faculty Profile Update (accessible from Lab Board & Explorer) ──
+function openEditFacultyProfileModal() {
+  const user = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null) || JSON.parse(localStorage.getItem('rip_user') || 'null');
+  if (!user || (user.role !== 'Faculty' && user.role !== 'Admin')) return;
+  document.getElementById('editFacultyProfileModal')?.classList.add('open');
+}
+function closeEditFacultyProfileModal() {
+  document.getElementById('editFacultyProfileModal')?.classList.remove('open');
+}
 async function submitEditFacultyProfile() {
-  if (currentUser?.role !== 'Faculty') return;
-  const res = await fetch('/api/faculty/update_profile', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-      faculty_id: currentUser.user_id,
-      designation: document.getElementById('editFacDesignation').value.trim(),
-      h_index: document.getElementById('editFacHIndex').value,
-      research_domains: document.getElementById('editFacDomains').value.trim(),
-      remaining_slots: document.getElementById('editFacSlots').value,
-      min_cgpa_req: document.getElementById('editFacMinCgpa').value,
-      thesis_available: document.getElementById('editFacThesisAvail').checked
-    })
-  });
-  const data = await res.json(); alert(data.message); closeEditFacultyProfileModal();
+  const user = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null) || JSON.parse(localStorage.getItem('rip_user') || 'null');
+  if (!user || (user.role !== 'Faculty' && user.role !== 'Admin')) return alert('Unauthorized.');
+  
+  const isTargetAdmin = user.role === 'Admin';
+  const targetId = (window.currentViewingFaculty && (window.currentViewingFaculty.user_id || window.currentViewingFaculty.faculty_id)) || user.user_id;
+  const endpoint = isTargetAdmin ? '/api/faculty/admin_edit' : '/api/faculty/update_profile';
+
+  const desig = document.getElementById('editFacDesignation')?.value.trim() || '';
+  const domainsStr = document.getElementById('editFacDomains')?.value.trim() || '';
+  const domains = domainsStr.split(',').map(s => s.trim()).filter(Boolean);
+  const hIndex = parseInt(document.getElementById('editFacHIndex')?.value) || 0;
+  const slots = parseInt(document.getElementById('editFacSlots')?.value) || 0;
+  const cgpa = parseFloat(document.getElementById('editFacCgpa')?.value) || 0.0;
+  const thesisAvail = document.getElementById('editFacThesisAvail')?.checked ? 1 : 0;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        faculty_id: targetId,
+        designation: desig,
+        research_domains: domains,
+        h_index: hIndex,
+        remaining_slots: slots,
+        min_cgpa_req: cgpa,
+        thesis_available: thesisAvail
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (window.showToast) window.showToast('Faculty profile updated successfully!');
+      else alert(data.message || 'Faculty profile updated successfully!');
+      closeEditFacultyProfileModal();
+      if (window.openFacultyDetailsModal && targetId) window.openFacultyDetailsModal(targetId);
+      if (window.runFacultySearch) window.runFacultySearch();
+    } else {
+      alert(data.message || 'Error updating profile');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Error updating profile');
+  }
 }
 
 // ── Admin Control Panel ──────────────────────────────────
@@ -650,7 +738,8 @@ async function loadAdminPanel() {
         <span class="tag" style="background:${(u.status || 'Active') === 'Active' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; color:${(u.status || 'Active') === 'Active' ? '#10b981' : '#ef4444'};">${u.status || 'Active'}</span>
       </td>
       <td style="padding:0.75rem 0.5rem;">
-        <div style="display:flex; gap:0.4rem;">
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          ${u.role === 'Faculty' ? `<button class="btn btn-sm btn-cyan" onclick="openFacultyDetailsModal('${u.user_id}')">Edit Profile</button>` : ''}
           <button class="btn btn-sm btn-secondary" onclick="adminToggleUserStatus('${u.user_id}')">${(u.status || 'Active') === 'Active' ? 'Suspend' : 'Activate'}</button>
           <button class="btn btn-sm btn-danger"    onclick="adminDeleteUser('${u.user_id}')">Delete</button>
         </div>

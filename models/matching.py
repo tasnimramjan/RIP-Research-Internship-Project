@@ -81,15 +81,16 @@ class MatchingModel:
         
         cursor = conn.cursor()
         
+        from models.faculty import parse_json_list
         cursor.execute(fac_query, fac_params)
         faculty = [dict(row) for row in cursor.fetchall()]
         for f in faculty:
-            f['research_domains'] = json.loads(f['research_domains']) if f['research_domains'] else []
+            f['research_domains'] = parse_json_list(f.get('research_domains'))
             
         cursor.execute(lab_query, lab_params)
         labs = [dict(row) for row in cursor.fetchall()]
         for l in labs:
-            l['facilities'] = json.loads(l['facilities']) if l['facilities'] else []
+            l['facilities'] = parse_json_list(l.get('facilities'))
             
         cursor.execute(thesis_query, thesis_params)
         thesis = [dict(row) for row in cursor.fetchall()]

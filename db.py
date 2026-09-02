@@ -47,9 +47,15 @@ def init_db():
         current_students INTEGER NOT NULL DEFAULT 0,
         min_cgpa_req REAL DEFAULT 3.0,
         thesis_available INTEGER DEFAULT 1,
+        is_verified INTEGER DEFAULT 1,
         FOREIGN KEY (faculty_id) REFERENCES users(user_id) ON DELETE CASCADE
     )
     """)
+    try:
+        cursor.execute("ALTER TABLE faculty ADD COLUMN is_verified INTEGER DEFAULT 1")
+    except Exception:
+        pass
+
     
     # 4. Admin Table
     cursor.execute("""

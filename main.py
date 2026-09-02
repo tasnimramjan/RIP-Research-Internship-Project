@@ -218,6 +218,12 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/faculty/update_profile":
             res = FacultyController.update_faculty_profile(data.get('faculty_id'), data)
             self.send_json(res)
+        elif path == "/api/faculty/verify":
+            res = FacultyController.verify_faculty(data.get('faculty_id'), data.get('is_verified'))
+            self.send_json(res)
+        elif path == "/api/faculty/admin_edit":
+            res = FacultyController.admin_edit_faculty(data.get('faculty_id'), data)
+            self.send_json(res)
         elif path == "/api/faculty/create_lab":
             res = FacultyController.create_lab(data.get('faculty_id'), data)
             self.send_json(res)
