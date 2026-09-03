@@ -27,15 +27,6 @@ async function runAvailabilitySearch() {
     
     const res = await fetch(`/api/availability/search?${params.toString()}`);
     if (!res.ok) {
-      if (res.status === 404) {
-        container.style.display = 'block';
-        container.innerHTML = `<div style="text-align:center; padding:3rem; color:red;">
-          <strong>Error 404: Endpoint not found.</strong><br><br>
-          Please restart your Python server (Ctrl+C and run <code>python3 main.py</code> again) so it can load the new Availability Tracker code!
-        </div>`;
-        emptyState.style.display = 'none';
-        return;
-      }
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     
@@ -50,7 +41,7 @@ async function runAvailabilitySearch() {
     console.error("Error fetching availability data:", err);
     container.style.display = 'block';
     container.innerHTML = `<div style="text-align:center; padding:3rem; color:red;">Failed to connect to the server. Please ensure the server is running.</div>`;
-    emptyState.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
   }
 }
 
@@ -59,14 +50,18 @@ function renderAvailabilityResults(results) {
   const container = document.getElementById('trackerContainer');
   
   if (!results || results.length === 0) {
-    emptyState.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'block';
     container.style.display = 'none';
     return;
   }
   
-  emptyState.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
   container.style.display = 'grid';
   
+  const currentUser = window.currentUser || (window.getCurrentUser ? window.getCurrentUser() : null);
+  const userRole = currentUser && currentUser.role ? currentUser.role.toLowerCase() : '';
+  const isAdmin = userRole === 'admin';
+
   container.innerHTML = results.map(f => {
     // Determine badge colors based on status
     let badgeColor = '';
@@ -76,12 +71,15 @@ function renderAvailabilityResults(results) {
       badgeBg = 'rgba(20,184,166,0.1)';
     } else if (f.status === 'Limited') {
       badgeColor = 'var(--accent-pink)';
-      badgeBg = 'rgba(2ec,72,153,0.1)';
+      badgeBg = 'rgba(236,72,153,0.1)';
     } else {
       badgeColor = 'var(--text-muted)';
       badgeBg = 'var(--bg-lighter)';
     }
     
+    const canUpdate = isAdmin || (userRole === 'faculty' && currentUser && currentUser.user_id === f.faculty_id);
+    const domains = f.research_domains || [];
+
     return `
       <div class="card" style="border-left: 4px solid ${badgeColor};">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
@@ -93,10 +91,10 @@ function renderAvailabilityResults(results) {
         </div>
         
         <div style="margin-bottom:0.8rem;">
-          <div style="font-size:0.8rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Research Interests:</div>
+          <div style="font-size:0.8rem; font-weight:600; margin-bottom:0.4rem; color:var(--text-main);">Research Domains:</div>
           <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-            ${f.research_domains.slice(0, 3).map(d => `<span class="badge" style="background:var(--bg-lighter); color:var(--text-main);">${d}</span>`).join('')}
-            ${f.research_domains.length > 3 ? `<span class="badge" style="background:var(--bg-lighter); color:var(--text-muted);">+${f.research_domains.length - 3} more</span>` : ''}
+            ${domains.slice(0, 3).map(d => `<span class="badge" style="background:var(--bg-lighter); color:var(--text-main);">${d}</span>`).join('')}
+            ${domains.length > 3 ? `<span class="badge" style="background:var(--bg-lighter); color:var(--text-muted);">+${domains.length - 3} more</span>` : ''}
           </div>
         </div>
         
@@ -106,56 +104,82 @@ function renderAvailabilityResults(results) {
         </div>
         ` : ''}
         
-        <div style="background:var(--bg-main); border-radius:var(--radius); padding:0.8rem; display:flex; justify-content:space-between; text-align:center;">
+        <div style="background:var(--bg-main); border-radius:var(--radius); padding:0.8rem; display:flex; justify-content:space-between; text-align:center; margin-bottom:1rem;">
           <div>
-            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${f.current_students}</div>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${f.current_students !== undefined ? f.current_students : 0}</div>
             <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Current</div>
           </div>
           <div>
-            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${f.max_capacity}</div>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${f.max_capacity !== undefined ? f.max_capacity : 5}</div>
             <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Max Capacity</div>
           </div>
           <div>
-            <div style="font-size:1.2rem; font-weight:800; color:${badgeColor};">${f.remaining_slots}</div>
+            <div style="font-size:1.2rem; font-weight:800; color:${badgeColor};">${f.remaining_slots !== undefined ? f.remaining_slots : 0}</div>
             <div style="font-size:0.7rem; color:${badgeColor}; text-transform:uppercase; letter-spacing:0.5px;">Remaining</div>
           </div>
         </div>
-        </div>
         
-        ${(window.currentUser && window.currentUser.user_id === f.faculty_id) ? `
-          <div style="margin-top:1rem;">
-            <button class="btn btn-sm btn-cyan" style="width:100%;" onclick="openUpdateAvailabilityModal('${f.faculty_id}')">Update Availability & Profile</button>
-          </div>
-        ` : ''}
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-sm btn-secondary" style="flex:1;" onclick="openViewFacultyDetailsModal('${f.faculty_id}')">View Details</button>
+          ${canUpdate ? `<button class="btn btn-sm btn-cyan" style="flex:1;" onclick="openUpdateAvailabilityModal('${f.faculty_id}')">Update</button>` : ''}
+        </div>
       </div>
     `;
   }).join('');
 }
 
 async function openUpdateAvailabilityModal(facultyId) {
+  window._editingAvailabilityFacultyId = facultyId;
   try {
     const res = await fetch(`/api/faculty/profile?faculty_id=${facultyId}`);
     const data = await res.json();
     if (data.success && data.faculty) {
       const fac = data.faculty;
-      document.getElementById('editFacDesignation').value = fac.designation || '';
-      document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
-      document.getElementById('editFacHIndex').value = fac.h_index || 0;
-      document.getElementById('editFacSlots').value = fac.remaining_slots || 0;
-      document.getElementById('editFacCgpa').value = fac.min_cgpa_req || 0.0;
-      document.getElementById('editFacThesisAvail').checked = !!fac.thesis_available;
-      
-      document.getElementById('editFacultyProfileModal').classList.add('open');
+      const modal = document.getElementById('editFacultyProfileModal');
+      if (modal) {
+        document.getElementById('editFacDesignation').value = fac.designation || '';
+        document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
+        if (document.getElementById('editFacHIndex')) document.getElementById('editFacHIndex').value = fac.h_index || 0;
+        if (document.getElementById('editFacMaxCap')) document.getElementById('editFacMaxCap').value = fac.max_capacity !== undefined ? fac.max_capacity : 5;
+        if (document.getElementById('editFacCurrStud')) document.getElementById('editFacCurrStud').value = fac.current_students !== undefined ? fac.current_students : 0;
+        if (document.getElementById('editFacSlots')) document.getElementById('editFacSlots').value = fac.remaining_slots !== undefined ? fac.remaining_slots : 0;
+        if (document.getElementById('editFacMinCgpa')) document.getElementById('editFacMinCgpa').value = fac.min_cgpa_req || 3.0;
+        if (document.getElementById('editFacThesisAvail')) document.getElementById('editFacThesisAvail').checked = !!fac.thesis_available;
+        
+        modal.classList.add('open');
+      }
     }
   } catch (err) {
     console.error(err);
   }
 }
 
+async function openViewFacultyDetailsModal(facultyId) {
+  if (typeof window.openFacultyDetailsModal === 'function') {
+    window.openFacultyDetailsModal(facultyId);
+  } else if (typeof openFacultyDetailsModal === 'function') {
+    openFacultyDetailsModal(facultyId);
+  } else {
+    try {
+      const res = await fetch(`/api/faculty/profile?faculty_id=${facultyId}`);
+      const data = await res.json();
+      if (data.success && data.faculty) {
+        if (typeof renderFacultyDetails === 'function') renderFacultyDetails(data.faculty);
+        const modal = document.getElementById('facultyDetailsModal');
+        if (modal) modal.classList.add('open');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+window.openViewFacultyDetailsModal = openViewFacultyDetailsModal;
+
 // Global exposure
 window.runAvailabilitySearch = runAvailabilitySearch;
 window.debounceAvailabilitySearch = debounceAvailabilitySearch;
 window.openUpdateAvailabilityModal = openUpdateAvailabilityModal;
+window.openViewFacultyDetailsModal = openViewFacultyDetailsModal;
 
 function initAvailabilityTracker() {
   runAvailabilitySearch();

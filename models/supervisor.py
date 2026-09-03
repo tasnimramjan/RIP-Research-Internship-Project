@@ -38,7 +38,18 @@ class SupervisorModel:
         results = []
         for r in rows:
             item = dict(r)
-            domains = json.loads(item['research_domains'])
+            domains_raw = item.get('research_domains')
+            domains = []
+            if domains_raw:
+                if isinstance(domains_raw, list):
+                    domains = domains_raw
+                else:
+                    try:
+                        res = json.loads(domains_raw)
+                        domains = res if isinstance(res, list) else []
+                    except Exception:
+                        if isinstance(domains_raw, str):
+                            domains = [d.strip() for d in domains_raw.split(',') if d.strip()]
             item['research_domains'] = domains
             
             # Keyword filter (in domains, name, designation)

@@ -18,6 +18,7 @@ from controllers.forum_controller       import ForumController
 from controllers.project_controller     import ProjectController
 from controllers.message_controller     import MessageController
 from controllers.thesis_hub_controller  import ThesisHubController
+from controllers.availability_controller import AvailabilityController
 
 # Removed (features stripped from v2, now restored):
 #   MatchingController   — Research Interest Matching & 1-to-1 Chat (Partially restored)
@@ -292,6 +293,9 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(InternshipController.apply(data.get('opportunity_id'), data.get('student_id')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
+        elif path == '/api/availability/update':
+            from controllers.availability_controller import AvailabilityController
+            self.send_json(AvailabilityController.update_availability(data.get('faculty_id'), data))
 
         # -- Thesis Management Hub Features --
         elif path == "/api/milestones/update":

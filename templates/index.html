@@ -1086,10 +1086,13 @@
           <div id="facDetailsDomains"></div>
         </div>
         <div style="background:var(--bg-lighter); padding:1rem; border-radius:8px;">
-          <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Key Stats</h4>
-          <p><strong>h-index:</strong> <span id="facDetailsHIndex"></span></p>
-          <p><strong>Open Slots:</strong> <span id="facDetailsSlots"></span></p>
-          <p><strong>Min CGPA Req:</strong> <span id="facDetailsCgpa"></span></p>
+          <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Capacity &amp; Supervision Stats</h4>
+          <p style="margin-bottom:0.3rem;"><strong>Supervision Status:</strong> <span id="facDetailsStatusBadge" style="font-weight:700;">Available</span></p>
+          <p style="margin-bottom:0.3rem;"><strong>Current Students:</strong> <span id="facDetailsCurrStudents">0</span></p>
+          <p style="margin-bottom:0.3rem;"><strong>Max Capacity:</strong> <span id="facDetailsMaxCap">5</span></p>
+          <p style="margin-bottom:0.3rem;"><strong>Remaining Slots:</strong> <span id="facDetailsSlots">0</span></p>
+          <p style="margin-bottom:0.3rem;"><strong>h-index:</strong> <span id="facDetailsHIndex"></span></p>
+          <p style="margin-bottom:0.3rem;"><strong>Min CGPA Req:</strong> <span id="facDetailsCgpa"></span></p>
         </div>
       </div>
 
@@ -1434,9 +1437,76 @@
         </div>
       </form>
     </div>
+  <!-- FACULTY DETAILS MODAL FOR AVAILABILITY TRACKER -->
+  <div id="viewFacultyDetailsModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 540px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem;">
+        <div>
+          <h3 id="viewFacDetailsName" style="font-size:1.3rem; font-weight:800; color:var(--text-main); margin-bottom:0.2rem;">Faculty Details</h3>
+          <p id="viewFacDetailsDept" style="font-size:0.85rem; color:var(--text-muted); margin:0;">Designation, Department</p>
+        </div>
+        <button type="button" class="btn-close-sm" onclick="closeViewFacultyDetailsModal()">&times;</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1rem; background:var(--bg-main); padding:1rem; border-radius:var(--radius);">
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Email Address</div>
+          <div id="viewFacDetailsEmail" style="font-size:0.9rem; font-weight:600; color:var(--text-main);">faculty@univ.edu</div>
+        </div>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Supervision Status</div>
+          <div id="viewFacDetailsStatus" style="font-size:0.9rem; font-weight:700;">Available</div>
+        </div>
+      </div>
+
+      <!-- Capacity Stats Box -->
+      <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem; margin-bottom:1rem;">
+        <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:0.6rem;">Supervision Capacity &amp; Slots</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; text-align:center;">
+          <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
+            <div id="viewFacDetailsCurr" style="font-size:1.3rem; font-weight:800; color:var(--text-main);">0</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Current Students</div>
+          </div>
+          <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
+            <div id="viewFacDetailsMax" style="font-size:1.3rem; font-weight:800; color:var(--text-main);">5</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Max Capacity</div>
+          </div>
+          <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
+            <div id="viewFacDetailsRem" style="font-size:1.3rem; font-weight:800; color:var(--accent-teal);">5</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Remaining Slots</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requirements & Research Info -->
+      <div style="margin-bottom:1rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:0.8rem;">
+          <div style="font-size:0.85rem; color:var(--text-main);">
+            <strong>Min CGPA Req:</strong> <span id="viewFacDetailsMinCgpa">3.0</span>
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-main);">
+            <strong>h-index:</strong> <span id="viewFacDetailsHIndex">10</span>
+          </div>
+        </div>
+        
+        <div style="margin-bottom:0.8rem;">
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:0.4rem;">Research Domains &amp; Expertise</div>
+          <div id="viewFacDetailsDomains" style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
+        </div>
+
+        <div id="viewFacDetailsLabSection" style="font-size:0.85rem; color:var(--text-muted); display:none;">
+          <strong>Research Lab:</strong> <span id="viewFacDetailsLabName"></span> (<span id="viewFacDetailsLabArea"></span>)
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeViewFacultyDetailsModal()">Close</button>
+      </div>
+    </div>
   </div>
 
   <script src="/static/js/thesis_hub.js"></script>
+
 </body>
 
 </html>

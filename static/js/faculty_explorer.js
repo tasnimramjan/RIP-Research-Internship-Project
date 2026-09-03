@@ -137,9 +137,29 @@ function renderFacultyDetails(fac) {
   document.getElementById('facDetailsName').textContent = fac.name;
   document.getElementById('facDetailsDesigDept').textContent = `${fac.designation}, Department of ${fac.department} | ${fac.email}`;
   
-  document.getElementById('facDetailsHIndex').textContent = fac.h_index || 0;
-  document.getElementById('facDetailsSlots').textContent = fac.remaining_slots || 0;
-  document.getElementById('facDetailsCgpa').textContent = fac.min_cgpa_req || 0.0;
+  const maxCap = fac.max_capacity !== undefined ? fac.max_capacity : 5;
+  const currStud = fac.current_students !== undefined ? fac.current_students : 0;
+  const remSlots = fac.remaining_slots !== undefined ? fac.remaining_slots : Math.max(0, maxCap - currStud);
+
+  if (document.getElementById('facDetailsCurrStudents')) document.getElementById('facDetailsCurrStudents').textContent = currStud;
+  if (document.getElementById('facDetailsMaxCap')) document.getElementById('facDetailsMaxCap').textContent = maxCap;
+  if (document.getElementById('facDetailsSlots')) document.getElementById('facDetailsSlots').textContent = remSlots;
+  if (document.getElementById('facDetailsHIndex')) document.getElementById('facDetailsHIndex').textContent = fac.h_index || 0;
+  if (document.getElementById('facDetailsCgpa')) document.getElementById('facDetailsCgpa').textContent = fac.min_cgpa_req || 3.0;
+
+  const statusEl = document.getElementById('facDetailsStatusBadge');
+  if (statusEl) {
+    if (fac.thesis_available === 0 || remSlots === 0) {
+      statusEl.textContent = 'Full (0 slots)';
+      statusEl.style.color = 'var(--text-muted)';
+    } else if (remSlots <= 2) {
+      statusEl.textContent = `Limited (${remSlots} slots)`;
+      statusEl.style.color = 'var(--accent-pink)';
+    } else {
+      statusEl.textContent = `Available (${remSlots} slots)`;
+      statusEl.style.color = 'var(--accent-teal)';
+    }
+  }
   
   // Format domains as plain clean text without square/box background tags
   const domainsContainer = document.getElementById('facDetailsDomains');

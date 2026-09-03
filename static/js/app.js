@@ -118,7 +118,7 @@ function switchView(viewId) {
   else if (viewId === 'thesis-groups') loadThesisGroups();
   else if (viewId === 'admin-panel') loadAdminPanel();
   else if (viewId === 'interest-matching') { if (window.loadInterestMatching) window.loadInterestMatching(); }
-  else if (viewId === 'availability-tracker') { if (window.initAvailabilityTracker) window.initAvailabilityTracker(); }
+  else if (viewId === 'availability-tracker') { if (window.initAvailabilityTracker) window.initAvailabilityTracker(); else if (window.runAvailabilitySearch) window.runAvailabilitySearch(); else loadAvailabilityTracker(); }
   else if (viewId === 'discussion-forums' && window.Forums) { Forums.init(currentUser); Forums.loadThreads(); }
   else if (viewId === 'teammate-finder' && window.Teammates) { Teammates.init(currentUser); Teammates.loadProjects(); }
   else if (viewId === 'faculty-chat') loadFacultyChat();
