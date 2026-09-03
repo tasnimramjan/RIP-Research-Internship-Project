@@ -20,14 +20,34 @@ let chatPollInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => { initApp(); });
 
+function getCurrentUser() {
+  if (currentUser) {
+    window.currentUser = currentUser;
+    return currentUser;
+  }
+  if (window.currentUser) return window.currentUser;
+  const stored = localStorage.getItem('rip_user');
+  if (stored) {
+    try {
+      currentUser = JSON.parse(stored);
+      window.currentUser = currentUser;
+      return currentUser;
+    } catch (e) {}
+  }
+  return null;
+}
+window.getCurrentUser = getCurrentUser;
+
 function initApp() {
   const stored = localStorage.getItem('rip_user');
   currentUser = stored ? JSON.parse(stored) : null;
+  window.currentUser = currentUser;
   renderUserNav();
   showLandingPage();
   if (currentUser && window.Forums) Forums.init(currentUser);
   if (currentUser && window.Teammates) Teammates.init(currentUser);
 }
+
 
 // ── Navigation ──────────────────────────────────────────
 function renderUserNav() {
@@ -118,14 +138,48 @@ function toggleAuthMode(mode) {
   document.getElementById('authModalTitle').innerText = isSignup ? 'Create Account' : 'Account Login';
 }
 
+function clearAllSearchState() {
+  const inputsToClear = [
+    'matchingSearchInput', 'facultySearchInput', 'facultyDeptFilter', 'facultyLabFilter',
+    'finderDept', 'finderKeyword', 'finderCgpa', 'labSearchInput', 'paperSearchInput', 'thesisTopicFilter'
+  ];
+  inputsToClear.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  
+  const finderAvail = document.getElementById('finderAvail');
+  if (finderAvail) finderAvail.checked = false;
+
+  // Clear rendered search result lists
+  ['matchFacultyList', 'matchLabList', 'matchThesisList', 'matchProjectList', 'facultyList', 'supervisorList', 'labGrid'].forEach(id => {
+    const container = document.getElementById(id);
+    if (container) container.innerHTML = '';
+  });
+
+  const matchingEmptyState = document.getElementById('matchingEmptyState');
+  if (matchingEmptyState) matchingEmptyState.style.display = 'none';
+}
+
 async function submitLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   if (!email || !password) return alert('Please enter your email and password.');
   const res  = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
   const data = await res.json();
-  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); if(window.Forums) Forums.init(currentUser); if(window.Teammates) Teammates.init(currentUser); }
-  else alert(data.message);
+  if (data.success) { 
+    currentUser = data.user; 
+    window.currentUser = currentUser; 
+    localStorage.setItem('rip_user', JSON.stringify(currentUser)); 
+    clearAllSearchState();
+    renderUserNav(); 
+    closeAuthModal(); 
+    showLandingPage(); 
+    if(window.Forums) Forums.init(currentUser); 
+    if(window.Teammates) Teammates.init(currentUser); 
+  } else {
+    alert(data.message);
+  }
 }
 
 async function submitSignup() {
@@ -138,11 +192,32 @@ async function submitSignup() {
   if (password.length < 8) return alert('Password must be at least 8 characters long.');
   const res  = await fetch('/api/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, password, role, department: dept}) });
   const data = await res.json();
-  if (data.success) { currentUser = data.user; localStorage.setItem('rip_user', JSON.stringify(currentUser)); renderUserNav(); closeAuthModal(); showLandingPage(); if(window.Forums) Forums.init(currentUser); if(window.Teammates) Teammates.init(currentUser); }
-  else alert(data.message);
+  if (data.success) { 
+    currentUser = data.user; 
+    window.currentUser = currentUser; 
+    localStorage.setItem('rip_user', JSON.stringify(currentUser)); 
+    clearAllSearchState();
+    renderUserNav(); 
+    closeAuthModal(); 
+    showLandingPage(); 
+    if(window.Forums) Forums.init(currentUser); 
+    if(window.Teammates) Teammates.init(currentUser); 
+  } else {
+    alert(data.message);
+  }
 }
 
-function logout() { currentUser = null; localStorage.removeItem('rip_user'); if(window.Forums && window.Forums.pollingInterval) clearInterval(window.Forums.pollingInterval); if(window.Teammates && window.Teammates.pollingInterval) clearInterval(window.Teammates.pollingInterval); renderUserNav(); showLandingPage(); }
+function logout() { 
+  currentUser = null; 
+  window.currentUser = null; 
+  localStorage.removeItem('rip_user'); 
+  clearAllSearchState();
+  if(window.Forums && window.Forums.pollingInterval) clearInterval(window.Forums.pollingInterval); 
+  if(window.Teammates && window.Teammates.pollingInterval) clearInterval(window.Teammates.pollingInterval); 
+  renderUserNav(); 
+  showLandingPage(); 
+}
+
 
 // ── FEATURE 1: Smart Supervisor Finder ──────────────────
 async function loadSupervisors() {
@@ -534,13 +609,24 @@ let directChatPollInterval = null;
 
 function openDirectChat(receiverId, receiverName) {
   if (!currentUser) return alert('Please log in to send messages.');
+  if (currentUser.role === 'Admin') {
+    return alert('Admins cannot send direct messages.');
+  }
   document.getElementById('directChatUserName').innerText = 'Chat with ' + receiverName;
   document.getElementById('directChatWindow').classList.add('open');
   window._activeReceiverId = receiverId;
+  const input = document.getElementById('directChatInput');
+  if (input) {
+    input.value = '';
+    input.setAttribute('autocomplete', 'off');
+  }
   fetchDirectChatMessages();
   if (directChatPollInterval) clearInterval(directChatPollInterval);
   directChatPollInterval = setInterval(fetchDirectChatMessages, 2500);
 }
+
+
+
 
 function closeDirectChat() { 
   document.getElementById('directChatWindow').classList.remove('open'); 

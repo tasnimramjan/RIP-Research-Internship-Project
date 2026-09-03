@@ -129,6 +129,9 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(ProjectController.get_all_posts())
             elif path == '/api/messages/history':
                 self.send_json(MessageController.get_direct_messages(params_flat.get('user1'), params_flat.get('user2')))
+            elif path == '/api/messages/conversations':
+                self.send_json(MessageController.get_user_conversations(params_flat.get('user_id')))
+
 
             elif path == "/api/faculty/search":
                 self.send_json(FacultyController.search_faculty(params_flat))
@@ -137,6 +140,9 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             elif path == "/api/matching/search":
                 from controllers.matching_controller import MatchingController
                 self.send_json(MatchingController.search(params_flat))
+            elif path == "/api/matching/students":
+                from controllers.matching_controller import MatchingController
+                self.send_json(MatchingController.get_matched_students(params_flat.get('faculty_id')))
             
             # -- REMOVED routes return 404 --
             else:
@@ -237,6 +243,11 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ProjectController.join_team(data.get('post_id'), data.get('student_id')))
         elif path == '/api/messages/send':
             self.send_json(MessageController.send_message(data))
+        elif path == "/api/matching/update_interests":
+            from controllers.matching_controller import MatchingController
+            res = MatchingController.update_student_interests(data.get('student_id'), data.get('interests'))
+            self.send_json(res)
+
 
         else:
             self.send_json({"error": "POST endpoint not found"}, status=404)

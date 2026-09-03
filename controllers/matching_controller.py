@@ -11,9 +11,29 @@ class MatchingController:
     @staticmethod
     def search(params):
         keywords = params.get('keywords', '')
-        results = MatchingModel.search_all(keywords)
+        student_id = params.get('student_id') or params.get('user_id')
+        results = MatchingModel.search_all(keywords_str=keywords, student_id=student_id)
         results["success"] = True
         return results
+
+    @staticmethod
+    def update_student_interests(student_id, interests):
+        if not student_id:
+            return {"success": False, "message": "Student ID is required."}
+        ok = MatchingModel.update_student_interests(student_id, interests)
+        return {"success": ok, "message": "Research interests updated successfully."}
+
+    @staticmethod
+    def get_matched_students(faculty_id):
+        if not faculty_id:
+            return {"success": False, "message": "Faculty ID is required."}
+        students = MatchingModel.get_matched_students_for_faculty(faculty_id)
+        return {"success": True, "students": students}
+
+    @staticmethod
+    def get_admin_conversations():
+        messages = MatchingModel.get_admin_conversations()
+        return {"success": True, "conversations": messages}
 
     @staticmethod
     def match_student_with_faculty(student_id):
@@ -53,3 +73,4 @@ class MatchingController:
             return {"success": False, "message": "Message text cannot be empty."}
         msg_id = ChatMessageModel.send_message(sender_id, receiver_id=receiver_id, message_text=text.strip())
         return {"success": True, "message_id": msg_id}
+

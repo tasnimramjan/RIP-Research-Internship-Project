@@ -182,11 +182,38 @@
       <div class="panel-header">
         <div>
           <h2 class="panel-title">Research Interest Matching</h2>
-          <p class="panel-subtitle">Discover faculty, research labs, theses, and projects that match your interests.</p>
+          <p class="panel-subtitle">Discover faculty, research labs, thesis, and projects that match your interests.</p>
         </div>
       </div>
+
+
+      <!-- Faculty Expertise & Matched Students Section -->
+      <div id="facultyMatchingSection" style="display:none; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem; margin-bottom:1.5rem;">
+        
+        <!-- Faculty Student Messages Inbox -->
+        <div style="margin-bottom:1.8rem; border-bottom:1px solid var(--border-color); padding-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <h4 style="margin-bottom:0.2rem; font-size:1.1rem; font-weight:800; color:var(--accent-cyan);">Student Messages & Inquiries</h4>
+              <p style="font-size:0.82rem; color:var(--text-muted);">View direct messages sent by students and reply to their research inquiries.</p>
+            </div>
+            <button class="btn btn-sm btn-cyan" onclick="loadFacultyConversations()">Refresh Messages</button>
+          </div>
+          <div class="card-grid" id="facultyConversationsList"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <h4 style="margin-bottom:0.2rem; font-size:1.05rem; font-weight:700; color:var(--accent-indigo);">Matched & Interested Students</h4>
+            <p style="font-size:0.82rem; color:var(--text-muted);">Students whose research interests align with your expertise domains.</p>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="loadFacultyMatchedStudents()">Refresh Matched Students</button>
+        </div>
+        <div class="card-grid" id="facultyMatchedStudentsList" style="margin-bottom:0.5rem;"></div>
+      </div>
+
       
-      <div style="margin-bottom:1.5rem; display:flex; gap:0.5rem; align-items:flex-end; max-width:450px; justify-content:flex-start;">
+      <div style="margin-bottom:1.5rem; display:flex; gap:0.5rem; align-items:flex-end; max-width:550px; justify-content:flex-start;">
         <div style="flex:1;">
           <label style="display:block; margin-bottom:0.4rem; font-weight:600; font-size:0.85rem;">Search by Keywords, Topics, or Interests</label>
           <input type="text" id="matchingSearchInput" placeholder="e.g. Artificial Intelligence, Data Science, NLP" oninput="debounceMatchingSearch()" style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius); background:var(--bg-card); color:var(--text-main);">
@@ -194,11 +221,11 @@
         <button class="btn btn-secondary" style="padding:0.6rem 1.2rem; height:41px;" onclick="document.getElementById('matchingSearchInput').value=''; runMatchingSearch();">Clear</button>
       </div>
       
-      <div id="matchingEmptyState" style="text-align:center; padding:3rem; color:var(--text-muted);">
-        Type some keywords above to find matching research opportunities.
+      <div id="matchingEmptyState" style="text-align:center; padding:2rem; color:var(--text-muted); display:none;">
+        No records match your query. Try clearing the search or using broader terms.
       </div>
 
-      <div id="matchingResultsContainer" style="display:none; gap:2rem; flex-direction:column;">
+      <div id="matchingResultsContainer" style="display:flex; gap:2rem; flex-direction:column;">
         <div>
           <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-cyan);">Matching Faculty</h3>
           <div class="card-grid" id="matchFacultyList"></div>
@@ -210,9 +237,10 @@
         </div>
 
         <div>
-          <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-pink);">Previous Theses</h3>
+          <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-pink);">Previous Thesis</h3>
           <div class="card-grid" id="matchThesisList"></div>
         </div>
+
         
         <div>
           <h3 style="font-size:1.2rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:1rem; color:var(--accent-cyan);">Academic Projects</h3>
@@ -220,6 +248,7 @@
         </div>
       </div>
     </section>
+
 
     <!-- FEATURE 1: Smart Supervisor Finder (KEPT) -->
     <section id="supervisor-finder" class="view-panel">
@@ -359,9 +388,10 @@
   </div>
   <div id="directChatMessages" class="chat-messages"></div>
   <div class="chat-input-area">
-    <input type="text" id="directChatInput" placeholder="Type a message...">
+    <input type="text" id="directChatInput" placeholder="Type a message..." autocomplete="off" auto-complete="new-password" name="chat_msg_no_autofill" spellcheck="false">
     <button id="directChatSendBtn" style="background:#4f46e5; color:white; border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-weight:bold;">&gt;</button>
   </div>
+
 </div>
 
 <!-- AUTHENTICATION MODAL -->
@@ -690,11 +720,12 @@
   </div>
 </div>
 
-<script src="/static/forums.js"></script>
-<script src="/static/teammates.js"></script>
-<script src="/static/js/faculty_explorer.js"></script>
-<script src="/static/js/matching.js"></script>
-<script src="/static/js/app.js"></script>
+<script src="/static/js/app.js?v=20260903"></script>
+<script src="/static/forums.js?v=20260903"></script>
+<script src="/static/teammates.js?v=20260903"></script>
+<script src="/static/js/faculty_explorer.js?v=20260903"></script>
+<script src="/static/js/matching.js?v=20260903"></script>
+
 <!-- CREATE THREAD MODAL -->
 <div id="createThreadModal" class="modal-overlay">
   <div class="modal-box">

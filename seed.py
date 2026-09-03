@@ -36,7 +36,7 @@ def seed_data():
             "dept": "CSE",
             "designation": "Professor",
             "h_index": 24,
-            "domains": ["Computer Vision", "Deep Learning", "Medical Imaging"],
+            "domains": ["Computer Vision", "Deep Learning", "Medical Image Processing", "Convolutional Neural Networks", "Pattern Recognition"],
             "slots": 3,
             "min_cgpa": 3.5,
             "available": 1
@@ -48,7 +48,7 @@ def seed_data():
             "dept": "CSE",
             "designation": "Associate Professor",
             "h_index": 18,
-            "domains": ["NLP", "LLMs", "Speech Processing"],
+            "domains": ["Natural Language Processing", "Large Language Models (LLMs)", "Speech Recognition", "Machine Translation", "Computational Linguistics"],
             "slots": 2,
             "min_cgpa": 3.2,
             "available": 1
@@ -60,7 +60,7 @@ def seed_data():
             "dept": "EEE",
             "designation": "Assistant Professor",
             "h_index": 12,
-            "domains": ["IoT", "Robotics", "Embedded Systems"],
+            "domains": ["Internet of Things (IoT)", "Robotics & Automation", "Embedded Systems", "Wireless Sensor Networks", "Mechatronics"],
             "slots": 4,
             "min_cgpa": 3.0,
             "available": 1
@@ -72,7 +72,7 @@ def seed_data():
             "dept": "CSE",
             "designation": "Professor",
             "h_index": 30,
-            "domains": ["Cybersecurity", "Blockchain", "Cloud Security"],
+            "domains": ["Cybersecurity", "Blockchain Technology", "Cloud Security", "Applied Cryptography", "Network Intrusion Detection"],
             "slots": 0,
             "min_cgpa": 3.7,
             "available": 0
@@ -164,6 +164,28 @@ def seed_data():
             "ras": [],
             "projects": [
                 {"id": "lp_3", "title": "Autonomous Drone Swarm Navigation in Obstacle Fields"}
+            ]
+        },
+        {
+            "id": "lab_sec",
+            "name": "Cybersecurity & Cryptography Lab",
+            "focus": "Cloud Security, Zero-Knowledge Proofs, Intrusion Detection",
+            "facilities": ["Hardware Security Modules", "Isolated Testbed Network", "Packet Analyzers"],
+            "faculty": "fac_ahmed",
+            "ras": [],
+            "projects": [
+                {"id": "lp_4", "title": "Zero-Knowledge Authentication for Cloud Storage Systems"}
+            ]
+        },
+        {
+            "id": "lab_bio",
+            "name": "Computational Biology & Data Intelligence Lab",
+            "focus": "Bioinformatics, Gene Sequence Analysis, Clinical Predictive Modeling",
+            "facilities": ["High-Performance Compute Node", "Next-Gen Sequencing Server"],
+            "faculty": "9cf8f02b",
+            "ras": [],
+            "projects": [
+                {"id": "lp_5", "title": "Deep Learning for Genomic Variation Discovery"}
             ]
         }
     ]
