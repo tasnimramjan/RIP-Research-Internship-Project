@@ -1742,7 +1742,14 @@
     });
   }
 
-  function openCreateEventModal()  { document.getElementById('createEventModal').classList.add('open'); }
+  function openCreateEventModal() {
+  const modal = document.getElementById('createEventModal');
+  if (modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+  modal.classList.add('open');
+  }
+  
   function closeCreateEventModal() { document.getElementById('createEventModal').classList.remove('open'); }
 
   function submitCreateEvent() {
