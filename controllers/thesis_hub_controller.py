@@ -137,5 +137,6 @@ class ThesisHubController:
     def ask_ai_assistant(data):
         prompt = data.get("prompt", "")
         context = data.get("context", "")
-        reply = ThesisHubModel.generate_ai_response(prompt=prompt, context=context)
+        api_key = data.get("api_key", "")
+        reply = ThesisHubModel.generate_ai_response(prompt=prompt, context=context, api_key=api_key)
         return {"response": reply}

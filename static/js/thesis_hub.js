@@ -30,6 +30,11 @@ const ThesisHub = {
       modal.classList.remove('hidden');
       modal.classList.add('open');
       modal.style.display = 'flex';
+
+      if (modalId === 'gemini-key-modal') {
+        const keyInput = document.getElementById('gemini-key-input');
+        if (keyInput) keyInput.value = localStorage.getItem('gemini_api_key') || '';
+      }
     }
   },
 
@@ -77,6 +82,7 @@ const ThesisHub = {
     wire('open-citation-modal-btn', 'close-citation-modal-btn', 'citation-modal');
     wire('open-resource-modal-btn', 'close-resource-modal-btn', 'resource-modal');
     wire('open-archive-modal-btn', 'close-archive-modal-btn', 'archive-modal');
+    wire('open-gemini-key-btn', 'close-gemini-key-btn', 'gemini-key-modal');
   },
 
   // ── FEATURE 11: Milestones & Gemini AI Assistant ───────
@@ -129,10 +135,11 @@ const ThesisHub = {
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         try {
+          const apiKey = localStorage.getItem('gemini_api_key') || '';
           const res = await fetch('/api/ai-assistant', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: text, context: '' })
+            body: JSON.stringify({ prompt: text, context: '', api_key: apiKey })
           });
           const data = await res.json();
 
@@ -152,6 +159,33 @@ const ThesisHub = {
           e.preventDefault();
           sendPrompt();
         }
+      });
+    }
+
+    const keyForm = document.getElementById('gemini-key-form');
+    if (keyForm) {
+      keyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const key = document.getElementById('gemini-key-input')?.value.trim() || '';
+        if (key) {
+          localStorage.setItem('gemini_api_key', key);
+          alert('Gemini API Key saved successfully in browser storage!');
+        } else {
+          localStorage.removeItem('gemini_api_key');
+          alert('Gemini API Key cleared.');
+        }
+        this.closeModal('gemini-key-modal');
+      });
+    }
+
+    const clearKeyBtn = document.getElementById('clear-gemini-key-btn');
+    if (clearKeyBtn) {
+      clearKeyBtn.addEventListener('click', () => {
+        localStorage.removeItem('gemini_api_key');
+        const keyInput = document.getElementById('gemini-key-input');
+        if (keyInput) keyInput.value = '';
+        alert('Gemini API Key cleared.');
+        this.closeModal('gemini-key-modal');
       });
     }
   },
@@ -254,10 +288,11 @@ const ThesisHub = {
     if (aiEnhanceBtn && latexInput) {
       aiEnhanceBtn.addEventListener('click', async () => {
         const text = latexInput.value;
+        const apiKey = localStorage.getItem('gemini_api_key') || '';
         const res = await fetch('/api/ai-assistant', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: 'improve and polish LaTeX content', context: text.slice(0, 300) })
+          body: JSON.stringify({ prompt: 'improve and polish LaTeX content', context: text.slice(0, 300), api_key: apiKey })
         });
         const data = await res.json();
         alert(data.response || 'AI enhancement complete.');
