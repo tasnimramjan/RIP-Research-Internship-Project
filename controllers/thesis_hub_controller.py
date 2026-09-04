@@ -116,6 +116,22 @@ class ThesisHubController:
         dept = params.get("dept", "")
         return ThesisHubModel.search_archive(q=q, dept=dept)
 
+    @staticmethod
+    def add_archive_thesis(data):
+        title = data.get("title")
+        author = data.get("author")
+        department = data.get("department", "Computer Science")
+        year = int(data.get("year", 2026))
+        research_area = data.get("research_area", "General")
+        keywords = data.get("keywords", "")
+        abstract = data.get("abstract", "")
+
+        if not title or not author:
+            return {"success": False, "message": "Title and author are required."}
+
+        new_id = ThesisHubModel.add_archive_thesis(title, author, department, year, research_area, keywords, abstract)
+        return {"success": True, "id": new_id}
+
     # ── AI Assistant ────────────────────────────────────────
     @staticmethod
     def ask_ai_assistant(data):

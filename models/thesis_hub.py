@@ -1,5 +1,7 @@
 import sqlite3
 import os
+import json
+import urllib.request
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rip_database.sqlite")
 
@@ -330,6 +332,8 @@ class ThesisHubModel:
             sql += " AND department = ?"
             params.append(dept)
 
+        sql += " ORDER BY id DESC"
+
         cursor.execute(sql, params)
         rows = [dict(r) for r in cursor.fetchall()]
 
@@ -344,18 +348,87 @@ class ThesisHubModel:
         conn.close()
         return rows
 
-    # ── AI Assistant ────────────────────────────────────────
+    @staticmethod
+    def add_archive_thesis(title, author, department, year, research_area, keywords="", abstract=""):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO archive (title, author, department, year, research_area, keywords, abstract)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (title, author, department, int(year), research_area, keywords, abstract))
+        new_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return new_id
+
+    # ── AI Assistant (Gemini API Integration) ───────────────
     @staticmethod
     def generate_ai_response(prompt="", context=""):
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+        # 1. Direct call to Google Gemini API if key is present
+        if api_key:
+            preferred_model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+            candidate_models = [preferred_model]
+            for fallback in ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"]:
+                if fallback not in candidate_models:
+                    candidate_models.append(fallback)
+
+            system_instruction = (
+                "You are the Gemini Academic AI Assistant for a university research, thesis, and internship platform. "
+                "Provide clear, insightful, professional guidance for thesis proposals, literature reviews, "
+                "methodology formulations, academic writing, and LaTeX authoring. Format with Markdown."
+            )
+
+            full_prompt = f"{system_instruction}\n\n"
+            if context:
+                full_prompt += f"Document/LaTeX Context:\n\"\"\"\n{context}\n\"\"\"\n\n"
+            full_prompt += f"User Request:\n{prompt}"
+
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": full_prompt}
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "maxOutputTokens": 1024
+                }
+            }
+
+            for model_name in candidate_models:
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                    req = urllib.request.Request(
+                        url,
+                        data=json.dumps(payload).encode("utf-8"),
+                        headers={"Content-Type": "application/json"}
+                    )
+
+                    with urllib.request.urlopen(req, timeout=15) as response:
+                        resp_data = json.loads(response.read().decode("utf-8"))
+                        candidates = resp_data.get("candidates", [])
+                        if candidates:
+                            parts = candidates[0].get("content", {}).get("parts", [])
+                            if parts and "text" in parts[0]:
+                                return parts[0]["text"]
+                except Exception as e:
+                    print(f"[Gemini API Exception for {model_name}] {e}")
+                    continue
+
+        # 2. High-quality academic fallback responses
         prompt_lower = prompt.lower()
         if "improve" in prompt_lower or "rewrite" in prompt_lower:
-            return f"**Hugging Face AI Refinement Suggestion:**\n\n'{context or prompt}'\n\n*Improvements Applied:* Converted informal verbs into formal academic syntax, clarified active/passive voice balance, and sharpened thesis claims."
+            return f"**Gemini AI Refinement Suggestion:**\n\n'{context or prompt}'\n\n*Improvements Applied:*\n- Converted informal phrases to formal academic terminology\n- Balanced passive and active voice for clarity\n- Sharpened technical thesis contribution claims\n\n*(Note: Set `GEMINI_API_KEY` in environment for live Gemini responses)*"
         elif "summarize" in prompt_lower:
-            return "**Hugging Face Executive Summary:**\nThe proposed methodology integrates GNN-driven processing with real-time sensor streams, reducing computational complexity while preserving empirical precision."
+            return "**Gemini Executive Summary:**\n\nThe proposed framework synthesizes graph-structured data pipelines with real-time streaming telemetry, maintaining computational tractability while preserving empirical precision.\n\n*(Note: Set `GEMINI_API_KEY` in environment for live Gemini responses)*"
         elif "methodology" in prompt_lower or "method" in prompt_lower:
-            return "**Hugging Face Methodology Recommendation:**\nEnsure baseline models and hyperparameter validation procedures are formally stated with ablation metrics."
+            return "**Gemini Methodology Recommendation:**\n\n1. Formulate formal research hypotheses with measurable parameters.\n2. Detail baseline architectures and ablation test protocols.\n3. Validate empirical claims with appropriate statistical confidence measures.\n\n*(Note: Set `GEMINI_API_KEY` in environment for live Gemini responses)*"
         else:
-            return f"**Hugging Face Academic AI:**\nI reviewed your input: *'{prompt}'*.\n\nEnsure all hypotheses are formally articulated and cross-referenced with empirical literature."
+            return f"**Gemini Academic AI:**\n\nI reviewed your input: *'{prompt}'*.\n\nEnsure that your research problem statement is grounded in recent literature and that empirical evaluation metrics are formally defined.\n\n*(Note: Set `GEMINI_API_KEY` in environment for live Gemini responses)*"
 
 # Initialize tables when model is loaded
 ThesisHubModel.init_db()

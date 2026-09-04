@@ -98,6 +98,8 @@ class StandaloneThesisHubHandler(http.server.SimpleHTTPRequestHandler):
             return self.respond_json(ThesisHubController.add_resource(payload))
         elif parsed.path == "/api/ai-assistant":
             return self.respond_json(ThesisHubController.ask_ai_assistant(payload))
+        elif parsed.path == "/api/archive/add":
+            return self.respond_json(ThesisHubController.add_archive_thesis(payload))
 
         return self.respond_json({"error": "Bad Request"}, 400)
 

@@ -366,11 +366,49 @@
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
   border-radius: var(--radius, 12px);
   padding: 1.2rem;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .citation-card:hover {
   border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.copy-single-cit-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+  color: var(--text-main, #f8fafc);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.copy-single-cit-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+}
+
+.copy-single-cit-btn:active {
+  transform: scale(0.96);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+  color: var(--text-main, #f8fafc);
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .formatted-citation {

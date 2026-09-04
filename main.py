@@ -312,6 +312,8 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(ThesisHubController.add_resource(data))
         elif path == "/api/ai-assistant":
             self.send_json(ThesisHubController.ask_ai_assistant(data))
+        elif path == "/api/archive/add":
+            self.send_json(ThesisHubController.add_archive_thesis(data))
         else:
             self.send_json({"error": "POST endpoint not found"}, status=404)
 

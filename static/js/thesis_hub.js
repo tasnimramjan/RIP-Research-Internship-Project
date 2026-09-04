@@ -76,9 +76,10 @@ const ThesisHub = {
     wire('edit-feedback-btn', 'close-supervisor-modal-btn', 'supervisor-modal');
     wire('open-citation-modal-btn', 'close-citation-modal-btn', 'citation-modal');
     wire('open-resource-modal-btn', 'close-resource-modal-btn', 'resource-modal');
+    wire('open-archive-modal-btn', 'close-archive-modal-btn', 'archive-modal');
   },
 
-  // ── FEATURE 11: Milestones & Hugging Face AI Assistant ─
+  // ── FEATURE 11: Milestones & Gemini AI Assistant ───────
   setupTracker() {
     const addForm = document.getElementById('add-milestone-form');
     if (addForm) {
@@ -332,16 +333,6 @@ const ThesisHub = {
     const styleEl = document.getElementById('citation-style');
     if (styleEl) styleEl.addEventListener('change', () => this.renderCitations());
 
-    const copyBtn = document.getElementById('copy-citations-btn');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', () => {
-        const formattedList = this.getFormattedBibliography();
-        navigator.clipboard.writeText(formattedList).then(() => {
-          alert('Bibliography copied to clipboard!');
-        });
-      });
-    }
-
     const addCitForm = document.getElementById('add-citation-form');
     if (addCitForm) {
       addCitForm.addEventListener('submit', async (e) => {
@@ -368,6 +359,25 @@ const ThesisHub = {
     }
   },
 
+  formatCitationText(c, style, isHtml = false) {
+    const emStart = isHtml ? '<em>' : '';
+    const emEnd = isHtml ? '</em>' : '';
+    const journal = c.journal || '';
+    const doi = c.doi || 'N/A';
+
+    if (style === 'APA') {
+      return `${c.authors} (${c.year}). ${c.title}. ${emStart}${journal}${emEnd}. DOI: ${doi}`;
+    } else if (style === 'IEEE') {
+      return `${c.authors}, "${c.title}," ${emStart}${journal}${emEnd}, ${c.year}.`;
+    } else if (style === 'MLA') {
+      return `${c.authors}. "${c.title}." ${emStart}${journal}${emEnd}, ${c.year}.`;
+    } else if (style === 'BibTeX') {
+      const citeKey = `ref_${c.id || c.title.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 15)}`;
+      return `@article{${citeKey},\n  author = {${c.authors}},\n  title = {${c.title}},\n  journal = {${journal}},\n  year = {${c.year}},\n  doi = {${doi}}\n}`;
+    }
+    return `${c.authors}. ${c.title} (${c.year}).`;
+  },
+
   async loadCitations() {
     try {
       const res = await fetch('/api/citations');
@@ -386,37 +396,55 @@ const ThesisHub = {
     const style = styleEl.value;
     container.innerHTML = '';
 
-    this.currentCitations.forEach(c => {
-      let formatted = '';
-      if (style === 'APA') {
-        formatted = `${c.authors} (${c.year}). ${c.title}. <em>${c.journal || ''}</em>. DOI: ${c.doi || 'N/A'}`;
-      } else if (style === 'IEEE') {
-        formatted = `${c.authors}, "${c.title}," <em>${c.journal || ''}</em>, ${c.year}.`;
-      } else if (style === 'MLA') {
-        formatted = `${c.authors}. "${c.title}." <em>${c.journal || ''}</em>, ${c.year}.`;
-      } else if (style === 'BibTeX') {
-        formatted = `@article{ref_${c.id},\n  author = {${c.authors}},\n  title = {${c.title}},\n  year = {${c.year}}\n}`;
-      }
+    if (this.currentCitations.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-muted); padding:1rem;">No citations added yet. Click "Add Citation" to add your first reference.</div>';
+      return;
+    }
+
+    this.currentCitations.forEach((c) => {
+      const formattedHtml = this.formatCitationText(c, style, true);
+      const formattedPlain = this.formatCitationText(c, style, false);
 
       const card = document.createElement('div');
       card.className = 'citation-card';
       card.innerHTML = `
-        <span class="badge" style="background:var(--accent-indigo, #6366f1); color:#fff;">${c.citation_type || 'reference'}</span>
-        <div class="formatted-citation">${formatted}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.6rem;">
+          <span class="badge" style="background:var(--accent-indigo, #6366f1); color:#fff; text-transform:uppercase; font-size:0.75rem;">${c.citation_type || 'reference'}</span>
+          <button class="btn btn-sm copy-single-cit-btn" title="Copy this citation in ${style} format">
+            <i class="fa-regular fa-copy"></i> <span>Copy Citation</span>
+          </button>
+        </div>
+        <div class="formatted-citation">${formattedHtml}</div>
       `;
+
+      const copySingleBtn = card.querySelector('.copy-single-cit-btn');
+      if (copySingleBtn) {
+        copySingleBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(formattedPlain);
+            const span = copySingleBtn.querySelector('span');
+            const icon = copySingleBtn.querySelector('i');
+            if (span && icon) {
+              const origText = span.textContent;
+              span.textContent = 'Copied!';
+              icon.className = 'fa-solid fa-check';
+              copySingleBtn.style.borderColor = 'var(--accent-green, #10b981)';
+              copySingleBtn.style.color = 'var(--accent-green, #10b981)';
+              setTimeout(() => {
+                span.textContent = origText;
+                icon.className = 'fa-regular fa-copy';
+                copySingleBtn.style.borderColor = '';
+                copySingleBtn.style.color = '';
+              }, 2000);
+            }
+          } catch (err) {
+            console.error("Failed to copy citation:", err);
+          }
+        });
+      }
+
       container.appendChild(card);
     });
-  },
-
-  getFormattedBibliography() {
-    const style = document.getElementById('citation-style')?.value || 'APA';
-    return this.currentCitations.map(c => {
-      if (style === 'APA') return `${c.authors} (${c.year}). ${c.title}. ${c.journal || ''}. DOI: ${c.doi || 'N/A'}`;
-      if (style === 'IEEE') return `${c.authors}, "${c.title}," ${c.journal || ''}, ${c.year}.`;
-      if (style === 'MLA') return `${c.authors}. "${c.title}." ${c.journal || ''}, ${c.year}.`;
-      if (style === 'BibTeX') return `@article{ref_${c.id},\n  author = {${c.authors}},\n  title = {${c.title}},\n  year = {${c.year}}\n}`;
-      return `${c.authors}. ${c.title} (${c.year}).`;
-    }).join('\n\n');
   },
 
   // ── FEATURE 14: Resource Library ────────────────────────
@@ -483,6 +511,40 @@ const ThesisHub = {
       if (e.key === 'Enter') this.loadArchive();
     });
     if (deptFilter) deptFilter.addEventListener('change', () => this.loadArchive());
+
+    const addArchForm = document.getElementById('add-archive-form');
+    if (addArchForm) {
+      addArchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          title: document.getElementById('arch-title').value,
+          author: document.getElementById('arch-author').value,
+          department: document.getElementById('arch-dept').value,
+          year: parseInt(document.getElementById('arch-year').value || '2026'),
+          research_area: document.getElementById('arch-area').value,
+          keywords: document.getElementById('arch-keywords').value,
+          abstract: document.getElementById('arch-abstract').value
+        };
+
+        try {
+          const res = await fetch('/api/archive/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            this.closeModal('archive-modal');
+            addArchForm.reset();
+            this.loadArchive();
+          } else {
+            alert(data.message || data.error || 'Error adding thesis to archive.');
+          }
+        } catch (err) {
+          console.error("Error adding thesis to archive:", err);
+        }
+      });
+    }
   },
 
   async loadArchive() {
