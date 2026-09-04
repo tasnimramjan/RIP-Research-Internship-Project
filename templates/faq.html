@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Academic FAQ Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        #chat { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .bot { color: green; font-weight: bold; }
+        .user { color: blue; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Academic FAQ Assistant</h1>
+    <div id="chat"></div>
+    <input type="text" id="query" placeholder="Ask a question..." style="width: 75%; padding: 8px;">
+    <button onclick="ask()" style="padding: 8px 16px;">Ask</button>
+
+    <script>
+        function ask() {
+            const q = document.getElementById('query').value;
+            if (!q) return;
+            const chat = document.getElementById('chat');
+            chat.innerHTML += `<p class="user">You: ${q}</p>`;
+            document.getElementById('query').value = '';
+
+            fetch('/api/faq/ask', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ question: q })
+            })
+            .then(res => res.json())
+            .then(data => {
+                chat.innerHTML += `<p class="bot">Bot: ${data.answer}</p>`;
+                chat.scrollTop = chat.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>

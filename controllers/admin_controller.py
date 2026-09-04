@@ -77,3 +77,17 @@ class AdminController:
     def get_system_analytics():
         stats = AdminModel.get_system_stats()
         return {"success": True, "stats": stats}
+    
+    #part4
+
+    @staticmethod
+    def toggle_status(user_id):
+        return AdminModel.toggle_user_status(user_id)
+
+    @staticmethod
+    def verify_faculty(faculty_id):
+        return AdminModel.verify_faculty(faculty_id)
+
+    @staticmethod
+    def get_analytics():
+        return {"success": True, "analytics": AdminModel.get_system_analytics()}

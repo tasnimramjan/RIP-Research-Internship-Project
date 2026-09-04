@@ -112,7 +112,7 @@ function switchView(viewId) {
     if (window.loadUserSearchState) window.loadUserSearchState();
     if (window.runFacultySearch) window.runFacultySearch();
   }
-  else if (viewId === 'lab-board') loadLabBoard();
+   else if (viewId === 'lab-board') loadLabBoard();
   else if (viewId === 'internship-portal') loadInternships();
   else if (viewId === 'paper-discovery') loadPapers();
   else if (viewId === 'thesis-groups') loadThesisGroups();
@@ -128,171 +128,10 @@ function switchView(viewId) {
   else if (viewId === 'tab-citations') { if (window.loadCitationsManager) window.loadCitationsManager(); }
   else if (viewId === 'tab-resources') { if (window.loadResourceLibrary) window.loadResourceLibrary(); }
   else if (viewId === 'tab-archive') { if (window.loadPeerArchive) window.loadPeerArchive(); }
+  else if (viewId === 'events-hub')                 loadEventsHub();
+  else if (viewId === 'notification-center')        loadNotificationsHub();
+  else if (viewId === 'personalized-dashboard')     loadPersonalizedDashboard();
 }
-
-// ── Faculty Profile Settings ──────────────────────────────
-async function loadFacultyProfileSettings() {
-  if (!currentUser || currentUser.role !== 'Faculty') return;
-  const res = await fetch(`/api/faculty/me?faculty_id=${currentUser.user_id}`);
-  const data = await res.json();
-  if (data.success) {
-    const f = data.faculty;
-    const nameEl = document.getElementById('facProfName');
-    if (nameEl) nameEl.value = f.name || currentUser.name || '';
-    const emailEl = document.getElementById('facProfEmail');
-    if (emailEl) emailEl.value = f.email || currentUser.email || '';
-    const deptEl = document.getElementById('facProfDept');
-    if (deptEl) deptEl.value = f.department || currentUser.department || 'CSE';
-    
-    const domEl = document.getElementById('facProfDomains');
-    if (domEl) domEl.value = Array.isArray(f.research_domains) ? f.research_domains.join(', ') : (f.research_domains || '');
-    const desigEl = document.getElementById('facProfDesignation');
-    if (desigEl) desigEl.value = f.designation || '';
-    const hEl = document.getElementById('facProfHIndex');
-    if (hEl) hEl.value = f.h_index || 0;
-    const slotsEl = document.getElementById('facProfSlots');
-    if (slotsEl) slotsEl.value = f.remaining_slots || 0;
-    const capEl = document.getElementById('facProfMaxCap');
-    if (capEl) capEl.value = f.max_capacity || 5;
-    const cgpaEl = document.getElementById('facProfCgpa');
-    if (cgpaEl) cgpaEl.value = f.min_cgpa_req || 3.0;
-    const availEl = document.getElementById('facProfThesisAvail');
-    if (availEl) availEl.checked = !!f.thesis_available;
-
-    // Render Labs
-    const labsList = document.getElementById('facProfLabsList');
-    if (data.labs.length === 0) {
-      labsList.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No directed labs found.</p>';
-    } else {
-      labsList.innerHTML = data.labs.map(l => `
-        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
-          <div>
-            <h4 style="color:var(--accent-cyan); font-weight:700;">${l.lab_name}</h4>
-            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Focus:</strong> ${l.focus_area}</p>
-            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Facilities:</strong> ${Array.isArray(l.facilities) ? l.facilities.join(', ') : l.facilities}</p>
-          </div>
-          <button class="btn btn-sm btn-danger" onclick="deleteLab('${l.lab_id}')">Delete Lab</button>
-        </div>
-      `).join('');
-    }
-
-    // Render Papers
-    const papersList = document.getElementById('facProfPapersList');
-    if (data.papers.length === 0) {
-      papersList.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No publications found.</p>';
-    } else {
-      papersList.innerHTML = data.papers.map(p => `
-        <div style="background:var(--bg-color); padding:1rem; border-radius:8px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
-          <div>
-            <h4 style="color:var(--accent-pink); font-weight:700;">${p.title}</h4>
-            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Authors:</strong> ${Array.isArray(p.authors) ? p.authors.join(', ') : p.authors}</p>
-            <p style="font-size:0.9rem; margin-top:0.3rem;"><strong style="color:var(--text-muted);">Venue/Domain:</strong> ${p.domain} (${p.publication_year})</p>
-          </div>
-          <button class="btn btn-sm btn-danger" onclick="facultyDeletePaper('${p.paper_id}')">Delete</button>
-        </div>
-      `).join('');
-    }
-  }
-}
-
-async function facultyDeletePaper(paperId) {
-  if (!confirm('Are you sure you want to delete this publication?')) return;
-  const res = await fetch('/api/papers/delete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: currentUser.user_id, paper_id: paperId })
-  });
-  const data = await res.json();
-  alert(data.message);
-  loadFacultyProfileSettings();
-}
-
-async function saveFacultyProfileStats() {
-  const domStr = document.getElementById('facProfDomains')?.value || '';
-  const domainsArr = domStr.split(',').map(s => s.trim()).filter(Boolean);
-  
-  const data = {
-    faculty_id: currentUser.user_id,
-    name: document.getElementById('facProfName')?.value.trim() || '',
-    department: document.getElementById('facProfDept')?.value || 'CSE',
-    designation: document.getElementById('facProfDesignation')?.value.trim() || '',
-    research_domains: domainsArr,
-    h_index: parseInt(document.getElementById('facProfHIndex')?.value) || 0,
-    remaining_slots: parseInt(document.getElementById('facProfSlots')?.value) || 0,
-    max_capacity: parseInt(document.getElementById('facProfMaxCap')?.value) || 5,
-    min_cgpa_req: parseFloat(document.getElementById('facProfCgpa')?.value) || 0.0,
-    thesis_available: document.getElementById('facProfThesisAvail')?.checked ? 1 : 0
-  };
-  const res = await fetch('/api/faculty/update_profile', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  const json = await res.json();
-  if (json.success) {
-    if (currentUser) {
-      if (data.name) currentUser.name = data.name;
-      if (data.department) currentUser.department = data.department;
-      localStorage.setItem('rip_user', JSON.stringify(currentUser));
-      if (window.renderUserNav) renderUserNav();
-    }
-    if (window.showToast) showToast('Profile updated successfully.');
-    else alert('Profile updated successfully.');
-    loadFacultyProfileSettings();
-  } else {
-    alert(json.message || 'Error updating profile.');
-  }
-}
-
-function openCreateLabModal() {
-  document.getElementById('createLabModal').style.display = 'flex';
-}
-
-async function submitCreateLab() {
-  const name = document.getElementById('newLabName').value.trim();
-  const focus = document.getElementById('newLabFocus').value.trim();
-  const facs = document.getElementById('newLabFacilities').value.trim();
-  if (!name || !focus) return alert('Lab Name and Focus Area are required.');
-
-  const res = await fetch('/api/faculty/create_lab', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ faculty_id: currentUser.user_id, lab_name: name, focus_area: focus, facilities: facs })
-  });
-  const json = await res.json();
-  if (json.success) {
-    document.getElementById('createLabModal').style.display = 'none';
-    showToast('Lab created successfully.');
-    loadFacultyProfileSettings();
-  } else alert(json.message);
-}
-
-function openAddPaperModal() {
-  document.getElementById('addPaperModal').style.display = 'flex';
-}
-
-async function submitAddPaper() {
-  const title = document.getElementById('newPaperTitle').value.trim();
-  const authorsStr = document.getElementById('newPaperAuthors').value.trim();
-  const domain = document.getElementById('newPaperDomain').value.trim();
-  const year = document.getElementById('newPaperYear').value.trim();
-  const abstract = document.getElementById('newPaperAbstract').value.trim();
-
-  if (!title || !authorsStr || !domain || !year || !abstract) {
-    return alert('All fields are required.');
-  }
-  const authors = authorsStr.split(',').map(s => s.trim()).filter(s => s);
-
-  const res = await fetch('/api/papers/add', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ faculty_id: currentUser.user_id, title, authors, domain, year: parseInt(year), abstract })
-  });
-  const json = await res.json();
-  if (json.success) {
-    document.getElementById('addPaperModal').style.display = 'none';
-    showToast('Publication added successfully.');
-    loadFacultyProfileSettings();
-  } else alert(json.message);
-}
-
 
 // ── Authentication ───────────────────────────────────────
 function openAuthModal(mode = 'login') { toggleAuthMode(mode); document.getElementById('authModal').classList.add('open'); }

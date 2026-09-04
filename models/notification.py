@@ -26,7 +26,7 @@ class NotificationModel:
     def get_user_notifications(user_id, unread_only=False):
         conn = get_db()
         cursor = conn.cursor()
-        
+
         query = """
             SELECT n.*, u.name as sender_name, u.role as sender_role
             FROM notifications n

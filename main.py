@@ -20,6 +20,12 @@ from controllers.message_controller     import MessageController
 from controllers.thesis_hub_controller  import ThesisHubController
 from controllers.availability_controller import AvailabilityController
 
+#controllers below only needed for feature(16-20)
+from controllers.event_controller import EventController
+from controllers.notification_controller import NotificationController
+from controllers.dashboard_controller import DashboardController
+from controllers.faq_controller import FAQController
+
 # Removed (features stripped from v2, now restored):
 #   MatchingController   — Research Interest Matching & 1-to-1 Chat (Partially restored)
 # Routes for Faculty Profile Explorer removed below.
@@ -172,6 +178,21 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(ThesisHubController.get_resources())
             elif path == "/api/archive":
                 self.send_json(ThesisHubController.search_archive(params_flat))
+
+            elif path == "/api/events": # -- Features 16-20 Routes --
+                category = params_flat.get('category')
+                res = EventController.get_events(category=category)
+                self.send_json(res)
+
+            elif path == "/api/notifications":
+                user_id = params_flat.get('user_id', 'u_student_1')
+                res = NotificationController.get_notifications(user_id)
+                self.send_json(res)
+
+            elif path == "/api/dashboard":
+                user_id = params_flat.get('user_id', 'u_student_1')
+                res = DashboardController.get_dashboard_data(user_id)
+                self.send_json(res)
             # -- REMOVED routes return 404 --
             else:
                 self.send_json({"error": "Endpoint not found"}, status=404)
@@ -296,6 +317,26 @@ class RIPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/availability/update':
             from controllers.availability_controller import AvailabilityController
             self.send_json(AvailabilityController.update_availability(data.get('faculty_id'), data))
+
+        elif path == "/api/events/create":  # -- Features 16-20 POST Endpoints --
+            res = EventController.create_event(data)
+            self.send_json(res)
+        elif path == "/api/events/register":
+            res = EventController.register_event(data.get('event_id'), data.get('user_id'))
+            self.send_json(res)
+        elif path == "/api/notifications/read":
+            res = NotificationController.mark_as_read(data)
+            self.send_json(res)
+        elif path == "/api/notifications/read_all":
+            res = NotificationController.mark_all_as_read(data)
+            self.send_json(res)
+        elif path == "/api/notifications/delete":
+            res = NotificationController.delete_notification(data)
+            self.send_json(res)
+
+        elif path == "/api/faq/ask":
+            res = FAQController.ask_question(data)
+            self.send_json(res)
 
         # -- Thesis Management Hub Features --
         elif path == "/api/milestones/update":

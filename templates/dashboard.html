@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Personalized Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f8f9fa; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Personalized Student Dashboard</h1>
+
+    <div class="card">
+        <h2>Upcoming Events</h2>
+        <ul id="events-list">Loading...</ul>
+    </div>
+
+    <div class="card">
+        <h2>Unread Notifications</h2>
+        <ul id="notif-list">Loading...</ul>
+    </div>
+
+    <div class="card">
+        <h2>Academic Tasks</h2>
+        <ul id="task-list">Loading...</ul>
+    </div>
+
+    <script>
+        fetch('/api/dashboard?user_id=u_student_1')
+            .then(res => res.json())
+            .then(data => {
+                const db = data.dashboard;
+                document.getElementById('events-list').innerHTML = db.upcoming_events.map(e => `<li><strong>${e.title}</strong> - ${e.event_date} (${e.location})</li>`).join('') || '<li>No upcoming events.</li>';
+                document.getElementById('notif-list').innerHTML = db.unread_notifications.map(n => `<li><strong>${n.title}:</strong> ${n.message}</li>`).join('') || '<li>No new notifications.</li>';
+                document.getElementById('task-list').innerHTML = db.tasks.map(t => `<li>${t.task} (Due: ${t.due})</li>`).join('');
+            });
+    </script>
+</body>
+</html>

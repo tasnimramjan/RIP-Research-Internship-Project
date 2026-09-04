@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Control Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        button { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Admin Control Panel</h1>
+    <div id="analytics">Loading analytics...</div>
+
+    <h2>User Management</h2>
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="user-rows"></tbody>
+    </table>
+
+    <script>
+        fetch('/api/admin/analytics')
+            .then(res => res.json())
+            .then(data => {
+                const a = data.analytics;
+                document.getElementById('analytics').innerHTML = `<p><strong>Total Users:</strong> ${a.total_users} | <strong>Total Events:</strong> ${a.total_events}</p>`;
+            });
+
+        function loadUsers() {
+            fetch('/api/admin/users')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('user-rows').innerHTML = data.users.map(u => `
+                        <tr>
+                            <td>${u.name}</td>
+                            <td>${u.email}</td>
+                            <td>${u.role}</td>
+                            <td>${u.is_active ? 'Active' : 'Disabled'}</td>
+                            <td><button onclick="toggleUser('${u.user_id}')">Toggle Access</button></td>
+                        </tr>
+                    `).join('');
+                });
+        }
+
+        function toggleUser(userId) {
+            fetch('/api/admin/toggle-user', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(res => res.json())
+            .then(res => {
+                alert(res.message);
+                loadUsers();
+            });
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>
