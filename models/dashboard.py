@@ -13,7 +13,13 @@ class DashboardModel:
         cursor.execute("SELECT title, deadline, company_name FROM internship_opportunities ORDER BY deadline ASC LIMIT 3")
         internships = [dict(r) for r in cursor.fetchall()]
         
-        cursor.execute("SELECT title, event_date, location FROM events ORDER BY event_date ASC LIMIT 3")
+        cursor.execute("""
+            SELECT e.title, e.event_date, e.location
+            FROM event_registrations r
+            JOIN events e ON r.event_id = e.event_id
+            WHERE r.user_id = ?
+            ORDER BY e.event_date ASC LIMIT 3
+        """, (student_id,))
         events = [dict(r) for r in cursor.fetchall()]
         
         cursor.execute("""
