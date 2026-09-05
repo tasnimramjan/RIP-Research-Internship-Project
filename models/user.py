@@ -25,6 +25,8 @@ class UserModel:
         user.pop('password_hash', None)
         return user
 
+    get_user_by_id = get_by_id
+
     @staticmethod
     def get_by_email(email):
         conn = get_db()

@@ -114,3 +114,14 @@ class LabModel:
         conn.commit()
         conn.close()
         return project_id
+
+    @staticmethod
+    def delete_lab(lab_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM ra_opportunities WHERE lab_id = ?", (lab_id,))
+        cursor.execute("DELETE FROM lab_projects WHERE lab_id = ?", (lab_id,))
+        cursor.execute("DELETE FROM research_labs WHERE lab_id = ?", (lab_id,))
+        conn.commit()
+        conn.close()
+        return True

@@ -121,8 +121,10 @@
               <!-- Messages loaded here -->
             </div>
             <div style="display: flex; gap: 0.5rem;">
-              <input type="text" id="facultyChatInput" class="form-control" placeholder="Type a message..."
-                onkeypress="if(event.key==='Enter') sendFacultyChatMessage()">
+              <textarea id="facultyChatInput" rows="1" class="form-control" placeholder="Type a message..."
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                style="flex:1; background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); border-radius:8px; padding:0.5rem 0.8rem; font-family:inherit; font-size:0.9rem; resize:none; outline:none; height:38px; line-height:1.3;"
+                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendFacultyChatMessage(); }"></textarea>
               <button class="btn-primary" onclick="sendFacultyChatMessage()">Send</button>
             </div>
           </div>
@@ -864,8 +866,10 @@
     </div>
     <div id="chatMessages" class="chat-messages"></div>
     <div class="chat-input-row">
-      <input type="text" id="chatInput" placeholder="Type a message..."
-        onkeydown="if(event.key==='Enter') sendChatMessage()">
+      <textarea id="chatInput" rows="1" placeholder="Type a message..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="flex:1; background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); border-radius:18px; padding:0.5rem 0.8rem; font-family:inherit; font-size:0.9rem; resize:none; outline:none; height:38px; line-height:1.3;"
+        onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChatMessage(); }"></textarea>
       <button class="btn btn-sm" onclick="sendChatMessage()">Send</button>
     </div>
   </div>
@@ -878,7 +882,9 @@
     </div>
     <div id="directChatMessages" class="chat-messages"></div>
     <div class="chat-input-area">
-      <input type="text" id="directChatInput" placeholder="Type a message...">
+      <textarea id="directChatInput" rows="1" placeholder="Type a message..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="flex:1; background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); border-radius:18px; padding:0.5rem 0.8rem; font-family:inherit; font-size:0.9rem; resize:none; outline:none; height:38px; line-height:1.3;"></textarea>
       <button id="directChatSendBtn"
         style="background:#4f46e5; color:white; border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-weight:bold;">&gt;</button>
     </div>
