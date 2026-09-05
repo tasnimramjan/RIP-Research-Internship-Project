@@ -82,7 +82,7 @@ class FacultyController:
         domains = data.get('research_domains')
         slots = data.get('remaining_slots')
         max_capacity = data.get('max_capacity')
-        min_cgpa = data.get('min_cgpa_req')
+        min_cgpa = data.get('min_cgpa_req') if data.get('min_cgpa_req') is not None else data.get('min_cgpa')
         thesis_avail = data.get('thesis_available')
 
         ok = SupervisorModel.update_faculty_profile(
@@ -109,14 +109,18 @@ class FacultyController:
         desig = data.get('designation')
         domains = data.get('research_domains')
         h_index = data.get('h_index')
+        max_cap = data.get('max_capacity')
+        curr_stud = data.get('current_students')
         slots = data.get('remaining_slots')
-        cgpa = data.get('min_cgpa_req')
+        cgpa = data.get('min_cgpa_req') if data.get('min_cgpa_req') is not None else data.get('min_cgpa')
         verified = data.get('is_verified')
+        thesis_avail = data.get('thesis_available')
         
         ok = FacultyModel.admin_update_faculty(
             faculty_id, designation=desig, research_domains=domains,
-            h_index=h_index, remaining_slots=slots, min_cgpa_req=cgpa,
-            is_verified=verified
+            h_index=h_index, max_capacity=max_cap, current_students=curr_stud,
+            remaining_slots=slots, min_cgpa_req=cgpa,
+            is_verified=verified, thesis_available=thesis_avail
         )
         return {"success": ok, "message": "Faculty profile details updated by Admin." if ok else "Failed to update profile."}
 

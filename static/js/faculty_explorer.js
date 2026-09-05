@@ -149,7 +149,7 @@ function renderFacultyDetails(fac) {
 
   const statusEl = document.getElementById('facDetailsStatusBadge');
   if (statusEl) {
-    if (fac.thesis_available === 0 || remSlots === 0) {
+    if (remSlots === 0) {
       statusEl.textContent = 'Full (0 slots)';
       statusEl.style.color = 'var(--text-muted)';
     } else if (remSlots <= 2) {
@@ -220,8 +220,11 @@ function renderFacultyDetails(fac) {
   if (hIndexInput) hIndexInput.value = fac.h_index || 0;
   const slotsInput = document.getElementById('editFacSlots');
   if (slotsInput) slotsInput.value = fac.remaining_slots || 0;
+  const minCgpaVal = (fac.min_cgpa_req !== undefined && fac.min_cgpa_req !== null) ? fac.min_cgpa_req : (fac.min_cgpa !== undefined ? fac.min_cgpa : 3.0);
   const cgpaInput = document.getElementById('editFacCgpa');
-  if (cgpaInput) cgpaInput.value = fac.min_cgpa_req || 0.0;
+  if (cgpaInput) cgpaInput.value = minCgpaVal;
+  const minCgpaInput = document.getElementById('editFacMinCgpa');
+  if (minCgpaInput) minCgpaInput.value = minCgpaVal;
   const thesisInput = document.getElementById('editFacThesisAvail');
   if (thesisInput) thesisInput.checked = !!fac.thesis_available;
 }
@@ -236,16 +239,20 @@ function closeEditFacultyModal() {
 }
 
 async function submitEditFacultyProfile() {
-  if (!currentViewingFaculty) return;
-  const designation = document.getElementById('editFacDesignation').value.trim();
-  const domains = document.getElementById('editFacDomains').value.split(',').map(s => s.trim()).filter(Boolean);
-  const hIndex = parseInt(document.getElementById('editFacHIndex').value) || 0;
-  const slots = parseInt(document.getElementById('editFacSlots').value) || 0;
-  const cgpa = parseFloat(document.getElementById('editFacCgpa').value) || 0.0;
-  const thesisAvail = document.getElementById('editFacThesisAvail').checked ? 1 : 0;
-
-  const targetId = currentViewingFaculty.user_id || currentViewingFaculty.faculty_id;
   const currentUser = getCurrentUser();
+  const targetId = (currentViewingFaculty && (currentViewingFaculty.user_id || currentViewingFaculty.faculty_id)) || window._editingAvailabilityFacultyId || (currentUser ? currentUser.user_id : null);
+  if (!targetId) return;
+
+  const designation = document.getElementById('editFacDesignation')?.value.trim() || '';
+  const domains = (document.getElementById('editFacDomains')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+  const hIndex = parseInt(document.getElementById('editFacHIndex')?.value) || 0;
+  const slots = parseInt(document.getElementById('editFacSlots')?.value) || 0;
+  
+  const cgpaEl = document.getElementById('editFacCgpa') || document.getElementById('editFacMinCgpa');
+  const cgpaVal = cgpaEl ? cgpaEl.value : '';
+  const cgpa = (cgpaVal !== '' && !isNaN(parseFloat(cgpaVal))) ? parseFloat(cgpaVal) : 3.0;
+
+  const thesisAvail = document.getElementById('editFacThesisAvail')?.checked ? 1 : 0;
   const endpoint = (currentUser && currentUser.role === 'Admin') ? '/api/faculty/admin_edit' : '/api/faculty/update_profile';
 
   try {
@@ -259,6 +266,7 @@ async function submitEditFacultyProfile() {
         h_index: hIndex,
         remaining_slots: slots,
         min_cgpa_req: cgpa,
+        min_cgpa: cgpa,
         thesis_available: thesisAvail
       })
     });
@@ -267,8 +275,9 @@ async function submitEditFacultyProfile() {
       if (window.showToast) window.showToast('Faculty profile updated successfully!');
       else alert('Profile updated successfully!');
       closeEditFacultyModal();
-      openFacultyDetailsModal(targetId); // Refresh modal view
-      runFacultySearch(); // Refresh list view
+      if (typeof openFacultyDetailsModal === 'function') openFacultyDetailsModal(targetId);
+      if (typeof runFacultySearch === 'function') runFacultySearch();
+      if (typeof window.runAvailabilitySearch === 'function') window.runAvailabilitySearch();
     } else {
       alert(data.message || 'Error updating profile');
     }

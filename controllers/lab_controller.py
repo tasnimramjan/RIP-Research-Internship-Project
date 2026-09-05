@@ -37,18 +37,13 @@ class LabController:
         
         lab = LabModel.get_lab_by_id(lab_id)
         if not lab:
-            return {"success": False, "message": "Lab not found."}
+            return {"success": False, "message": "Research Lab not found."}
             
-        # Check permissions: user must be the faculty who owns it or an Admin
-        # We will do a simple check: if user_id matches faculty_id, let them delete.
-        # Admin deletion can bypass this if we pass a flag or check roles, but for now we trust the controller logic.
-        # Actually, let's look up user role:
         from models.user import UserModel
-        user = UserModel.get_user_by_id(user_id)
+        user = UserModel.get_by_id(user_id)
         
-        if not user or (user['role'] != 'Admin' and lab['faculty_id'] != user_id):
-            return {"success": False, "message": "Unauthorized to delete this lab."}
+        if not user or (user.get('role') != 'Admin' and lab.get('faculty_id') != user_id):
+            return {"success": False, "message": "Unauthorized to delete this research lab."}
             
-        from models.admin import AdminModel
-        success = AdminModel.delete_lab(lab_id)
-        return {"success": success, "message": "Lab deleted successfully." if success else "Failed to delete lab."}
+        success = LabModel.delete_lab(lab_id)
+        return {"success": success, "message": "Research lab deleted successfully." if success else "Failed to delete research lab."}

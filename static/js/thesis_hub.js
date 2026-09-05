@@ -85,6 +85,112 @@ const ThesisHub = {
     wire('open-gemini-key-btn', 'close-gemini-key-btn', 'gemini-key-modal');
   },
 
+  // ── Markdown Parser & Code Helper for AI Assistant ──────
+  renderMarkdown(text) {
+    if (!text) return '';
+
+    // 1. Extract and protect fenced code blocks ```lang ... ```
+    const codeBlocks = [];
+    let processed = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const id = `__CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || 'code', code: code.trim() });
+      return id;
+    });
+
+    // 2. Escape basic HTML in the rest of the text
+    processed = processed
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // 3. Headers (h1 to h5)
+    processed = processed.replace(/^##### (.*$)/gim, '<h6 class="ai-heading">$1</h6>');
+    processed = processed.replace(/^#### (.*$)/gim, '<h5 class="ai-heading">$1</h5>');
+    processed = processed.replace(/^### (.*$)/gim, '<h4 class="ai-heading">$1</h4>');
+    processed = processed.replace(/^## (.*$)/gim, '<h3 class="ai-heading">$1</h3>');
+    processed = processed.replace(/^# (.*$)/gim, '<h2 class="ai-heading">$1</h2>');
+
+    // 4. Blockquotes
+    processed = processed.replace(/^&gt; (.*$)/gim, '<blockquote class="ai-quote">$1</blockquote>');
+
+    // 5. Bold and Italic
+    processed = processed.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    processed = processed.replace(/__(.*?)__/g, '<strong>$1</strong>');
+    processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    processed = processed.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+
+    // 6. Inline code `code`
+    processed = processed.replace(/`([^`\n]+)`/g, '<code class="ai-inline-code">$1</code>');
+
+    // 7. Unordered lists (- item or * item)
+    processed = processed.replace(/^[*-] (.*$)/gim, '<li class="ai-list-item">$1</li>');
+    processed = processed.replace(/(<li class="ai-list-item">[\s\S]*?<\/li>(?:\s*<li class="ai-list-item">[\s\S]*?<\/li>)*)/gim, '<ul class="ai-list">$1</ul>');
+
+    // 8. Ordered lists (1. item)
+    processed = processed.replace(/^\d+\. (.*$)/gim, '<li class="ai-num-item">$1</li>');
+    processed = processed.replace(/(<li class="ai-num-item">[\s\S]*?<\/li>(?:\s*<li class="ai-num-item">[\s\S]*?<\/li>)*)/gim, '<ol class="ai-ordered-list">$1</ol>');
+
+    // 9. Paragraph breaks (\n\n) vs linebreaks (\n)
+    processed = processed.replace(/\n\n+/g, '</p><p class="ai-p">');
+    processed = processed.replace(/\n/g, '<br>');
+    processed = `<p class="ai-p">${processed}</p>`;
+
+    // Clean up empty paragraphs around block elements
+    processed = processed.replace(/<p class="ai-p">\s*<\/p>/g, '');
+    processed = processed.replace(/<p class="ai-p"><(h[2-6]|ul|ol|blockquote)/g, '<$1');
+    processed = processed.replace(/<\/(h[2-6]|ul|ol|blockquote)><\/p>/g, '</$1>');
+
+    // 10. Re-insert protected code blocks with copy action
+    codeBlocks.forEach((cb, index) => {
+      const escapedCode = cb.code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const codeHtml = `
+        <div class="ai-code-wrapper">
+          <div class="ai-code-header">
+            <span class="ai-code-lang">${cb.lang}</span>
+            <button class="ai-copy-code-btn" type="button" onclick="ThesisHub.copyCode(this)" title="Copy Code">
+              <i class="fa-regular fa-copy"></i> <span>Copy</span>
+            </button>
+          </div>
+          <pre><code class="language-${cb.lang}">${escapedCode}</code></pre>
+        </div>
+      `;
+      processed = processed.replace(`__CODE_BLOCK_${index}__`, codeHtml);
+    });
+
+    return processed;
+  },
+
+  copyCode(btn) {
+    const wrapper = btn.closest('.ai-code-wrapper');
+    if (!wrapper) return;
+    const codeEl = wrapper.querySelector('pre code');
+    if (!codeEl) return;
+    const codeText = codeEl.innerText;
+
+    navigator.clipboard.writeText(codeText).then(() => {
+      const span = btn.querySelector('span');
+      const icon = btn.querySelector('i');
+      if (span && icon) {
+        const orig = span.textContent;
+        span.textContent = 'Copied!';
+        icon.className = 'fa-solid fa-check';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          span.textContent = orig;
+          icon.className = 'fa-regular fa-copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      }
+    }).catch(err => {
+      console.error('Failed to copy code:', err);
+    });
+  },
+
   // ── FEATURE 11: Milestones & Gemini AI Assistant ───────
   setupTracker() {
     const addForm = document.getElementById('add-milestone-form');
@@ -134,6 +240,19 @@ const ThesisHub = {
         aiPrompt.value = '';
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
+        // Add loading / typing indicator
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'chat-message ai ai-typing';
+        typingIndicator.id = 'ai-typing-indicator';
+        typingIndicator.innerHTML = `
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <small style="color:var(--text-muted); margin-left:8px;">Hugging Face AI is thinking...</small>
+        `;
+        chatHistory.appendChild(typingIndicator);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
         try {
           const apiKey = localStorage.getItem('gemini_api_key') || '';
           const res = await fetch('/api/ai-assistant', {
@@ -143,13 +262,25 @@ const ThesisHub = {
           });
           const data = await res.json();
 
+          // Remove typing indicator
+          const currentIndicator = document.getElementById('ai-typing-indicator');
+          if (currentIndicator) currentIndicator.remove();
+
           const aiMsg = document.createElement('div');
           aiMsg.className = 'chat-message ai';
-          aiMsg.innerText = data.response || "No response received.";
+          aiMsg.innerHTML = this.renderMarkdown(data.response || "No response received.");
           chatHistory.appendChild(aiMsg);
           chatHistory.scrollTop = chatHistory.scrollHeight;
         } catch (err) {
           console.error("Error calling AI assistant:", err);
+          const currentIndicator = document.getElementById('ai-typing-indicator');
+          if (currentIndicator) currentIndicator.remove();
+
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'chat-message ai';
+          errorMsg.innerHTML = '<p class="ai-p" style="color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Network error connecting to AI Assistant. Please check server logs.</p>';
+          chatHistory.appendChild(errorMsg);
+          chatHistory.scrollTop = chatHistory.scrollHeight;
         }
       };
 
@@ -169,10 +300,10 @@ const ThesisHub = {
         const key = document.getElementById('gemini-key-input')?.value.trim() || '';
         if (key) {
           localStorage.setItem('gemini_api_key', key);
-          alert('Gemini API Key saved successfully in browser storage!');
+          alert('AI API Key saved successfully in browser storage!');
         } else {
           localStorage.removeItem('gemini_api_key');
-          alert('Gemini API Key cleared.');
+          alert('API Key cleared.');
         }
         this.closeModal('gemini-key-modal');
       });
@@ -184,7 +315,7 @@ const ThesisHub = {
         localStorage.removeItem('gemini_api_key');
         const keyInput = document.getElementById('gemini-key-input');
         if (keyInput) keyInput.value = '';
-        alert('Gemini API Key cleared.');
+        alert('API Key cleared.');
         this.closeModal('gemini-key-modal');
       });
     }

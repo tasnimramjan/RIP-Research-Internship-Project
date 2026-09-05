@@ -509,7 +509,7 @@ async function submitEditFacultyProfile() {
   if (!user || (user.role !== 'Faculty' && user.role !== 'Admin')) return alert('Unauthorized.');
   
   const isTargetAdmin = user.role === 'Admin';
-  const targetId = (window.currentViewingFaculty && (window.currentViewingFaculty.user_id || window.currentViewingFaculty.faculty_id)) || user.user_id;
+  const targetId = (window.currentViewingFaculty && (window.currentViewingFaculty.user_id || window.currentViewingFaculty.faculty_id)) || window._editingAvailabilityFacultyId || user.user_id;
   const endpoint = isTargetAdmin ? '/api/faculty/admin_edit' : '/api/faculty/update_profile';
 
   const desig = document.getElementById('editFacDesignation')?.value.trim() || '';
@@ -517,7 +517,11 @@ async function submitEditFacultyProfile() {
   const domains = domainsStr.split(',').map(s => s.trim()).filter(Boolean);
   const hIndex = parseInt(document.getElementById('editFacHIndex')?.value) || 0;
   const slots = parseInt(document.getElementById('editFacSlots')?.value) || 0;
-  const cgpa = parseFloat(document.getElementById('editFacCgpa')?.value) || 0.0;
+  
+  const cgpaEl = document.getElementById('editFacCgpa') || document.getElementById('editFacMinCgpa');
+  const cgpaVal = cgpaEl ? cgpaEl.value : '';
+  const cgpa = (cgpaVal !== '' && !isNaN(parseFloat(cgpaVal))) ? parseFloat(cgpaVal) : 3.0;
+  
   const thesisAvail = document.getElementById('editFacThesisAvail')?.checked ? 1 : 0;
 
   try {
@@ -531,6 +535,7 @@ async function submitEditFacultyProfile() {
         h_index: hIndex,
         remaining_slots: slots,
         min_cgpa_req: cgpa,
+        min_cgpa: cgpa,
         thesis_available: thesisAvail
       })
     });
@@ -541,6 +546,7 @@ async function submitEditFacultyProfile() {
       closeEditFacultyProfileModal();
       if (window.openFacultyDetailsModal && targetId) window.openFacultyDetailsModal(targetId);
       if (window.runFacultySearch) window.runFacultySearch();
+      if (window.runAvailabilitySearch) window.runAvailabilitySearch();
     } else {
       alert(data.message || 'Error updating profile');
     }
@@ -596,7 +602,34 @@ async function submitAddUser() {
   const res = await fetch('/api/admin/add_user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role, department: dept }) });
   const data = await res.json(); if (data.success) { alert(data.message); closeAddUserModal(); loadAdminPanel(); } else alert(data.message);
 }
-async function deleteLab(labId) { if (!confirm('Delete this lab?')) return; const res = await fetch('/api/labs/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lab_id: labId, user_id: currentUser.user_id }) }); const data = await res.json(); alert(data.message); loadLabBoard(); }
+async function deleteLab(labId) {
+  if (!confirm('Are you sure you want to delete this research lab?')) return;
+  const user = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null) || JSON.parse(localStorage.getItem('rip_user') || 'null');
+  if (!user) return alert('Please log in to delete lab.');
+
+  const isAdmin = user.role === 'Admin' || user.role === 'admin';
+  const endpoint = isAdmin ? '/api/admin/delete_lab' : '/api/labs/delete';
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lab_id: labId, user_id: user.user_id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (window.showToast) window.showToast('Research lab deleted successfully!');
+      else alert(data.message || 'Research lab deleted successfully!');
+      loadLabBoard();
+    } else {
+      alert(data.message || 'Error deleting lab');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Failed to delete lab');
+  }
+}
+window.deleteLab = deleteLab;
 async function adminDeleteThesisGroup(groupId) { if (!confirm('Delete this group?')) return; const res = await fetch('/api/admin/delete_group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: groupId }) }); const data = await res.json(); alert(data.message); loadThesisGroups(); }
 
 // ── Group Chat Drawer ────────────────────────────────────
@@ -656,6 +689,18 @@ function openDirectChat(receiverId, receiverName) {
   const win = document.getElementById('directChatWindow');
   if (win) win.classList.add('open');
   
+  const input = document.getElementById('directChatInput');
+  if (input) {
+    input.value = '';
+    input.placeholder = 'Type a message...';
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+    input.removeAttribute('name');
+    setTimeout(() => { if (input) { input.value = ''; input.focus(); } }, 50);
+  }
+
   fetchDirectChatMessages();
   if (directChatPollInterval) clearInterval(directChatPollInterval);
   directChatPollInterval = setInterval(fetchDirectChatMessages, 2500);
@@ -746,7 +791,7 @@ async function sendDirectChatMessage() {
 document.getElementById('closeDirectChatBtn')?.addEventListener('click', closeDirectChat);
 document.getElementById('directChatSendBtn')?.addEventListener('click', sendDirectChatMessage);
 document.getElementById('directChatInput')?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendDirectChatMessage();
   }
@@ -781,6 +826,18 @@ async function openFacultyChat(studentId, name) {
   window._activeFacultyChatStudentId = studentId;
   document.getElementById('facultyChatTitle').innerText = `Chat with ${name}`;
   document.getElementById('facultyChatWindow').style.display = 'flex';
+
+  const input = document.getElementById('facultyChatInput');
+  if (input) {
+    input.value = '';
+    input.placeholder = 'Type a message...';
+    input.setAttribute('autocomplete', 'new-password');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+    input.setAttribute('name', 'no_autocomplete_fac_msg');
+    setTimeout(() => { if (input) input.focus(); }, 100);
+  }
 
   if (window._facultyChatInterval) clearInterval(window._facultyChatInterval);
   fetchFacultyChatMessages();
