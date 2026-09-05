@@ -28,6 +28,18 @@ class EventController:
 
     @staticmethod
     def register_event(event_id, user_id):
+        from db import get_db
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT role FROM users WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return {"success": False, "message": "User not found."}
+        if row["role"] != "Student":
+            return {"success": False, "message": "Only students can register for events."}
+
         return EventModel.register_user(event_id, user_id)
 
     @staticmethod

@@ -1722,32 +1722,49 @@
             </div>
             <p style="color:var(--text-muted); font-size:0.9rem;">${e.description || ''}</p>
             <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
-              <button class="btn btn-sm btn-cyan" onclick="registerForEvent('${e.event_id}')">Register</button>
+              ${(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Student')
+                ? `<button class="btn btn-sm btn-cyan" onclick="registerForEvent('${e.event_id}')">Register</button>`
+                : `<button class="btn btn-sm btn-secondary" disabled title="Only students can register for events">Register</button>`}
             </div>
           </div>
         `).join('') || '<p style="color:var(--text-muted);">No events found for this category.</p>';
       });
   }
 
+  function resetCreateEventForm() {
+   document.getElementById('newEventTitle').value = '';
+   document.getElementById('newEventCategory').value = 'Conference';
+   document.getElementById('newEventOrganizer').value = '';
+   document.getElementById('newEventDate').value = '';
+   document.getElementById('newEventLocation').value = '';
+   document.getElementById('newEventDesc').value = '';
+   document.getElementById('newEventLink').value = '';
+  }
+
   function registerForEvent(eventId) {
-    fetch('/api/events/register', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ event_id: eventId, user_id: ripUserId() })
-    })
-    .then(res => res.json())
-    .then(res => {
-      alert(res.message);
-      loadEventsHub();
+   if (!currentUser || currentUser.role !== 'Student') {
+    alert('Only students can register for events.');
+    return;
+   }
+   fetch('/api/events/register', {
+     method: 'POST',
+     headers: {'Content-Type': 'application/json'},
+     body: JSON.stringify({ event_id: eventId, user_id: ripUserId() })
+   })
+   .then(res => res.json())
+   .then(res => {
+     alert(res.message);
+     loadEventsHub();
     });
   }
 
   function openCreateEventModal() {
-  const modal = document.getElementById('createEventModal');
-  if (modal.parentElement !== document.body) {
+   resetCreateEventForm();
+   const modal = document.getElementById('createEventModal');
+   if (modal.parentElement !== document.body) {
     document.body.appendChild(modal);
-  }
-  modal.classList.add('open');
+   }
+   modal.classList.add('open');
   }
   
   function closeCreateEventModal() { document.getElementById('createEventModal').classList.remove('open'); }
@@ -1772,10 +1789,10 @@
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ title, category, organizer, event_date, location, description, registration_link })
     })
-    .then(res => res.json())
-    .then(res => {
+        .then(res => {
       alert(res.message);
       if (res.success) {
+        resetCreateEventForm();
         closeCreateEventModal();
         loadEventsHub();
       }
