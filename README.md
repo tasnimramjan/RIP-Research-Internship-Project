@@ -21,10 +21,28 @@ The system provides tools for finding supervisors, exploring research labs, disc
 ## Features
 
 - Smart Supervisor Finder
+- Research Interest Matching
+- Faculty Profile Explorer
+- Availability Tracker
 - Research Lab Board
+
 - Internship Opportunity Portal
+- Project Teammate Finder
 - Research Paper Discovery
+- Discussion Forum
 - Thesis Group Finder
+
+- Research Event & Conference Hub 
+- Admin Control Panel
+- Real time Notification Center 
+- Personalized Dashboard 
+- Academic FAQ Chatbot
+
+- Thesis Progress Tracker & Hugging Face AI Assistant
+- Overleaf-Style Thesis Document Manager 
+- Resource Library
+- Peer Thesis Archive 
+- Citation & Reference Manager 
 
 ## Technologies
 Frontend: HTML5, CSS3, JavaScript (ES6)
