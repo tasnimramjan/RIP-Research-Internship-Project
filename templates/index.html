@@ -1855,40 +1855,47 @@
       }
 
       // ── FEATURE 18: Real-Time Notification Center ────────────────────
-      function loadNotificationsHub() {
-        fetch(`/api/notifications?user_id=${encodeURIComponent(ripUserId())}`)
-          .then(res => res.json())
-          .then(data => {
-            const notifs = data.notifications || [];
-            document.getElementById('notif-container').innerHTML = notifs.map(n => `
+    function loadNotificationsHub() {
+       fetch(`/api/notifications?user_id=${encodeURIComponent(ripUserId())}`)
+      .then(res => res.json())
+      .then(data => {
+        const notifs = data.notifications || [];
+        document.getElementById('notif-container').innerHTML = notifs.map(n => `
           <div style="padding:12px 16px; border-left:4px solid ${n.is_read ? 'var(--border-color)' : 'var(--accent-cyan)'};
                       background:var(--bg-card); margin-bottom:10px; border-radius:8px;
                       opacity:${n.is_read ? '0.65' : '1'};">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
               <div>
-                <h4 style="margin-bottom:0.2rem;">${n.title} <span class="tag" style="margin-left:0.4rem;">${n.category}</span></h4>
+                <h4 style="margin-bottom:0.2rem;">${n.title} <span class="tag" style="margin-left:0.4rem;">${n.type || 'General'}</span></h4>
                 <p style="color:var(--text-muted); font-size:0.9rem;">${n.message}</p>
                 <small style="color:var(--text-muted);">${n.created_at}</small>
               </div>
-              ${n.is_read ? '' : `<button class="btn btn-sm btn-secondary" onclick="markNotifRead('${n.notif_id}')">Mark Read</button>`}
+              ${n.is_read ? '' : `<button class="btn btn-sm btn-secondary" onclick="markNotifRead('${n.notification_id}')">Mark Read</button>`}
             </div>
           </div>
         `).join('') || '<p style="color:var(--text-muted);">No notifications found.</p>';
-          });
-      }
+      });
+  }
 
-      function markNotifRead(notifId) {
-        fetch('/api/notifications/read', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ notif_id: notifId })
-        })
-          .then(res => res.json())
-          .then(() => loadNotificationsHub());
-      }
+   function markNotifRead(notifId) {
+      fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ notification_id: notifId, user_id: ripUserId() })
+      })
+       .then(res => res.json())
+       .then(res => {
+       if (!res.success) alert(res.message || 'Could not mark as read.');
+       loadNotificationsHub();
+      })
+      .catch(err => {
+       console.error('Mark read failed:', err);
+       alert('Something went wrong marking this as read.');
+      });
+    }
 
       // ── FEATURE 19: Personalized Dashboard ────────────────────────────
-      function loadPersonalizedDashboard() {
+     function loadPersonalizedDashboard() {
         const container = document.getElementById('dashboard-content');
         fetch(`/api/dashboard?user_id=${encodeURIComponent(ripUserId())}`)
           .then(res => res.json())

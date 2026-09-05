@@ -8,7 +8,7 @@ from db import get_db
 
 class NotificationModel:
     @staticmethod
-    def create_notification(user_id, notif_type, title, message, reference_id=None, sender_id=None):
+    def create_notification(user_id, title, message, notif_type="General", reference_id=None, sender_id=None):
         conn = get_db()
         cursor = conn.cursor()
         notif_id = "notif_" + str(uuid.uuid4())[:8]
