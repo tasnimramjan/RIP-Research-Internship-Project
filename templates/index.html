@@ -27,19 +27,21 @@
       <div style="display:flex; align-items:center; gap:0.8rem;">
         <!-- STUDENT ONLY: JOIN REQUESTS NOTIFICATION MENU -->
         <div id="joinRequestsNavContainer" class="join-requests-nav" style="display:none; position:relative;">
-          <button id="joinRequestsNavBtn" class="btn btn-sm btn-secondary" onclick="Teammates.toggleJoinRequestsMenu()" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; position:relative;">
+          <button id="joinRequestsNavBtn" class="btn btn-sm btn-secondary" onclick="Teammates.toggleJoinRequestsMenu()"
+            style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; position:relative;">
             <i class="fa-solid fa-user-group"></i>
             <span>Join Requests</span>
             <span id="joinRequestsBadge" class="badge-notif-counter" style="display:none;">0</span>
           </button>
-          
+
           <div id="joinRequestsDropdown" class="join-requests-dropdown">
             <div class="join-requests-dropdown-header">
               <span style="font-weight:700; color:var(--text-main); font-size:0.9rem;">Join Requests</span>
               <button class="btn-close-sm" onclick="Teammates.closeJoinRequestsMenu()">&times;</button>
             </div>
             <div id="joinRequestsDropdownList" class="join-requests-dropdown-list">
-              <p style="color:var(--text-muted); font-size:0.85rem; padding:1rem; text-align:center;">Loading requests...</p>
+              <p style="color:var(--text-muted); font-size:0.85rem; padding:1rem; text-align:center;">Loading
+                requests...</p>
             </div>
           </div>
         </div>
@@ -52,8 +54,9 @@
 
   <!-- HAMBURGER MENU DRAWER -->
   <div id="menuDrawer" class="menu-drawer">
-    <button id="facultyProfileMenuItem" class="menu-item" style="display:none; color:var(--accent-cyan); font-weight:700;"
-      onclick="switchView('faculty-profile')">My Profile</button>
+    <button id="facultyProfileMenuItem" class="menu-item"
+      style="display:none; color:var(--accent-cyan); font-weight:700;" onclick="switchView('faculty-profile')">My
+      Profile</button>
     <button id="adminMenuItem" class="menu-item" style="display:none; color:var(--accent-pink); font-weight:700;"
       onclick="switchView('admin-panel')">Admin Control Panel</button>
     <button class="menu-item" onclick="switchView('interest-matching')">Research Interest Matching</button>
@@ -62,11 +65,13 @@
     <button class="menu-item" onclick="switchView('lab-board')">Research Lab Board</button>
     <button class="menu-item" onclick="switchView('internship-portal')">Internship Opportunity Portal</button>
     <button class="menu-item" onclick="switchView('paper-discovery')">Research Paper Discovery</button>
-    <button id="thesisGroupMenuItem" class="menu-item" onclick="switchView('thesis-groups')">Thesis Group Finder</button>
+    <button id="thesisGroupMenuItem" class="menu-item" onclick="switchView('thesis-groups')">Thesis Group
+      Finder</button>
     <button class="menu-item" onclick="switchView('discussion-forums')">Discussion Forums</button>
     <button class="menu-item" onclick="switchView('teammate-finder')">Project Teammate Finder</button>
     <button class="menu-item" onclick="switchView('availability-tracker')">Availability Tracker</button>
-    <button id="facultyChatMenuItem" class="menu-item" style="display:none;" onclick="switchView('faculty-chat')">Faculty Messages</button>
+    <button id="facultyChatMenuItem" class="menu-item" style="display:none;"
+      onclick="switchView('faculty-chat')">Faculty Messages</button>
     <button class="menu-item" onclick="switchView('tab-tracker')">Thesis Progress & AI</button>
     <button class="menu-item" onclick="switchView('tab-overleaf')">LaTeX Document Manager</button>
     <button class="menu-item" onclick="switchView('tab-citations')">Citations & References</button>
@@ -106,13 +111,18 @@
           <div id="facultyChatContactList" class="card" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
             <!-- Contacts loaded here -->
           </div>
-          <div id="facultyChatWindow" class="card" style="display: none; padding: 1rem; max-height: 60vh; display: flex; flex-direction: column;">
-            <div style="font-weight: 700; color: var(--accent-indigo); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);" id="facultyChatTitle">Chat</div>
-            <div id="facultyChatMessages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+          <div id="facultyChatWindow" class="card"
+            style="display: none; padding: 1rem; max-height: 60vh; display: flex; flex-direction: column;">
+            <div
+              style="font-weight: 700; color: var(--accent-indigo); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);"
+              id="facultyChatTitle">Chat</div>
+            <div id="facultyChatMessages"
+              style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
               <!-- Messages loaded here -->
             </div>
             <div style="display: flex; gap: 0.5rem;">
-              <input type="text" id="facultyChatInput" class="form-control" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendFacultyChatMessage()">
+              <input type="text" id="facultyChatInput" class="form-control" placeholder="Type a message..."
+                onkeypress="if(event.key==='Enter') sendFacultyChatMessage()">
               <button class="btn-primary" onclick="sendFacultyChatMessage()">Send</button>
             </div>
           </div>
@@ -169,11 +179,13 @@
             <p class="panel-subtitle">Manage your research domains, key stats, labs, and publications.</p>
           </div>
         </div>
-        
+
         <div style="display:flex; flex-direction:column; gap:2rem;">
           <!-- Stats Update Form -->
-          <div style="background:var(--card-bg); padding:1.5rem; border:1px solid var(--border-color); border-radius:12px;">
-            <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:1rem; color:white;">Profile Information & Key Stats</h3>
+          <div
+            style="background:var(--card-bg); padding:1.5rem; border:1px solid var(--border-color); border-radius:12px;">
+            <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:1rem; color:white;">Profile Information & Key
+              Stats</h3>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
               <div class="form-group">
                 <label>Full Name</label>
@@ -217,16 +229,20 @@
                 <label>Min CGPA Req</label>
                 <input type="number" step="0.1" id="facProfCgpa" value="3.0">
               </div>
-              <div class="form-group" style="grid-column:1 / -1; display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+              <div class="form-group"
+                style="grid-column:1 / -1; display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
                 <input type="checkbox" id="facProfThesisAvail" style="width:auto;">
-                <label for="facProfThesisAvail" style="margin:0; cursor:pointer;">Available for Supervising Thesis / Project Students</label>
+                <label for="facProfThesisAvail" style="margin:0; cursor:pointer;">Available for Supervising Thesis /
+                  Project Students</label>
               </div>
             </div>
-            <button class="btn btn-cyan" style="margin-top:1rem;" onclick="saveFacultyProfileStats()">Save Profile Changes</button>
+            <button class="btn btn-cyan" style="margin-top:1rem;" onclick="saveFacultyProfileStats()">Save Profile
+              Changes</button>
           </div>
 
           <!-- Directed Labs -->
-          <div style="background:var(--card-bg); padding:1.5rem; border:1px solid var(--border-color); border-radius:12px;">
+          <div
+            style="background:var(--card-bg); padding:1.5rem; border:1px solid var(--border-color); border-radius:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
               <h3 style="font-size:1.1rem; font-weight:600; color:white;">Directed Labs</h3>
               <button class="btn btn-sm btn-cyan" onclick="openCreateLabModal()">Add Lab</button>
@@ -235,7 +251,8 @@
           </div>
 
           <!-- Publications -->
-          <div style="background:var(--card-bg); padding:1.5rem; border:1px solid var(--border-color); border-radius:12px;">
+          <div
+            style="background:var(--card-bg); padding:1.5rem; border:1px solid var(--border-color); border-radius:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
               <h3 style="font-size:1.1rem; font-weight:600; color:white;">Selected Publications</h3>
               <button class="btn btn-sm btn-cyan" onclick="openAddPaperModal()">Add Publication</button>
@@ -250,15 +267,18 @@
         <div class="panel-header">
           <div>
             <h2 class="panel-title">Discussion Forums</h2>
-            <p class="panel-subtitle">Dedicated spaces for Thesis, Projects, Internships, Defense Preparation, and General Academic Discussions.</p>
+            <p class="panel-subtitle">Dedicated spaces for Thesis, Projects, Internships, Defense Preparation, and
+              General Academic Discussions.</p>
           </div>
-          <button id="openCreateThreadBtn" class="btn btn-sm btn-cyan" onclick="Forums.openCreateModal()">+ New Thread</button>
+          <button id="openCreateThreadBtn" class="btn btn-sm btn-cyan" onclick="Forums.openCreateModal()">+ New
+            Thread</button>
         </div>
 
         <div class="forum-layout">
           <!-- Left Sidebar: Dedicated Discussion Spaces -->
           <div class="forum-sidebar">
-            <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:0.6rem; padding-left:0.4rem;">
+            <div
+              style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:0.6rem; padding-left:0.4rem;">
               Discussion Spaces
             </div>
             <ul id="forumSpacesList" class="forum-spaces-list"></ul>
@@ -268,8 +288,10 @@
           <div class="forum-main-content">
             <div id="activeSpaceHeader" class="active-space-header">
               <div>
-                <h3 id="currentSpaceTitle" style="font-size:1.15rem; font-weight:700; color:var(--text-main); margin:0;">All Discussions</h3>
-                <p id="currentSpaceDesc" style="font-size:0.82rem; color:var(--text-muted); margin:0.2rem 0 0 0;">View accessible discussions from all relevant spaces.</p>
+                <h3 id="currentSpaceTitle"
+                  style="font-size:1.15rem; font-weight:700; color:var(--text-main); margin:0;">All Discussions</h3>
+                <p id="currentSpaceDesc" style="font-size:0.82rem; color:var(--text-muted); margin:0.2rem 0 0 0;">View
+                  accessible discussions from all relevant spaces.</p>
               </div>
               <div id="currentSpaceAccessBadge"></div>
             </div>
@@ -588,14 +610,15 @@
         <div class="card-grid" id="thesisGroupList"></div>
       </section>
 
-      <!-- FEATURE 11: TRACKER & GEMINI AI ASSISTANT -->
+      <!-- FEATURE 11: TRACKER & HUGGING FACE AI ASSISTANT -->
       <section id="tab-tracker" class="view-panel">
         <div class="panel-header">
           <div>
             <h2 class="panel-title" style="color:var(--accent-cyan);">Thesis Progress Tracker & AI Assistant</h2>
-            <p class="panel-subtitle">Manage roadmap milestones and leverage Gemini AI thesis assistance.</p>
+            <p class="panel-subtitle">Manage roadmap milestones and leverage Hugging Face AI thesis assistance.</p>
           </div>
-          <button class="btn btn-cyan" id="open-milestone-modal-btn" onclick="ThesisHub.openModal('milestone-modal')"><i class="fa-solid fa-plus"></i> Add Milestone</button>
+          <button class="btn btn-cyan" id="open-milestone-modal-btn" onclick="ThesisHub.openModal('milestone-modal')"><i
+              class="fa-solid fa-plus"></i> Add Milestone</button>
         </div>
 
         <div class="overall-progress-card">
@@ -619,23 +642,30 @@
               <div class="ai-card-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:8px;">
                   <i class="fa-solid fa-robot"></i>
-                  <h3 style="font-size:1.1rem; font-weight:700;">Gemini AI Assistant</h3>
+                  <h3 style="font-size:1.1rem; font-weight:700;">Hugging Face AI</h3>
                 </div>
-                <button type="button" id="open-gemini-key-btn" onclick="ThesisHub.openModal('gemini-key-modal')" title="Configure Gemini API Key" style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color, rgba(255,255,255,0.15)); color:var(--text-main); cursor:pointer; font-size:0.8rem; padding:0.25rem 0.6rem; border-radius:6px; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s ease;">
+                <button type="button" id="open-gemini-key-btn" onclick="ThesisHub.openModal('gemini-key-modal')"
+                  title="Configure AI API Key"
+                  style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color, rgba(255,255,255,0.15)); color:var(--text-main); cursor:pointer; font-size:0.8rem; padding:0.25rem 0.6rem; border-radius:6px; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s ease;">
                   <i class="fa-solid fa-key" style="color:var(--accent-cyan);"></i> <span>API Key</span>
                 </button>
               </div>
               <p class="ai-desc">Request writing support, structure recommendations, and methodology feedback.</p>
-              
+
               <div class="chat-box" id="ai-chat-history">
                 <div class="chat-message ai">
-                  Hello! I am your Gemini thesis assistant. How can I assist you with your thesis proposal, literature review, or academic writing today?
+                  <p class="ai-p">👋 Hello! I am your <strong>Hugging Face AI Assistant</strong>.</p>
+                  <p class="ai-p">I can assist you with your <strong>thesis proposal</strong>, <strong>literature
+                      review</strong>, <strong>methodology formulations</strong>, or <strong>LaTeX authoring</strong>.
+                    Ask a question below to get started!</p>
                 </div>
               </div>
 
               <div class="chat-input-group">
-                <textarea id="ai-input-prompt" placeholder="Ask Gemini for suggestions or feedback..."></textarea>
-                <button id="ai-submit-btn" class="btn btn-cyan"><i class="fa-solid fa-paper-plane"></i> Send Prompt</button>
+                <textarea id="ai-input-prompt"
+                  placeholder="Ask Hugging Face AI for suggestions or feedback..."></textarea>
+                <button id="ai-submit-btn" class="btn btn-cyan"><i class="fa-solid fa-paper-plane"></i> Send
+                  Prompt</button>
               </div>
             </div>
           </div>
@@ -647,11 +677,13 @@
         <div class="panel-header">
           <div>
             <h2 class="panel-title" style="color:var(--accent-indigo);">Overleaf-Style Thesis Editor</h2>
-            <p class="panel-subtitle">Write LaTeX code with live rendering, supervisor reviews, and approval workflows.</p>
+            <p class="panel-subtitle">Write LaTeX code with live rendering, supervisor reviews, and approval workflows.
+            </p>
           </div>
           <div style="display:flex; align-items:center; gap:0.75rem;">
             <span id="doc-version-badge" class="badge" style="background:var(--accent-indigo); color:#fff;">v1.2</span>
-            <button id="save-doc-btn" class="btn btn-cyan"><i class="fa-solid fa-floppy-disk"></i> Save Document</button>
+            <button id="save-doc-btn" class="btn btn-cyan"><i class="fa-solid fa-floppy-disk"></i> Save
+              Document</button>
           </div>
         </div>
 
@@ -662,17 +694,21 @@
             <div>
               <strong>Supervisor Approval Status: </strong>
               <span id="supervisor-status-badge" class="badge badge-warning">Needs Revision</span>
-              <p id="supervisor-feedback-text" style="margin-top:4px; font-size:0.9rem; color:var(--text-main);">Loading feedback...</p>
+              <p id="supervisor-feedback-text" style="margin-top:4px; font-size:0.9rem; color:var(--text-main);">Loading
+                feedback...</p>
             </div>
           </div>
-          <button id="edit-feedback-btn" class="btn btn-sm btn-secondary" onclick="ThesisHub.openModal('supervisor-modal')"><i class="fa-solid fa-pen"></i> Supervisor Review Panel</button>
+          <button id="edit-feedback-btn" class="btn btn-sm btn-secondary"
+            onclick="ThesisHub.openModal('supervisor-modal')"><i class="fa-solid fa-pen"></i> Supervisor Review
+            Panel</button>
         </div>
 
         <div class="overleaf-container">
           <div class="editor-pane">
             <div class="pane-header">
               <span><i class="fa-solid fa-code"></i> LaTeX Code</span>
-              <button id="ai-suggest-editor-btn" class="btn btn-sm btn-secondary"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Enhance Text</button>
+              <button id="ai-suggest-editor-btn" class="btn btn-sm btn-secondary"><i
+                  class="fa-solid fa-wand-magic-sparkles"></i> AI Enhance Text</button>
             </div>
             <textarea id="latex-input" class="latex-textarea" spellcheck="false"></textarea>
           </div>
@@ -694,7 +730,8 @@
             <h2 class="panel-title" style="color:var(--accent-purple);">Citation & Reference Manager</h2>
             <p class="panel-subtitle">Save references and copy citations in APA, IEEE, MLA, and BibTeX formats.</p>
           </div>
-          <button class="btn btn-cyan" id="open-citation-modal-btn" onclick="ThesisHub.openModal('citation-modal')"><i class="fa-solid fa-plus"></i> Add Citation</button>
+          <button class="btn btn-cyan" id="open-citation-modal-btn" onclick="ThesisHub.openModal('citation-modal')"><i
+              class="fa-solid fa-plus"></i> Add Citation</button>
         </div>
 
         <div class="citation-tool-bar">
@@ -719,7 +756,8 @@
             <h2 class="panel-title" style="color:var(--accent-pink);">Academic Resource Library</h2>
             <p class="panel-subtitle">Download thesis templates, guidelines, presentation decks, and seminar files.</p>
           </div>
-          <button class="btn btn-cyan" id="open-resource-modal-btn" onclick="ThesisHub.openModal('resource-modal')"><i class="fa-solid fa-plus"></i> Add Resource</button>
+          <button class="btn btn-cyan" id="open-resource-modal-btn" onclick="ThesisHub.openModal('resource-modal')"><i
+              class="fa-solid fa-plus"></i> Add Resource</button>
         </div>
 
         <div id="resources-grid" class="resources-container"></div>
@@ -730,27 +768,31 @@
         <div class="panel-header">
           <div>
             <h2 class="panel-title" style="color:var(--accent-cyan);">Peer Thesis Archive</h2>
-            <p class="panel-subtitle">Search and contribute previous student thesis documents by area, department, or topic.</p>
+            <p class="panel-subtitle">Search and contribute previous student thesis documents by area, department, or
+              topic.</p>
           </div>
-          <button class="btn btn-cyan" id="open-archive-modal-btn" onclick="ThesisHub.openModal('archive-modal')"><i class="fa-solid fa-plus"></i> Add Thesis to Archive</button>
+          <button class="btn btn-cyan" id="open-archive-modal-btn" onclick="ThesisHub.openModal('archive-modal')"><i
+              class="fa-solid fa-plus"></i> Add Thesis to Archive</button>
         </div>
 
         <div class="archive-search-box">
           <div class="archive-search-inputs">
-            <input type="text" id="archive-search-input" placeholder="Search keywords, titles, or concepts..." class="form-control">
+            <input type="text" id="archive-search-input" placeholder="Search keywords, titles, or concepts..."
+              class="form-control">
             <select id="archive-dept-filter" class="form-control">
               <option value="">All Departments</option>
               <option value="Computer Science">Computer Science</option>
               <option value="Software Engineering">Software Engineering</option>
               <option value="Cybersecurity">Cybersecurity</option>
             </select>
-            <button id="archive-search-btn" class="btn btn-cyan"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <button id="archive-search-btn" class="btn btn-cyan"><i class="fa-solid fa-magnifying-glass"></i>
+              Search</button>
           </div>
         </div>
 
         <div id="archive-results" class="archive-cards-list"></div>
       </section>
-            <!-- FEATURE 16: Research Event & Conference Hub -->
+      <!-- FEATURE 16: Research Event & Conference Hub -->
       <section id="events-hub" class="view-panel">
         <div class="panel-header">
           <div>
@@ -803,7 +845,9 @@
             <p class="panel-subtitle">Ask questions about thesis processes, internships, and university procedures.</p>
           </div>
         </div>
-        <div id="faq-chat" style="border: 1px solid var(--border-color); height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: var(--bg-card);"></div>
+        <div id="faq-chat"
+          style="border: 1px solid var(--border-color); height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: var(--bg-card);">
+        </div>
         <div style="display:flex; gap:0.5rem;">
           <input type="text" id="faq-query" placeholder="Ask a question..." style="flex:1; padding: 8px;">
           <button class="btn btn-cyan" onclick="askFaqBot()">Ask</button>
@@ -900,7 +944,7 @@
         onclick="closeAuthModal()">Close</button>
     </div>
   </div>
-    </div>
+  </div>
   </div>
 
   <!-- ADMIN ADD USER MODAL -->
@@ -1151,13 +1195,17 @@
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
         <div style="background:var(--bg-lighter); padding:1rem; border-radius:8px;">
-          <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Research Domains & Expertise</h4>
+          <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Research
+            Domains & Expertise</h4>
           <div id="facDetailsDomains"></div>
         </div>
         <div style="background:var(--bg-lighter); padding:1rem; border-radius:8px;">
-          <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Capacity &amp; Supervision Stats</h4>
-          <p style="margin-bottom:0.3rem;"><strong>Supervision Status:</strong> <span id="facDetailsStatusBadge" style="font-weight:700;">Available</span></p>
-          <p style="margin-bottom:0.3rem;"><strong>Current Students:</strong> <span id="facDetailsCurrStudents">0</span></p>
+          <h4 style="font-size:0.9rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">Capacity &amp;
+            Supervision Stats</h4>
+          <p style="margin-bottom:0.3rem;"><strong>Supervision Status:</strong> <span id="facDetailsStatusBadge"
+              style="font-weight:700;">Available</span></p>
+          <p style="margin-bottom:0.3rem;"><strong>Current Students:</strong> <span id="facDetailsCurrStudents">0</span>
+          </p>
           <p style="margin-bottom:0.3rem;"><strong>Max Capacity:</strong> <span id="facDetailsMaxCap">5</span></p>
           <p style="margin-bottom:0.3rem;"><strong>Remaining Slots:</strong> <span id="facDetailsSlots">0</span></p>
           <p style="margin-bottom:0.3rem;"><strong>h-index:</strong> <span id="facDetailsHIndex"></span></p>
@@ -1166,17 +1214,22 @@
       </div>
 
       <div style="margin-bottom:1.5rem;">
-        <h4 style="font-size:1rem; font-weight:700; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem; margin-bottom:0.8rem;">Directed Labs</h4>
+        <h4
+          style="font-size:1rem; font-weight:700; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem; margin-bottom:0.8rem;">
+          Directed Labs</h4>
         <div id="facDetailsLabs"></div>
       </div>
 
       <div style="margin-bottom:1.5rem;">
-        <h4 style="font-size:1rem; font-weight:700; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem; margin-bottom:0.8rem;">Selected Publications</h4>
+        <h4
+          style="font-size:1rem; font-weight:700; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem; margin-bottom:0.8rem;">
+          Selected Publications</h4>
         <div id="facDetailsPublications"></div>
       </div>
 
       <div style="display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1rem;">
-        <button id="editFacultyProfileBtn" class="btn btn-cyan" style="flex:1; display:none;" onclick="openEditFacultyModal()">Edit Profile</button>
+        <button id="editFacultyProfileBtn" class="btn btn-cyan" style="flex:1; display:none;"
+          onclick="openEditFacultyModal()">Edit Profile</button>
         <button class="btn btn-secondary" style="flex:1;" onclick="closeFacultyDetailsModal()">Close Profile</button>
       </div>
     </div>
@@ -1205,7 +1258,8 @@
       </div>
       <div style="display:flex; gap:0.5rem; margin-top:1rem;">
         <button class="btn btn-cyan" style="flex:1;" onclick="submitCreateLab()">Create Lab</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('createLabModal').style.display='none'">Cancel</button>
+        <button class="btn btn-secondary"
+          onclick="document.getElementById('createLabModal').style.display='none'">Cancel</button>
       </div>
     </div>
   </div>
@@ -1236,54 +1290,56 @@
       </div>
       <div style="display:flex; gap:0.5rem; margin-top:1rem;">
         <button class="btn btn-cyan" style="flex:1;" onclick="submitAddPaper()">Add Publication</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('addPaperModal').style.display='none'">Cancel</button>
+        <button class="btn btn-secondary"
+          onclick="document.getElementById('addPaperModal').style.display='none'">Cancel</button>
       </div>
     </div>
   </div>
 
   <script src="/static/js/app.js"></script>
   <!-- FACULTY EDIT PROFILE MODAL -->
-<div id="editFacultyProfileModal" class="modal-overlay">
-  <div class="modal-box">
-    <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:1rem;">Edit Faculty Profile</h3>
-    <form id="editFacultyProfileForm" onsubmit="event.preventDefault(); submitEditFacultyProfile();">
-      <div class="form-group">
-        <label>Designation</label>
-        <input type="text" id="editFacDesignation" required placeholder="e.g. Professor">
-      </div>
-      <div class="form-group">
-        <label>Research Domains (comma separated)</label>
-        <input type="text" id="editFacDomains" required placeholder="e.g. AI, Machine Learning">
-      </div>
-      <div style="display:flex; gap:1rem;">
-        <div class="form-group" style="flex:1;">
-          <label>h-index</label>
-          <input type="number" id="editFacHIndex" required min="0">
+  <div id="editFacultyProfileModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:1rem;">Edit Faculty Profile</h3>
+      <form id="editFacultyProfileForm" onsubmit="event.preventDefault(); submitEditFacultyProfile();">
+        <div class="form-group">
+          <label>Designation</label>
+          <input type="text" id="editFacDesignation" required placeholder="e.g. Professor">
         </div>
-        <div class="form-group" style="flex:1;">
-          <label>Remaining Slots</label>
-          <input type="number" id="editFacSlots" required min="0">
+        <div class="form-group">
+          <label>Research Domains (comma separated)</label>
+          <input type="text" id="editFacDomains" required placeholder="e.g. AI, Machine Learning">
         </div>
-      </div>
-      <div style="display:flex; gap:1rem;">
-        <div class="form-group" style="flex:1;">
-          <label>Min CGPA Req</label>
-          <input type="number" id="editFacCgpa" step="0.01" required min="0" max="4.0">
+        <div style="display:flex; gap:1rem;">
+          <div class="form-group" style="flex:1;">
+            <label>h-index</label>
+            <input type="number" id="editFacHIndex" required min="0">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Remaining Slots</label>
+            <input type="number" id="editFacSlots" required min="0">
+          </div>
         </div>
-        <div class="form-group" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
-          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-            <input type="checkbox" id="editFacThesisAvail">
-            Thesis Available
-          </label>
+        <div style="display:flex; gap:1rem;">
+          <div class="form-group" style="flex:1;">
+            <label>Min CGPA Req</label>
+            <input type="number" id="editFacCgpa" step="0.01" required min="0" max="4.0">
+          </div>
+          <div class="form-group" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <input type="checkbox" id="editFacThesisAvail">
+              Thesis Available
+            </label>
+          </div>
         </div>
-      </div>
-      <div style="display:flex; gap:0.6rem; margin-top:1rem;">
-        <button type="submit" class="btn btn-cyan" style="flex:1;">Save Changes</button>
-        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="document.getElementById('editFacultyProfileModal').classList.remove('open')">Cancel</button>
-      </div>
-    </form>
+        <div style="display:flex; gap:0.6rem; margin-top:1rem;">
+          <button type="submit" class="btn btn-cyan" style="flex:1;">Save Changes</button>
+          <button type="button" class="btn btn-secondary" style="flex:1;"
+            onclick="document.getElementById('editFacultyProfileModal').classList.remove('open')">Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
   <!-- POST PROJECT MODAL -->
   <div id="postProjectModal" class="modal-overlay">
@@ -1336,7 +1392,8 @@
           </div>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
-          <button type="button" class="btn btn-secondary" id="close-milestone-modal-btn" onclick="ThesisHub.closeModal('milestone-modal')">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="close-milestone-modal-btn"
+            onclick="ThesisHub.closeModal('milestone-modal')">Cancel</button>
           <button type="submit" class="btn btn-cyan">Create Milestone</button>
         </div>
       </form>
@@ -1359,10 +1416,12 @@
         </div>
         <div class="form-group" style="margin-bottom:1rem;">
           <label>Supervisor Comments & Feedback</label>
-          <textarea id="sup-feedback-input" class="form-control" rows="4" required placeholder="Enter feedback for student..."></textarea>
+          <textarea id="sup-feedback-input" class="form-control" rows="4" required
+            placeholder="Enter feedback for student..."></textarea>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
-          <button type="button" class="btn btn-secondary" id="close-supervisor-modal-btn" onclick="ThesisHub.closeModal('supervisor-modal')">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="close-supervisor-modal-btn"
+            onclick="ThesisHub.closeModal('supervisor-modal')">Cancel</button>
           <button type="submit" class="btn btn-cyan">Update Status & Feedback</button>
         </div>
       </form>
@@ -1407,7 +1466,8 @@
           </div>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
-          <button type="button" class="btn btn-secondary" id="close-citation-modal-btn" onclick="ThesisHub.closeModal('citation-modal')">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="close-citation-modal-btn"
+            onclick="ThesisHub.closeModal('citation-modal')">Cancel</button>
           <button type="submit" class="btn btn-cyan">Save Citation</button>
         </div>
       </form>
@@ -1434,10 +1494,12 @@
         </div>
         <div class="form-group" style="margin-bottom:1rem;">
           <label>Description</label>
-          <textarea id="res-description" required class="form-control" rows="3" placeholder="Resource description or content..."></textarea>
+          <textarea id="res-description" required class="form-control" rows="3"
+            placeholder="Resource description or content..."></textarea>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
-          <button type="button" class="btn btn-secondary" id="close-resource-modal-btn" onclick="ThesisHub.closeModal('resource-modal')">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="close-resource-modal-btn"
+            onclick="ThesisHub.closeModal('resource-modal')">Cancel</button>
           <button type="submit" class="btn btn-cyan">Save Resource</button>
         </div>
       </form>
@@ -1447,11 +1509,13 @@
   <!-- Add Thesis to Archive Modal -->
   <div id="archive-modal" class="modal-overlay hidden">
     <div class="modal-box" style="max-width:550px;">
-      <h3 style="font-size:1.2rem; font-weight:700; color:var(--accent-cyan, #06b6d4); margin-bottom:1rem;">Add Thesis Document to Archive</h3>
+      <h3 style="font-size:1.2rem; font-weight:700; color:var(--accent-cyan, #06b6d4); margin-bottom:1rem;">Add Thesis
+        Document to Archive</h3>
       <form id="add-archive-form">
         <div class="form-group" style="margin-bottom:0.75rem;">
           <label>Thesis Title</label>
-          <input type="text" id="arch-title" required class="form-control" placeholder="e.g. Distributed Consensus in Resource-Constrained IoT">
+          <input type="text" id="arch-title" required class="form-control"
+            placeholder="e.g. Distributed Consensus in Resource-Constrained IoT">
         </div>
         <div class="form-group" style="margin-bottom:0.75rem;">
           <label>Author / Peer Name</label>
@@ -1475,7 +1539,8 @@
         </div>
         <div class="form-group" style="margin-bottom:0.75rem;">
           <label>Research Area / Topic</label>
-          <input type="text" id="arch-area" required class="form-control" placeholder="e.g. Graph Neural Networks, IoT Security">
+          <input type="text" id="arch-area" required class="form-control"
+            placeholder="e.g. Graph Neural Networks, IoT Security">
         </div>
         <div class="form-group" style="margin-bottom:0.75rem;">
           <label>Keywords (comma separated)</label>
@@ -1483,35 +1548,39 @@
         </div>
         <div class="form-group" style="margin-bottom:1rem;">
           <label>Abstract / Executive Summary</label>
-          <textarea id="arch-abstract" required class="form-control" rows="3" placeholder="Brief summary of hypotheses, methodology, and key findings..."></textarea>
+          <textarea id="arch-abstract" required class="form-control" rows="3"
+            placeholder="Brief summary of hypotheses, methodology, and key findings..."></textarea>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
-          <button type="button" class="btn btn-secondary" id="close-archive-modal-btn" onclick="ThesisHub.closeModal('archive-modal')">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="close-archive-modal-btn"
+            onclick="ThesisHub.closeModal('archive-modal')">Cancel</button>
           <button type="submit" class="btn btn-cyan">Add to Archive</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Gemini API Key Settings Modal -->
+  <!-- AI Key Settings Modal -->
   <div id="gemini-key-modal" class="modal-overlay hidden">
     <div class="modal-box" style="max-width:480px;">
-      <h3 style="font-size:1.2rem; font-weight:700; color:var(--accent-cyan, #06b6d4); margin-bottom:0.5rem;"><i class="fa-solid fa-key"></i> Gemini API Key Settings</h3>
+      <h3 style="font-size:1.2rem; font-weight:700; color:var(--accent-cyan, #06b6d4); margin-bottom:0.5rem;"><i
+          class="fa-solid fa-key"></i> AI Assistant API Key</h3>
       <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.45;">
-        Paste your Google Gemini API key to activate live responses. Keys are saved securely in your browser storage.
+        Configure your AI API key to activate live generative responses. Keys are saved securely in your browser
+        storage.
       </p>
       <form id="gemini-key-form">
         <div class="form-group" style="margin-bottom:1rem;">
-          <label style="font-weight:600; font-size:0.88rem;">Google Gemini API Key</label>
-          <input type="password" id="gemini-key-input" class="form-control" placeholder="AIzaSy..." style="margin-top:0.35rem;">
-          <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:6px;">
-            Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent-cyan); text-decoration:underline;">Google AI Studio</a>.
-          </small>
+          <label style="font-weight:600; font-size:0.88rem;">API Key</label>
+          <input type="password" id="gemini-key-input" class="form-control" placeholder="Enter your API key..."
+            style="margin-top:0.35rem;">
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-          <button type="button" class="btn btn-sm btn-secondary" id="clear-gemini-key-btn" style="color:var(--accent-pink); border-color:rgba(236,72,153,0.3);">Clear Key</button>
+          <button type="button" class="btn btn-sm btn-secondary" id="clear-gemini-key-btn"
+            style="color:var(--accent-pink); border-color:rgba(236,72,153,0.3);">Clear Key</button>
           <div style="display:flex; gap:0.6rem;">
-            <button type="button" class="btn btn-sm btn-secondary" id="close-gemini-key-btn" onclick="ThesisHub.closeModal('gemini-key-modal')">Cancel</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="close-gemini-key-btn"
+              onclick="ThesisHub.closeModal('gemini-key-modal')">Cancel</button>
             <button type="submit" class="btn btn-sm btn-cyan">Save Key</button>
           </div>
         </div>
@@ -1533,11 +1602,13 @@
         </div>
         <div class="form-group" style="margin-bottom:0.8rem;">
           <label style="font-size:0.85rem; font-weight:600;">Thread Title</label>
-          <input type="text" id="threadTitle" class="form-control" required placeholder="e.g. Tips for Literature Review or Defense Questions">
+          <input type="text" id="threadTitle" class="form-control" required
+            placeholder="e.g. Tips for Literature Review or Defense Questions">
         </div>
         <div class="form-group" style="margin-bottom:1rem;">
           <label style="font-size:0.85rem; font-weight:600;">Content</label>
-          <textarea id="threadContent" class="form-control" rows="4" required placeholder="Share your question, discussion topic, or insight..."></textarea>
+          <textarea id="threadContent" class="form-control" rows="4" required
+            placeholder="Share your question, discussion topic, or insight..."></textarea>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
           <button type="button" class="btn btn-secondary" onclick="Forums.closeCreateModal()">Cancel</button>
@@ -1567,13 +1638,15 @@
         </div>
         <div class="form-group" style="margin-bottom:0.8rem;">
           <label style="font-size:0.85rem; font-weight:600;">Scheduled Reminder</label>
-          <div id="reminderFormattedPreview" style="font-size:0.85rem; color:var(--accent-cyan); font-weight:600; padding:0.5rem 0.8rem; background:rgba(6,182,212,0.1); border-radius:6px; border:1px solid rgba(6,182,212,0.25);">
+          <div id="reminderFormattedPreview"
+            style="font-size:0.85rem; color:var(--accent-cyan); font-weight:600; padding:0.5rem 0.8rem; background:rgba(6,182,212,0.1); border-radius:6px; border:1px solid rgba(6,182,212,0.25);">
             Please select date &amp; time
           </div>
         </div>
         <div class="form-group" style="margin-bottom:1.2rem;">
           <label style="font-size:0.85rem; font-weight:600;">Note (Optional)</label>
-          <input type="text" id="reminderNote" class="form-control" placeholder="e.g. Check defense prep feedback tomorrow">
+          <input type="text" id="reminderNote" class="form-control"
+            placeholder="e.g. Check defense prep feedback tomorrow">
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
           <button type="button" class="btn btn-secondary" onclick="Forums.closeReminderModal()">Cancel</button>
@@ -1581,137 +1654,149 @@
         </div>
       </form>
     </div>
-  <!-- FACULTY DETAILS MODAL FOR AVAILABILITY TRACKER -->
-  <div id="viewFacultyDetailsModal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 540px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem;">
-        <div>
-          <h3 id="viewFacDetailsName" style="font-size:1.3rem; font-weight:800; color:var(--text-main); margin-bottom:0.2rem;">Faculty Details</h3>
-          <p id="viewFacDetailsDept" style="font-size:0.85rem; color:var(--text-muted); margin:0;">Designation, Department</p>
-        </div>
-        <button type="button" class="btn-close-sm" onclick="closeViewFacultyDetailsModal()">&times;</button>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1rem; background:var(--bg-main); padding:1rem; border-radius:var(--radius);">
-        <div>
-          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Email Address</div>
-          <div id="viewFacDetailsEmail" style="font-size:0.9rem; font-weight:600; color:var(--text-main);">faculty@univ.edu</div>
-        </div>
-        <div>
-          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Supervision Status</div>
-          <div id="viewFacDetailsStatus" style="font-size:0.9rem; font-weight:700;">Available</div>
-        </div>
-      </div>
-
-      <!-- Capacity Stats Box -->
-      <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem; margin-bottom:1rem;">
-        <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:0.6rem;">Supervision Capacity &amp; Slots</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; text-align:center;">
-          <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
-            <div id="viewFacDetailsCurr" style="font-size:1.3rem; font-weight:800; color:var(--text-main);">0</div>
-            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Current Students</div>
+    <!-- FACULTY DETAILS MODAL FOR AVAILABILITY TRACKER -->
+    <div id="viewFacultyDetailsModal" class="modal-overlay">
+      <div class="modal-box" style="max-width: 540px;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem;">
+          <div>
+            <h3 id="viewFacDetailsName"
+              style="font-size:1.3rem; font-weight:800; color:var(--text-main); margin-bottom:0.2rem;">Faculty Details
+            </h3>
+            <p id="viewFacDetailsDept" style="font-size:0.85rem; color:var(--text-muted); margin:0;">Designation,
+              Department</p>
           </div>
-          <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
-            <div id="viewFacDetailsMax" style="font-size:1.3rem; font-weight:800; color:var(--text-main);">5</div>
-            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Max Capacity</div>
+          <button type="button" class="btn-close-sm" onclick="closeViewFacultyDetailsModal()">&times;</button>
+        </div>
+
+        <div
+          style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1rem; background:var(--bg-main); padding:1rem; border-radius:var(--radius);">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Email
+              Address</div>
+            <div id="viewFacDetailsEmail" style="font-size:0.9rem; font-weight:600; color:var(--text-main);">
+              faculty@univ.edu</div>
           </div>
-          <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
-            <div id="viewFacDetailsRem" style="font-size:1.3rem; font-weight:800; color:var(--accent-teal);">5</div>
-            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Remaining Slots</div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">
+              Supervision Status</div>
+            <div id="viewFacDetailsStatus" style="font-size:0.9rem; font-weight:700;">Available</div>
           </div>
         </div>
-      </div>
 
-      <!-- Requirements & Research Info -->
-      <div style="margin-bottom:1rem;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:0.8rem;">
-          <div style="font-size:0.85rem; color:var(--text-main);">
-            <strong>Min CGPA Req:</strong> <span id="viewFacDetailsMinCgpa">3.0</span>
+        <!-- Capacity Stats Box -->
+        <div
+          style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:1rem; margin-bottom:1rem;">
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:0.6rem;">Supervision
+            Capacity &amp; Slots</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; text-align:center;">
+            <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
+              <div id="viewFacDetailsCurr" style="font-size:1.3rem; font-weight:800; color:var(--text-main);">0</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Current Students</div>
+            </div>
+            <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
+              <div id="viewFacDetailsMax" style="font-size:1.3rem; font-weight:800; color:var(--text-main);">5</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Max Capacity</div>
+            </div>
+            <div style="background:var(--bg-main); padding:0.6rem; border-radius:8px;">
+              <div id="viewFacDetailsRem" style="font-size:1.3rem; font-weight:800; color:var(--accent-teal);">5</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Remaining Slots</div>
+            </div>
           </div>
-          <div style="font-size:0.85rem; color:var(--text-main);">
-            <strong>h-index:</strong> <span id="viewFacDetailsHIndex">10</span>
+        </div>
+
+        <!-- Requirements & Research Info -->
+        <div style="margin-bottom:1rem;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:0.8rem;">
+            <div style="font-size:0.85rem; color:var(--text-main);">
+              <strong>Min CGPA Req:</strong> <span id="viewFacDetailsMinCgpa">3.0</span>
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-main);">
+              <strong>h-index:</strong> <span id="viewFacDetailsHIndex">10</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:0.8rem;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:0.4rem;">Research
+              Domains &amp; Expertise</div>
+            <div id="viewFacDetailsDomains" style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
+          </div>
+
+          <div id="viewFacDetailsLabSection" style="font-size:0.85rem; color:var(--text-muted); display:none;">
+            <strong>Research Lab:</strong> <span id="viewFacDetailsLabName"></span> (<span
+              id="viewFacDetailsLabArea"></span>)
           </div>
         </div>
-        
-        <div style="margin-bottom:0.8rem;">
-          <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:0.4rem;">Research Domains &amp; Expertise</div>
-          <div id="viewFacDetailsDomains" style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
-        </div>
 
-        <div id="viewFacDetailsLabSection" style="font-size:0.85rem; color:var(--text-muted); display:none;">
-          <strong>Research Lab:</strong> <span id="viewFacDetailsLabName"></span> (<span id="viewFacDetailsLabArea"></span>)
+        <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeViewFacultyDetailsModal()">Close</button>
         </div>
       </div>
+    </div>
 
-      <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;">
-        <button type="button" class="btn btn-secondary" onclick="closeViewFacultyDetailsModal()">Close</button>
+    <script src="/static/js/thesis_hub.js"></script>
+    <!-- FEATURE 16: CREATE EVENT MODAL -->
+    <div id="createEventModal" class="modal-overlay">
+      <div class="modal-box">
+        <h3 style="font-size:1.2rem; font-weight:700;">Create Research Event</h3>
+        <div class="form-group">
+          <label>Event Title</label>
+          <input type="text" id="newEventTitle" placeholder="e.g. Annual AI Symposium">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="newEventCategory">
+            <option value="Conference">Conference</option>
+            <option value="Workshop">Workshop</option>
+            <option value="Seminar">Seminar</option>
+            <option value="Hackathon">Hackathon</option>
+            <option value="Academic Event">Academic Event</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Organizer</label>
+          <input type="text" id="newEventOrganizer" placeholder="e.g. Department of CSE">
+        </div>
+        <div class="form-group">
+          <label>Date & Time</label>
+          <input type="datetime-local" id="newEventDate">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="newEventLocation" placeholder="e.g. Auditorium A">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="newEventDesc" rows="3" placeholder="What is this event about?"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Registration Link (optional)</label>
+          <input type="text" id="newEventLink" placeholder="https://...">
+        </div>
+        <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
+          <button class="btn btn-cyan" style="flex:1;" onclick="submitCreateEvent()">Create Event</button>
+          <button class="btn btn-secondary" onclick="closeCreateEventModal()">Cancel</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script src="/static/js/thesis_hub.js"></script>
-<!-- FEATURE 16: CREATE EVENT MODAL -->
-<div id="createEventModal" class="modal-overlay">
-  <div class="modal-box">
-    <h3 style="font-size:1.2rem; font-weight:700;">Create Research Event</h3>
-    <div class="form-group">
-      <label>Event Title</label>
-      <input type="text" id="newEventTitle" placeholder="e.g. Annual AI Symposium">
-    </div>
-    <div class="form-group">
-      <label>Category</label>
-      <select id="newEventCategory">
-        <option value="Conference">Conference</option>
-        <option value="Workshop">Workshop</option>
-        <option value="Seminar">Seminar</option>
-        <option value="Hackathon">Hackathon</option>
-        <option value="Academic Event">Academic Event</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Organizer</label>
-      <input type="text" id="newEventOrganizer" placeholder="e.g. Department of CSE">
-    </div>
-    <div class="form-group">
-      <label>Date & Time</label>
-      <input type="datetime-local" id="newEventDate">
-    </div>
-    <div class="form-group">
-      <label>Location</label>
-      <input type="text" id="newEventLocation" placeholder="e.g. Auditorium A">
-    </div>
-    <div class="form-group">
-      <label>Description</label>
-      <textarea id="newEventDesc" rows="3" placeholder="What is this event about?"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Registration Link (optional)</label>
-      <input type="text" id="newEventLink" placeholder="https://...">
-    </div>
-    <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
-      <button class="btn btn-cyan" style="flex:1;" onclick="submitCreateEvent()">Create Event</button>
-      <button class="btn btn-secondary" onclick="closeCreateEventModal()">Cancel</button>
-    </div>
-  </div>
-</div>
+    <script>
+      // Helper: fall back to demo student id when nobody is logged in yet,
+      // matching the default main.py already uses server-side.
+      function ripUserId() {
+        return (typeof currentUser !== 'undefined' && currentUser) ? currentUser.user_id : 'u_student_1';
+      }
 
-<script>
-  // Helper: fall back to demo student id when nobody is logged in yet,
-  // matching the default main.py already uses server-side.
-  function ripUserId() {
-    return (typeof currentUser !== 'undefined' && currentUser) ? currentUser.user_id : 'u_student_1';
-  }
+      // ── FEATURE 16: Research Event & Conference Hub ──────────────────
+      function loadEventsHub() {
+        const category = document.getElementById('eventCategoryFilter')?.value || '';
+        const url = category ? `/api/events?category=${encodeURIComponent(category)}` : '/api/events';
 
-  // ── FEATURE 16: Research Event & Conference Hub ──────────────────
-  function loadEventsHub() {
-    const category = document.getElementById('eventCategoryFilter')?.value || '';
-    const url = category ? `/api/events?category=${encodeURIComponent(category)}` : '/api/events';
-
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        const list = data.events || [];
-        document.getElementById('events-container').innerHTML = list.map(e => `
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            const list = data.events || [];
+            document.getElementById('events-container').innerHTML = list.map(e => `
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div class="card-title">${e.title}</div>
@@ -1728,84 +1813,84 @@
             </div>
           </div>
         `).join('') || '<p style="color:var(--text-muted);">No events found for this category.</p>';
-      });
-  }
-
-  function resetCreateEventForm() {
-   document.getElementById('newEventTitle').value = '';
-   document.getElementById('newEventCategory').value = 'Conference';
-   document.getElementById('newEventOrganizer').value = '';
-   document.getElementById('newEventDate').value = '';
-   document.getElementById('newEventLocation').value = '';
-   document.getElementById('newEventDesc').value = '';
-   document.getElementById('newEventLink').value = '';
-  }
-
-  function registerForEvent(eventId) {
-   if (!currentUser || currentUser.role !== 'Student') {
-    alert('Only students can register for events.');
-    return;
-   }
-   fetch('/api/events/register', {
-     method: 'POST',
-     headers: {'Content-Type': 'application/json'},
-     body: JSON.stringify({ event_id: eventId, user_id: ripUserId() })
-   })
-   .then(res => res.json())
-   .then(res => {
-     alert(res.message);
-     loadEventsHub();
-    });
-  }
-
-  function openCreateEventModal() {
-   resetCreateEventForm();
-   const modal = document.getElementById('createEventModal');
-   if (modal.parentElement !== document.body) {
-    document.body.appendChild(modal);
-   }
-   modal.classList.add('open');
-  }
-  
-  function closeCreateEventModal() { document.getElementById('createEventModal').classList.remove('open'); }
-
-  function submitCreateEvent() {
-    const title = document.getElementById('newEventTitle').value.trim();
-    const category = document.getElementById('newEventCategory').value;
-    const organizer = document.getElementById('newEventOrganizer').value.trim();
-    const rawDate = document.getElementById('newEventDate').value; // yyyy-MM-ddTHH:mm
-    const location = document.getElementById('newEventLocation').value.trim();
-    const description = document.getElementById('newEventDesc').value.trim();
-    const registration_link = document.getElementById('newEventLink').value.trim();
-
-    if (!title || !organizer || !rawDate || !location) {
-      alert('Please fill in title, organizer, date, and location.');
-      return;
-    }
-    const event_date = rawDate.replace('T', ' ') + ':00';
-
-    fetch('/api/events/create', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ title, category, organizer, event_date, location, description, registration_link })
-    })
-        .then(res => {
-      alert(res.message);
-      if (res.success) {
-        resetCreateEventForm();
-        closeCreateEventModal();
-        loadEventsHub();
+          });
       }
-    });
-  }
 
-  // ── FEATURE 18: Real-Time Notification Center ────────────────────
-  function loadNotificationsHub() {
-    fetch(`/api/notifications?user_id=${encodeURIComponent(ripUserId())}`)
-      .then(res => res.json())
-      .then(data => {
-        const notifs = data.notifications || [];
-        document.getElementById('notif-container').innerHTML = notifs.map(n => `
+      function resetCreateEventForm() {
+        document.getElementById('newEventTitle').value = '';
+        document.getElementById('newEventCategory').value = 'Conference';
+        document.getElementById('newEventOrganizer').value = '';
+        document.getElementById('newEventDate').value = '';
+        document.getElementById('newEventLocation').value = '';
+        document.getElementById('newEventDesc').value = '';
+        document.getElementById('newEventLink').value = '';
+      }
+
+      function registerForEvent(eventId) {
+        if (!currentUser || currentUser.role !== 'Student') {
+          alert('Only students can register for events.');
+          return;
+        }
+        fetch('/api/events/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_id: eventId, user_id: ripUserId() })
+        })
+          .then(res => res.json())
+          .then(res => {
+            alert(res.message);
+            loadEventsHub();
+          });
+      }
+
+      function openCreateEventModal() {
+        resetCreateEventForm();
+        const modal = document.getElementById('createEventModal');
+        if (modal.parentElement !== document.body) {
+          document.body.appendChild(modal);
+        }
+        modal.classList.add('open');
+      }
+
+      function closeCreateEventModal() { document.getElementById('createEventModal').classList.remove('open'); }
+
+      function submitCreateEvent() {
+        const title = document.getElementById('newEventTitle').value.trim();
+        const category = document.getElementById('newEventCategory').value;
+        const organizer = document.getElementById('newEventOrganizer').value.trim();
+        const rawDate = document.getElementById('newEventDate').value; // yyyy-MM-ddTHH:mm
+        const location = document.getElementById('newEventLocation').value.trim();
+        const description = document.getElementById('newEventDesc').value.trim();
+        const registration_link = document.getElementById('newEventLink').value.trim();
+
+        if (!title || !organizer || !rawDate || !location) {
+          alert('Please fill in title, organizer, date, and location.');
+          return;
+        }
+        const event_date = rawDate.replace('T', ' ') + ':00';
+
+        fetch('/api/events/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, category, organizer, event_date, location, description, registration_link })
+        })
+          .then(res => {
+            alert(res.message);
+            if (res.success) {
+              resetCreateEventForm();
+              closeCreateEventModal();
+              loadEventsHub();
+            }
+          });
+      }
+
+      // ── FEATURE 18: Real-Time Notification Center ────────────────────
+      function loadNotificationsHub() {
+        fetch(`/api/notifications?user_id=${encodeURIComponent(ripUserId())}`)
+          .then(res => res.json())
+          .then(data => {
+            const notifs = data.notifications || [];
+            document.getElementById('notif-container').innerHTML = notifs.map(n => `
           <div style="padding:12px 16px; border-left:4px solid ${n.is_read ? 'var(--border-color)' : 'var(--accent-cyan)'};
                       background:var(--bg-card); margin-bottom:10px; border-radius:8px;
                       opacity:${n.is_read ? '0.65' : '1'};">
@@ -1819,42 +1904,42 @@
             </div>
           </div>
         `).join('') || '<p style="color:var(--text-muted);">No notifications found.</p>';
-      });
-  }
+          });
+      }
 
-  function markNotifRead(notifId) {
-    fetch('/api/notifications/read', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ notif_id: notifId })
-    })
-    .then(res => res.json())
-    .then(() => loadNotificationsHub());
-  }
+      function markNotifRead(notifId) {
+        fetch('/api/notifications/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notif_id: notifId })
+        })
+          .then(res => res.json())
+          .then(() => loadNotificationsHub());
+      }
 
-  // ── FEATURE 19: Personalized Dashboard ────────────────────────────
-  function loadPersonalizedDashboard() {
-    const container = document.getElementById('dashboard-content');
-    fetch(`/api/dashboard?user_id=${encodeURIComponent(ripUserId())}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) {
-          container.innerHTML = `<p style="color:var(--text-muted);">${data.message || 'Unable to load dashboard.'}</p>`;
-          return;
-        }
-        const db = data.dashboard || {};
-        const profile = db.user_profile || {};
+      // ── FEATURE 19: Personalized Dashboard ────────────────────────────
+      function loadPersonalizedDashboard() {
+        const container = document.getElementById('dashboard-content');
+        fetch(`/api/dashboard?user_id=${encodeURIComponent(ripUserId())}`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.success) {
+              container.innerHTML = `<p style="color:var(--text-muted);">${data.message || 'Unable to load dashboard.'}</p>`;
+              return;
+            }
+            const db = data.dashboard || {};
+            const profile = db.user_profile || {};
 
-        const header = `
+            const header = `
           <div class="card" style="background:var(--bg-card); padding:1rem 1.4rem; border-radius:8px; margin-bottom:1rem;">
             <p style="font-weight:700; font-size:1.05rem;">${profile.name || 'User'}</p>
             <p style="color:var(--text-muted); font-size:0.85rem;">${profile.role || ''} &bull; ${profile.department || ''}</p>
           </div>`;
 
-        // Faculty dashboard: thesis supervision status instead of events/internships/groups
-        if (db.status) {
-          const s = db.status;
-          container.innerHTML = header + `
+            // Faculty dashboard: thesis supervision status instead of events/internships/groups
+            if (db.status) {
+              const s = db.status;
+              container.innerHTML = header + `
             <div class="card" style="background:var(--bg-card); padding:1rem; border-radius:8px;">
               <h3 style="margin-bottom:0.8rem;">Thesis Supervision Status</h3>
               <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
@@ -1863,15 +1948,15 @@
                 <div><strong>${s.thesis_available ? 'Yes' : 'No'}</strong><div style="color:var(--text-muted); font-size:0.8rem;">Accepting Thesis Students</div></div>
               </div>
             </div>`;
-          return;
-        }
+              return;
+            }
 
-        // Student dashboard
-        const events = db.upcoming_events || [];
-        const internships = db.upcoming_internships || [];
-        const groups = db.my_thesis_groups || [];
+            // Student dashboard
+            const events = db.upcoming_events || [];
+            const internships = db.upcoming_internships || [];
+            const groups = db.my_thesis_groups || [];
 
-        container.innerHTML = header + `
+            container.innerHTML = header + `
           <div class="card" style="background:var(--bg-card); padding:1rem; border-radius:8px; margin-bottom:1rem;">
             <h3 style="margin-bottom:0.6rem;">Upcoming Events</h3>
             <ul>${events.map(e => `<li style="margin-bottom:0.4rem;"><strong>${e.title}</strong> — ${e.event_date} (${e.location})</li>`).join('') || '<li>No upcoming events.</li>'}</ul>
@@ -1884,39 +1969,39 @@
             <h3 style="margin-bottom:0.6rem;">My Thesis Groups</h3>
             <ul>${groups.map(g => `<li style="margin-bottom:0.4rem;"><strong>${g.group_name}</strong> — ${g.topic}</li>`).join('') || '<li>You have not joined any thesis groups yet.</li>'}</ul>
           </div>`;
+          });
+      }
+
+      // ── FEATURE 20: Academic FAQ Chatbot ──────────────────────────────
+      function askFaqBot() {
+        const input = document.getElementById('faq-query');
+        const q = input.value.trim();
+        if (!q) return;
+        const chat = document.getElementById('faq-chat');
+        chat.innerHTML += `<p style="color:var(--accent-cyan);"><strong>You:</strong> ${q}</p>`;
+        input.value = '';
+
+        fetch('/api/faq/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q })
+        })
+          .then(res => res.json())
+          .then(data => {
+            const answer = (data.data && data.data.response) || data.message || "Sorry, I couldn't process that.";
+            chat.innerHTML += `<p style="color:#22c55e;"><strong>Bot:</strong> ${answer}</p>`;
+            chat.scrollTop = chat.scrollHeight;
+          });
+      }
+
+      // Allow pressing Enter to submit a FAQ question
+      document.addEventListener('DOMContentLoaded', () => {
+        const faqInput = document.getElementById('faq-query');
+        if (faqInput) {
+          faqInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askFaqBot(); });
+        }
       });
-  }
-
-  // ── FEATURE 20: Academic FAQ Chatbot ──────────────────────────────
-  function askFaqBot() {
-    const input = document.getElementById('faq-query');
-    const q = input.value.trim();
-    if (!q) return;
-    const chat = document.getElementById('faq-chat');
-    chat.innerHTML += `<p style="color:var(--accent-cyan);"><strong>You:</strong> ${q}</p>`;
-    input.value = '';
-
-    fetch('/api/faq/ask', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ question: q })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const answer = (data.data && data.data.response) || data.message || "Sorry, I couldn't process that.";
-      chat.innerHTML += `<p style="color:#22c55e;"><strong>Bot:</strong> ${answer}</p>`;
-      chat.scrollTop = chat.scrollHeight;
-    });
-  }
-
-  // Allow pressing Enter to submit a FAQ question
-  document.addEventListener('DOMContentLoaded', () => {
-    const faqInput = document.getElementById('faq-query');
-    if (faqInput) {
-      faqInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askFaqBot(); });
-    }
-  });
-</script>
+    </script>
 
 </body>
 
