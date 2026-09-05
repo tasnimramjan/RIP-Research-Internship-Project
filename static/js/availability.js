@@ -63,6 +63,19 @@ function renderAvailabilityResults(results) {
   const isAdmin = userRole === 'admin';
 
   container.innerHTML = results.map(f => {
+    const maxCap = f.max_capacity !== undefined ? f.max_capacity : 5;
+    const currStud = f.current_students !== undefined ? f.current_students : 0;
+
+    let remSlots = Math.max(0, maxCap - currStud);
+    if (remSlots === 0) {
+      f.status = 'Full';
+    } else if (remSlots <= 2) {
+      f.status = 'Limited';
+    } else {
+      f.status = 'Available';
+    }
+    f.remaining_slots = remSlots;
+
     // Determine badge colors based on status
     let badgeColor = '';
     let badgeBg = '';
@@ -106,15 +119,15 @@ function renderAvailabilityResults(results) {
         
         <div style="background:var(--bg-main); border-radius:var(--radius); padding:0.8rem; display:flex; justify-content:space-between; text-align:center; margin-bottom:1rem;">
           <div>
-            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${f.current_students !== undefined ? f.current_students : 0}</div>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${currStud}</div>
             <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Current</div>
           </div>
           <div>
-            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${f.max_capacity !== undefined ? f.max_capacity : 5}</div>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--text-main);">${maxCap}</div>
             <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Max Capacity</div>
           </div>
           <div>
-            <div style="font-size:1.2rem; font-weight:800; color:${badgeColor};">${f.remaining_slots !== undefined ? f.remaining_slots : 0}</div>
+            <div style="font-size:1.2rem; font-weight:800; color:${badgeColor};">${remSlots}</div>
             <div style="font-size:0.7rem; color:${badgeColor}; text-transform:uppercase; letter-spacing:0.5px;">Remaining</div>
           </div>
         </div>
@@ -130,20 +143,26 @@ function renderAvailabilityResults(results) {
 
 async function openUpdateAvailabilityModal(facultyId) {
   window._editingAvailabilityFacultyId = facultyId;
+  window.currentViewingFaculty = { faculty_id: facultyId, user_id: facultyId };
   try {
     const res = await fetch(`/api/faculty/profile?faculty_id=${facultyId}`);
     const data = await res.json();
     if (data.success && data.faculty) {
       const fac = data.faculty;
+      window.currentViewingFaculty = fac;
       const modal = document.getElementById('editFacultyProfileModal');
       if (modal) {
-        document.getElementById('editFacDesignation').value = fac.designation || '';
-        document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
+        if (document.getElementById('editFacDesignation')) document.getElementById('editFacDesignation').value = fac.designation || '';
+        if (document.getElementById('editFacDomains')) document.getElementById('editFacDomains').value = (fac.research_domains || []).join(', ');
         if (document.getElementById('editFacHIndex')) document.getElementById('editFacHIndex').value = fac.h_index || 0;
         if (document.getElementById('editFacMaxCap')) document.getElementById('editFacMaxCap').value = fac.max_capacity !== undefined ? fac.max_capacity : 5;
         if (document.getElementById('editFacCurrStud')) document.getElementById('editFacCurrStud').value = fac.current_students !== undefined ? fac.current_students : 0;
         if (document.getElementById('editFacSlots')) document.getElementById('editFacSlots').value = fac.remaining_slots !== undefined ? fac.remaining_slots : 0;
-        if (document.getElementById('editFacMinCgpa')) document.getElementById('editFacMinCgpa').value = fac.min_cgpa_req || 3.0;
+        
+        const minCgpaVal = fac.min_cgpa_req !== undefined ? fac.min_cgpa_req : 3.0;
+        if (document.getElementById('editFacCgpa')) document.getElementById('editFacCgpa').value = minCgpaVal;
+        if (document.getElementById('editFacMinCgpa')) document.getElementById('editFacMinCgpa').value = minCgpaVal;
+        
         if (document.getElementById('editFacThesisAvail')) document.getElementById('editFacThesisAvail').checked = !!fac.thesis_available;
         
         modal.classList.add('open');

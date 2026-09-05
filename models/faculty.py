@@ -31,7 +31,9 @@ class FacultyModel:
         SELECT u.user_id, u.name, u.email, u.department, 
                f.designation, f.h_index, f.research_domains, 
                f.remaining_slots, f.min_cgpa_req, f.thesis_available,
-               COALESCE(f.is_verified, 1) as is_verified
+               COALESCE(f.is_verified, 1) as is_verified,
+               COALESCE(f.max_capacity, 5) as max_capacity,
+               COALESCE(f.current_students, 0) as current_students
         FROM faculty f
         JOIN users u ON f.faculty_id = u.user_id
         WHERE u.role = 'Faculty'
@@ -64,6 +66,13 @@ class FacultyModel:
             item = dict(f)
             domains = parse_json_list(item['research_domains'])
             item['research_domains'] = domains
+            
+            max_cap = item.get('max_capacity') if item.get('max_capacity') is not None else 5
+            curr_students = item.get('current_students') if item.get('current_students') is not None else 0
+            rem_slots = max(0, max_cap - curr_students)
+            item['max_capacity'] = max_cap
+            item['current_students'] = curr_students
+            item['remaining_slots'] = rem_slots
             
             # Associate labs
             item['directed_labs'] = lab_dict.get(item['user_id'], [])
@@ -142,7 +151,9 @@ class FacultyModel:
         SELECT u.user_id, u.name, u.email, u.department, 
                f.designation, f.h_index, f.research_domains, 
                f.remaining_slots, f.min_cgpa_req, f.thesis_available,
-               COALESCE(f.is_verified, 1) as is_verified
+               COALESCE(f.is_verified, 1) as is_verified,
+               COALESCE(f.max_capacity, 5) as max_capacity,
+               COALESCE(f.current_students, 0) as current_students
         FROM faculty f
         JOIN users u ON f.faculty_id = u.user_id
         WHERE u.user_id = ?
@@ -156,6 +167,13 @@ class FacultyModel:
             
         item = dict(row)
         item['research_domains'] = parse_json_list(item['research_domains'])
+        
+        max_cap = item.get('max_capacity') if item.get('max_capacity') is not None else 5
+        curr_students = item.get('current_students') if item.get('current_students') is not None else 0
+        rem_slots = max(0, max_cap - curr_students)
+        item['max_capacity'] = max_cap
+        item['current_students'] = curr_students
+        item['remaining_slots'] = rem_slots
         
         # Labs
         cursor.execute("SELECT lab_id, lab_name, focus_area, facilities FROM research_labs WHERE faculty_id = ?", (faculty_id,))
@@ -197,9 +215,22 @@ class FacultyModel:
         return True
 
     @staticmethod
-    def admin_update_faculty(faculty_id, designation=None, research_domains=None, h_index=None, remaining_slots=None, min_cgpa_req=None, is_verified=None):
+    def admin_update_faculty(faculty_id, designation=None, research_domains=None, h_index=None, remaining_slots=None, min_cgpa_req=None, is_verified=None, max_capacity=None, current_students=None, thesis_available=None):
         conn = get_db()
         cursor = conn.cursor()
+        
+        cursor.execute("SELECT max_capacity, current_students, thesis_available FROM faculty WHERE faculty_id = ?", (faculty_id,))
+        row = cursor.fetchone()
+        ex_max = row['max_capacity'] if row and row['max_capacity'] is not None else 5
+        ex_curr = row['current_students'] if row and row['current_students'] is not None else 0
+        ex_t_avail = row['thesis_available'] if row and row['thesis_available'] is not None else 1
+
+        new_max = int(max_capacity) if max_capacity is not None else ex_max
+        new_curr = int(current_students) if current_students is not None else ex_curr
+        new_t_avail = (1 if thesis_available else 0) if thesis_available is not None else ex_t_avail
+
+        calc_rem = max(0, new_max - new_curr)
+
         updates = []
         params = []
         
@@ -213,15 +244,25 @@ class FacultyModel:
         if h_index is not None:
             updates.append("h_index = ?")
             params.append(int(h_index))
-        if remaining_slots is not None:
-            updates.append("remaining_slots = ?")
-            params.append(int(remaining_slots))
+        if max_capacity is not None:
+            updates.append("max_capacity = ?")
+            params.append(new_max)
+        if current_students is not None:
+            updates.append("current_students = ?")
+            params.append(new_curr)
+            
+        updates.append("remaining_slots = ?")
+        params.append(calc_rem)
+            
         if min_cgpa_req is not None:
             updates.append("min_cgpa_req = ?")
             params.append(float(min_cgpa_req))
         if is_verified is not None:
             updates.append("is_verified = ?")
             params.append(1 if is_verified else 0)
+        if thesis_available is not None:
+            updates.append("thesis_available = ?")
+            params.append(new_t_avail)
 
         if not updates:
             conn.close()

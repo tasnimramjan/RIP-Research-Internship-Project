@@ -1045,42 +1045,6 @@
     </div>
   </div>
 
-  <!-- FACULTY EDIT PROFILE MODAL -->
-  <div id="editFacultyProfileModal" class="modal-overlay">
-    <div class="modal-box">
-      <h3 style="font-size:1.2rem; font-weight:700;">Edit Faculty Profile</h3>
-      <div class="form-group">
-        <label>Designation</label>
-        <input type="text" id="editFacDesignation" placeholder="e.g. Professor">
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;">
-        <div class="form-group">
-          <label>h-index</label>
-          <input type="number" id="editFacHIndex" value="20">
-        </div>
-        <div class="form-group">
-          <label>Open Slots</label>
-          <input type="number" id="editFacSlots" value="3">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Research Areas and Domains (comma-separated)</label>
-        <input type="text" id="editFacDomains" placeholder="e.g. Computer Vision, Deep Learning">
-      </div>
-      <div class="form-group">
-        <label>Min CGPA Requirement</label>
-        <input type="number" step="0.1" id="editFacMinCgpa" value="3.2">
-      </div>
-      <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
-        <input type="checkbox" id="editFacThesisAvail" checked style="width:auto; accent-color:var(--accent-cyan);">
-        <label for="editFacThesisAvail" style="cursor:pointer;">Accepting Thesis Supervision</label>
-      </div>
-      <div style="display:flex; gap:0.6rem; margin-top:0.5rem;">
-        <button class="btn btn-cyan" style="flex:1;" onclick="submitEditFacultyProfile()">Save Profile</button>
-        <button class="btn btn-secondary" onclick="closeEditFacultyProfileModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
 
   <!-- FACULTY CREATE LAB MODAL -->
   <div id="createLabModal" class="modal-overlay">

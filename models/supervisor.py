@@ -13,7 +13,8 @@ class SupervisorModel:
         
         query = """
         SELECT u.user_id, u.name, u.email, u.department, f.designation, f.h_index, 
-               f.research_domains, f.remaining_slots, f.min_cgpa_req, f.thesis_available
+               f.research_domains, f.remaining_slots, f.min_cgpa_req, f.thesis_available,
+               COALESCE(f.max_capacity, 5) as max_capacity, COALESCE(f.current_students, 0) as current_students
         FROM faculty f
         JOIN users u ON f.faculty_id = u.user_id
         WHERE 1=1
@@ -51,6 +52,13 @@ class SupervisorModel:
                         if isinstance(domains_raw, str):
                             domains = [d.strip() for d in domains_raw.split(',') if d.strip()]
             item['research_domains'] = domains
+            
+            max_cap = item.get('max_capacity') if item.get('max_capacity') is not None else 5
+            curr_students = item.get('current_students') if item.get('current_students') is not None else 0
+            rem_slots = max(0, max_cap - curr_students)
+            item['max_capacity'] = max_cap
+            item['current_students'] = curr_students
+            item['remaining_slots'] = rem_slots
             
             # Keyword filter (in domains, name, designation)
             if keyword:
@@ -101,6 +109,17 @@ class SupervisorModel:
         conn = get_db()
         cursor = conn.cursor()
 
+        # Fetch existing record for remaining_slots calculation
+        cursor.execute("SELECT max_capacity, current_students, thesis_available FROM faculty WHERE faculty_id = ?", (faculty_id,))
+        row = cursor.fetchone()
+        ex_max = row['max_capacity'] if row and row['max_capacity'] is not None else 5
+        ex_curr = row['current_students'] if row and row['current_students'] is not None else 0
+        ex_t = row['thesis_available'] if row and row['thesis_available'] is not None else 1
+
+        new_max = int(max_capacity) if max_capacity is not None else ex_max
+        new_t = (1 if thesis_available else 0) if thesis_available is not None else ex_t
+        calc_rem = max(0, new_max - ex_curr)
+
         # Update users table if name or department are provided
         if name is not None or department is not None:
             user_updates = []
@@ -128,18 +147,19 @@ class SupervisorModel:
                 research_domains = [d.strip() for d in research_domains.split(',') if d.strip()]
             updates.append("research_domains = ?")
             params.append(json.dumps(research_domains))
-        if remaining_slots is not None:
-            updates.append("remaining_slots = ?")
-            params.append(int(remaining_slots))
+        
+        updates.append("remaining_slots = ?")
+        params.append(calc_rem)
+
         if max_capacity is not None:
             updates.append("max_capacity = ?")
-            params.append(int(max_capacity))
+            params.append(new_max)
         if min_cgpa_req is not None:
             updates.append("min_cgpa_req = ?")
             params.append(float(min_cgpa_req))
         if thesis_available is not None:
             updates.append("thesis_available = ?")
-            params.append(1 if thesis_available else 0)
+            params.append(new_t)
 
         if updates:
             params.append(faculty_id)

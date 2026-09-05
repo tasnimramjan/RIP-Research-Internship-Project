@@ -56,23 +56,20 @@ class AvailabilityModel:
             
             max_cap = item.get('max_capacity') if item.get('max_capacity') is not None else 5
             curr_students = item.get('current_students') if item.get('current_students') is not None else 0
-            rem_slots = item.get('remaining_slots')
-            if rem_slots is None:
-                rem_slots = max(0, max_cap - curr_students)
-                
-            item['max_capacity'] = max_cap
-            item['current_students'] = curr_students
-            item['remaining_slots'] = rem_slots
-            item['research_domains'] = domains
             
-            # Determine availability status badge
-            if item.get('thesis_available') == 0 or rem_slots == 0:
+            rem_slots = max(0, max_cap - curr_students)
+            if rem_slots == 0:
                 item['status'] = 'Full'
             elif rem_slots <= 2:
                 item['status'] = 'Limited'
             else:
                 item['status'] = 'Available'
-                
+
+            item['max_capacity'] = max_cap
+            item['current_students'] = curr_students
+            item['remaining_slots'] = rem_slots
+            item['research_domains'] = domains
+            
             # Filter by Status
             if status and item['status'].lower() != status.lower():
                 continue
@@ -111,26 +108,34 @@ class AvailabilityModel:
         conn = get_db()
         cursor = conn.cursor()
         
+        cursor.execute("SELECT max_capacity, current_students, thesis_available FROM faculty WHERE faculty_id = ?", (faculty_id,))
+        ex = cursor.fetchone()
+        ex_max = ex['max_capacity'] if ex and ex['max_capacity'] is not None else 5
+        ex_curr = ex['current_students'] if ex and ex['current_students'] is not None else 0
+        ex_t = ex['thesis_available'] if ex and ex['thesis_available'] is not None else 1
+
+        new_max = int(max_capacity) if max_capacity is not None else ex_max
+        new_curr = int(current_students) if current_students is not None else ex_curr
+        new_t = (1 if thesis_available else 0) if thesis_available is not None else ex_t
+
+        calc_rem = max(0, new_max - new_curr)
+
         updates = []
         params = []
         
         if max_capacity is not None:
             updates.append("max_capacity = ?")
-            params.append(int(max_capacity))
+            params.append(new_max)
         if current_students is not None:
             updates.append("current_students = ?")
-            params.append(int(current_students))
-        if remaining_slots is not None:
-            updates.append("remaining_slots = ?")
-            params.append(int(remaining_slots))
-        elif max_capacity is not None and current_students is not None:
-            calc_rem = max(0, int(max_capacity) - int(current_students))
-            updates.append("remaining_slots = ?")
-            params.append(calc_rem)
+            params.append(new_curr)
+            
+        updates.append("remaining_slots = ?")
+        params.append(calc_rem)
             
         if thesis_available is not None:
             updates.append("thesis_available = ?")
-            params.append(1 if thesis_available else 0)
+            params.append(new_t)
         if designation is not None:
             updates.append("designation = ?")
             params.append(designation)

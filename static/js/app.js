@@ -509,7 +509,7 @@ async function submitEditFacultyProfile() {
   if (!user || (user.role !== 'Faculty' && user.role !== 'Admin')) return alert('Unauthorized.');
   
   const isTargetAdmin = user.role === 'Admin';
-  const targetId = (window.currentViewingFaculty && (window.currentViewingFaculty.user_id || window.currentViewingFaculty.faculty_id)) || user.user_id;
+  const targetId = (window.currentViewingFaculty && (window.currentViewingFaculty.user_id || window.currentViewingFaculty.faculty_id)) || window._editingAvailabilityFacultyId || user.user_id;
   const endpoint = isTargetAdmin ? '/api/faculty/admin_edit' : '/api/faculty/update_profile';
 
   const desig = document.getElementById('editFacDesignation')?.value.trim() || '';
@@ -517,7 +517,11 @@ async function submitEditFacultyProfile() {
   const domains = domainsStr.split(',').map(s => s.trim()).filter(Boolean);
   const hIndex = parseInt(document.getElementById('editFacHIndex')?.value) || 0;
   const slots = parseInt(document.getElementById('editFacSlots')?.value) || 0;
-  const cgpa = parseFloat(document.getElementById('editFacCgpa')?.value) || 0.0;
+  
+  const cgpaEl = document.getElementById('editFacCgpa') || document.getElementById('editFacMinCgpa');
+  const cgpaVal = cgpaEl ? cgpaEl.value : '';
+  const cgpa = (cgpaVal !== '' && !isNaN(parseFloat(cgpaVal))) ? parseFloat(cgpaVal) : 3.0;
+  
   const thesisAvail = document.getElementById('editFacThesisAvail')?.checked ? 1 : 0;
 
   try {
@@ -531,6 +535,7 @@ async function submitEditFacultyProfile() {
         h_index: hIndex,
         remaining_slots: slots,
         min_cgpa_req: cgpa,
+        min_cgpa: cgpa,
         thesis_available: thesisAvail
       })
     });
@@ -541,6 +546,7 @@ async function submitEditFacultyProfile() {
       closeEditFacultyProfileModal();
       if (window.openFacultyDetailsModal && targetId) window.openFacultyDetailsModal(targetId);
       if (window.runFacultySearch) window.runFacultySearch();
+      if (window.runAvailabilitySearch) window.runAvailabilitySearch();
     } else {
       alert(data.message || 'Error updating profile');
     }

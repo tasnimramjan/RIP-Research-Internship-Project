@@ -82,7 +82,7 @@ class FacultyController:
         domains = data.get('research_domains')
         slots = data.get('remaining_slots')
         max_capacity = data.get('max_capacity')
-        min_cgpa = data.get('min_cgpa_req')
+        min_cgpa = data.get('min_cgpa_req') if data.get('min_cgpa_req') is not None else data.get('min_cgpa')
         thesis_avail = data.get('thesis_available')
 
         ok = SupervisorModel.update_faculty_profile(
